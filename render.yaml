@@ -1,1 +1,7 @@
-
+services:
+  - type: web
+    name: earn-unlimited-funds
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
