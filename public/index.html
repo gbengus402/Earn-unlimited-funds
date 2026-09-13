@@ -3,67 +3,240 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Earn Unlimited Funds</title>
-  <link rel="stylesheet" href="/style.css">
+  <title>Earn Unlimited Funds | Digital Store</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+      line-height: 1.6;
+    }
+
+    header {
+      background: #071a3d;
+      color: white;
+      padding: 18px 6%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    header h2 {
+      font-size: 22px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 18px;
+      font-weight: bold;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 70px 20px;
+      background: linear-gradient(135deg, #071a3d, #1261c9);
+      color: white;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: auto;
+      font-size: 18px;
+    }
+
+    .section {
+      padding: 55px 6%;
+    }
+
+    .section h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 30px;
+    }
+
+    .product {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .cover {
+      background: linear-gradient(135deg, #071a3d, #d9a400);
+      color: white;
+      min-height: 300px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 25px;
+    }
+
+    .cover h3 {
+      font-size: 28px;
+    }
+
+    .product h3 {
+      font-size: 25px;
+      margin-bottom: 10px;
+    }
+
+    .price {
+      font-size: 30px;
+      font-weight: bold;
+      margin: 15px 0;
+      color: #071a3d;
+    }
+
+    .product ul {
+      margin: 15px 0 20px 20px;
+    }
+
+    .button {
+      display: inline-block;
+      background: #071a3d;
+      color: white;
+      padding: 13px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .button:hover {
+      opacity: 0.9;
+    }
+
+    .about {
+      background: white;
+      text-align: center;
+    }
+
+    .about p {
+      max-width: 750px;
+      margin: auto;
+    }
+
+    footer {
+      background: #071a3d;
+      color: white;
+      text-align: center;
+      padding: 25px;
+    }
+
+    @media (max-width: 700px) {
+      header {
+        justify-content: center;
+        text-align: center;
+      }
+
+      nav a {
+        margin: 0 8px;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .product {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-  <header>
-    <h2>Earn Unlimited Funds</h2>
+<header>
+  <h2>Earn Unlimited Funds</h2>
 
-    <nav>
-      <a href="/">Home</a>
-      <a href="#about">About</a>
-      <a href="#start">Get Started</a>
-    </nav>
-  </header>
+  <nav>
+    <a href="/">Home</a>
+    <a href="#store">Store</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
 
-  <section class="hero">
-    <h1>Earn Unlimited Funds</h1>
+<section class="hero">
+  <h1>Learn. Grow. Succeed.</h1>
 
-    <p>
-      Start your financial journey today.
-      Discover digital opportunities and learn practical ways
-      to build extra income online.
-    </p>
+  <p>
+    Discover practical digital products designed to help you
+    learn useful skills, improve your knowledge and take action.
+  </p>
+</section>
 
-    <a href="#start" class="button">Get Started</a>
-  </section>
+<section id="store" class="section">
+  <h2>Featured Digital Product</h2>
 
-  <section id="about">
-    <h2>Build Your Digital Opportunity</h2>
+  <div class="product">
 
-    <div class="cards">
-      <div class="card">
-        <h3>Learn</h3>
-        <p>Learn useful digital skills and strategies.</p>
-      </div>
-
-      <div class="card">
-        <h3>Start</h3>
-        <p>Take your first step toward building an online income.</p>
-      </div>
-
-      <div class="card">
-        <h3>Grow</h3>
-        <p>Keep learning and improve your digital business.</p>
-      </div>
+    <div class="cover">
+      <h3>HOW TO PASS HIGH IN EXAMS</h3>
     </div>
-  </section>
 
-  <section id="start" class="start">
-    <h2>Start Your Journey Today</h2>
-    <p>Take the first step and discover what is possible.</p>
+    <div>
+      <h3>How to Pass High in Exams</h3>
 
-    <a href="mailto:hello@example.com" class="button">
-      Contact Us
-    </a>
-  </section>
+      <p>
+        A practical student guide to studying smarter, remembering more,
+        managing exam pressure and preparing confidently for excellent results.
+      </p>
 
-  <footer>
-    <p>© 2026 Earn Unlimited Funds</p>
-  </footer>
+      <ul>
+        <li>Build an effective study timetable</li>
+        <li>Improve memory and recall</li>
+        <li>Use past questions effectively</li>
+        <li>Beat procrastination and distractions</li>
+        <li>Prepare for the final week</li>
+        <li>30-day high-score study plan</li>
+        <li>7-day emergency revision plan</li>
+      </ul>
+
+      <div class="price">₦25,000</div>
+
+      <a href="/product.html" class="button">
+        View Product
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<section id="about" class="section about">
+  <h2>About Earn Unlimited Funds</h2>
+
+  <p>
+    Earn Unlimited Funds provides practical digital products and resources
+    designed to help people learn, improve their skills and discover new
+    opportunities online.
+  </p>
+</section>
+
+<footer>
+  <p>© 2026 Earn Unlimited Funds. All rights reserved.</p>
+</footer>
 
 </body>
 </html>
