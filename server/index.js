@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(publicFolder, "index.html"));
 });
 
-// Paystack payment initialization
+// Initialize Paystack payment
 app.post("/api/pay", async (req, res) => {
   try {
     const { email } = req.body;
@@ -45,11 +45,11 @@ app.post("/api/pay", async (req, res) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email: email,
+          email,
           amount: 2500000,
           currency: "NGN",
           callback_url:
-            "https://earn-unlimited-funds.onrender.com/payment-success.html"
+            "https://earn-unlimited-funds.onrender.com/payment-callback"
         })
       }
     );
@@ -68,11 +68,66 @@ app.post("/api/pay", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Paystack error:", error);
+    console.error("Paystack initialization error:", error);
 
     res.status(500).json({
       message: "Payment service is temporarily unavailable."
     });
+  }
+});
+
+// Secure Paystack payment verification
+app.get("/payment-callback", async (req, res) => {
+  try {
+    const reference = req.query.reference;
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+
+    if (!reference) {
+      return res.status(400).send("Payment reference is missing.");
+    }
+
+    if (!secretKey) {
+      return res.status(500).send("Payment verification is not configured.");
+    }
+
+    const response = await fetch(
+      `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${secretKey}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (
+      !response.ok ||
+      !data.status ||
+      !data.data ||
+      data.data.status !== "success" ||
+      data.data.amount !== 2500000 ||
+      data.data.currency !== "NGN"
+    ) {
+      return res.status(400).send(`
+        <h1>Payment could not be verified</h1>
+        <p>Please contact support if money was deducted from your account.</p>
+      `);
+    }
+
+    // Payment has been verified by Paystack
+    res.redirect(
+      `/payment-success.html?reference=${encodeURIComponent(reference)}`
+    );
+
+  } catch (error) {
+    console.error("Paystack verification error:", error);
+
+    res.status(500).send(`
+      <h1>Payment verification failed</h1>
+      <p>Please contact support.</p>
+    `);
   }
 });
 
