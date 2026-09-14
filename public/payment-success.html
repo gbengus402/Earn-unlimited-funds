@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment Successful | Earn Unlimited Funds">
+
+  <title>Payment Successful | Earn Unlimited Funds</title>
 
   <style>
     * {
@@ -59,6 +61,11 @@
       font-weight: bold;
       margin-top: 10px;
     }
+
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -71,20 +78,48 @@
     <h1>Payment Successful!</h1>
 
     <p>
-      Thank you for your purchase of
+      Thank you for purchasing
       <strong>How to Pass High in Exams</strong>.
     </p>
 
     <p>
-      Your payment has been received. Your digital product
-      will be made available after payment verification.
+      Your payment has been verified successfully.
     </p>
+
+    <p id="status">
+      Preparing your secure download...
+    </p>
+
+    <a
+      id="downloadButton"
+      href="/api/download"
+      class="button"
+    >
+      Download Your Product
+    </a>
+
+    <br>
 
     <a href="/" class="button">
       Return to Store
     </a>
 
   </div>
+
+  <script>
+    /*
+      The payment callback has already verified the
+      Paystack transaction and placed the secure
+      download cookie in the browser.
+
+      When the customer reaches this page,
+      send them directly to the protected download.
+    */
+
+    setTimeout(function () {
+      window.location.href = "/api/download";
+    }, 1500);
+  </script>
 
 </body>
 </html>
