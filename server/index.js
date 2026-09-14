@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 10000;
 const publicFolder = path.join(__dirname, "..", "public");
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(publicFolder));
 
 app.get("/", (req, res) => {
@@ -45,7 +46,7 @@ app.post("/api/pay", async (req, res) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email,
+          email: email,
           amount: 2500000,
           currency: "NGN",
           callback_url:
@@ -56,7 +57,7 @@ app.post("/api/pay", async (req, res) => {
 
     const data = await response.json();
 
-    if (!response.ok || !data.status) {
+    if (!response.ok || !data.status || !data.data) {
       return res.status(400).json({
         message: data.message || "Unable to initialize payment."
       });
@@ -76,15 +77,37 @@ app.post("/api/pay", async (req, res) => {
   }
 });
 
-// Secure Paystack payment verification
+// Paystack payment callback and verification
 app.get("/payment-callback", async (req, res) => {
   try {
-    const reference = req.query.reference;
-    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    // Paystack normally returns the reference as ?reference=...
+    const reference =
+      req.query.reference ||
+      req.query.trxref ||
+      req.body?.reference ||
+      req.body?.trxref;
+
+    console.log("Paystack callback received:", req.query);
 
     if (!reference) {
-      return res.status(400).send("Payment reference is missing.");
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Payment Reference Missing</title>
+        </head>
+        <body style="font-family:Arial;text-align:center;padding:50px;">
+          <h1>Payment reference is missing</h1>
+          <p>We could not receive the payment reference from Paystack.</p>
+          <p>Please contact support if money was deducted from your account.</p>
+        </body>
+        </html>
+      `);
     }
+
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
     if (!secretKey) {
       return res.status(500).send("Payment verification is not configured.");
@@ -95,28 +118,41 @@ app.get("/payment-callback", async (req, res) => {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${secretKey}`
+          Authorization: `Bearer ${secretKey}`,
+          "Content-Type": "application/json"
         }
       }
     );
 
     const data = await response.json();
 
+    console.log("Paystack verification response:", data);
+
     if (
       !response.ok ||
       !data.status ||
       !data.data ||
       data.data.status !== "success" ||
-      data.data.amount !== 2500000 ||
+      Number(data.data.amount) !== 2500000 ||
       data.data.currency !== "NGN"
     ) {
       return res.status(400).send(`
-        <h1>Payment could not be verified</h1>
-        <p>Please contact support if money was deducted from your account.</p>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Payment Verification Failed</title>
+        </head>
+        <body style="font-family:Arial;text-align:center;padding:50px;">
+          <h1>Payment could not be verified</h1>
+          <p>Please contact support if money was deducted from your account.</p>
+        </body>
+        </html>
       `);
     }
 
-    // Payment has been verified by Paystack
+    // Payment has been successfully verified by Paystack
     res.redirect(
       `/payment-success.html?reference=${encodeURIComponent(reference)}`
     );
@@ -125,8 +161,18 @@ app.get("/payment-callback", async (req, res) => {
     console.error("Paystack verification error:", error);
 
     res.status(500).send(`
-      <h1>Payment verification failed</h1>
-      <p>Please contact support.</p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Payment Verification Error</title>
+      </head>
+      <body style="font-family:Arial;text-align:center;padding:50px;">
+        <h1>Payment verification failed</h1>
+        <p>Please contact support.</p>
+      </body>
+      </html>
     `);
   }
 });
@@ -142,3 +188,4 @@ app.get("/health", (req, res) => {
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
+  
