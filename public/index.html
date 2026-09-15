@@ -3,164 +3,235 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Earn Unlimited Funds | Digital Store</title>
 
   <style>
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
       background: #f5f7fb;
       color: #172033;
-      line-height: 1.6;
     }
 
     header {
       background: #071a3d;
       color: white;
-      padding: 18px 6%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 15px;
+      padding: 18px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
-    header h2 {
+    .nav {
+      max-width: 1150px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .logo {
       font-size: 22px;
+      font-weight: bold;
     }
 
     nav a {
       color: white;
       text-decoration: none;
       margin-left: 18px;
-      font-weight: bold;
+      font-size: 15px;
     }
 
     .hero {
+      background: linear-gradient(135deg, #071a3d, #123d7a);
+      color: white;
       text-align: center;
       padding: 70px 20px;
-      background: linear-gradient(135deg, #071a3d, #1261c9);
-      color: white;
     }
 
     .hero h1 {
+      margin: 0 0 18px;
       font-size: 42px;
-      margin-bottom: 15px;
     }
 
     .hero p {
-      max-width: 700px;
+      max-width: 720px;
       margin: auto;
       font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .hero-button {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 14px 28px;
+      background: #ffffff;
+      color: #071a3d;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
     }
 
     .section {
-      padding: 55px 6%;
-    }
-
-    .section h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 30px;
-    }
-
-    .product {
-      max-width: 850px;
+      max-width: 1150px;
       margin: auto;
-      background: white;
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
-      display: grid;
-      grid-template-columns: 1fr 1.5fr;
-      gap: 30px;
-      align-items: center;
+      padding: 55px 20px;
     }
 
-    .cover {
-      background: linear-gradient(135deg, #071a3d, #d9a400);
-      color: white;
-      min-height: 300px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .section-title {
       text-align: center;
-      padding: 25px;
+      margin-bottom: 35px;
     }
 
-    .cover h3 {
-      font-size: 28px;
-    }
-
-    .product h3 {
-      font-size: 25px;
+    .section-title h2 {
+      font-size: 32px;
       margin-bottom: 10px;
-    }
-
-    .price {
-      font-size: 30px;
-      font-weight: bold;
-      margin: 15px 0;
       color: #071a3d;
     }
 
-    .product ul {
-      margin: 15px 0 20px 20px;
+    .section-title p {
+      color: #596579;
     }
 
-    .button {
-      display: inline-block;
+    .products {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 14px;
+      padding: 25px;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      min-height: 330px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .product-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: #e9f0ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 27px;
+      margin-bottom: 18px;
+    }
+
+    .product-card h3 {
+      margin: 0 0 12px;
+      color: #071a3d;
+      font-size: 21px;
+      line-height: 1.3;
+    }
+
+    .product-card p {
+      color: #5d6878;
+      line-height: 1.6;
+      font-size: 15px;
+      flex-grow: 1;
+    }
+
+    .price {
+      font-size: 24px;
+      font-weight: bold;
+      color: #071a3d;
+      margin: 18px 0;
+    }
+
+    .buy-button {
+      display: block;
+      width: 100%;
+      text-align: center;
       background: #071a3d;
       color: white;
-      padding: 13px 24px;
-      border-radius: 8px;
       text-decoration: none;
+      padding: 14px;
+      border-radius: 8px;
       font-weight: bold;
+      font-size: 16px;
     }
 
-    .button:hover {
-      opacity: 0.9;
+    .buy-button:hover {
+      background: #123d7a;
     }
 
     .about {
       background: white;
-      text-align: center;
+      border-radius: 14px;
+      padding: 35px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+      line-height: 1.8;
     }
 
-    .about p {
-      max-width: 750px;
-      margin: auto;
+    .about h2 {
+      color: #071a3d;
     }
 
     footer {
       background: #071a3d;
       color: white;
       text-align: center;
-      padding: 25px;
+      padding: 30px 20px;
+      margin-top: 30px;
     }
 
-    @media (max-width: 700px) {
-      header {
-        justify-content: center;
-        text-align: center;
-      }
+    footer p {
+      margin: 6px 0;
+    }
 
-      nav a {
-        margin: 0 8px;
+    @media (max-width: 900px) {
+      .products {
+        grid-template-columns: repeat(2, 1fr);
       }
 
       .hero h1 {
-        font-size: 32px;
+        font-size: 35px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .nav {
+        flex-direction: column;
       }
 
-      .product {
+      nav a {
+        margin: 0 7px;
+      }
+
+      .products {
         grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 55px 18px;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+      }
+
+      .hero p {
+        font-size: 16px;
+      }
+
+      .section {
+        padding: 40px 15px;
       }
     }
   </style>
@@ -168,75 +239,233 @@
 
 <body>
 
-<header>
-  <h2>Earn Unlimited Funds</h2>
+  <!-- HEADER -->
+  <header>
+    <div class="nav">
+      <div class="logo">Earn Unlimited Funds</div>
 
-  <nav>
-    <a href="/">Home</a>
-    <a href="#store">Store</a>
-    <a href="#about">About</a>
-  </nav>
-</header>
-
-<section class="hero">
-  <h1>Learn. Grow. Succeed.</h1>
-
-  <p>
-    Discover practical digital products designed to help you
-    learn useful skills, improve your knowledge and take action.
-  </p>
-</section>
-
-<section id="store" class="section">
-  <h2>Featured Digital Product</h2>
-
-  <div class="product">
-
-    <div class="cover">
-      <h3>HOW TO PASS HIGH IN EXAMS</h3>
+      <nav>
+        <a href="#home">Home</a>
+        <a href="#products">Products</a>
+        <a href="#about">About</a>
+      </nav>
     </div>
+  </header>
 
-    <div>
-      <h3>How to Pass High in Exams</h3>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <h1>Earn Unlimited Funds</h1>
+
+    <p>
+      Discover practical digital guides designed to help you learn,
+      improve your skills, grow your knowledge and take meaningful
+      steps toward your financial and personal goals.
+    </p>
+
+    <a href="#products" class="hero-button">
+      Explore Our Products
+    </a>
+  </section>
+
+
+  <!-- PRODUCTS -->
+  <section class="section" id="products">
+
+    <div class="section-title">
+      <h2>Our Digital Products</h2>
 
       <p>
-        A practical student guide to studying smarter, remembering more,
-        managing exam pressure and preparing confidently for excellent results.
+        Choose the guide you need and get started today.
       </p>
-
-      <ul>
-        <li>Build an effective study timetable</li>
-        <li>Improve memory and recall</li>
-        <li>Use past questions effectively</li>
-        <li>Beat procrastination and distractions</li>
-        <li>Prepare for the final week</li>
-        <li>30-day high-score study plan</li>
-        <li>7-day emergency revision plan</li>
-      </ul>
-
-      <div class="price">₦25,000</div>
-
-      <a href="/product.html" class="button">
-        View Product
-      </a>
     </div>
 
-  </div>
-</section>
 
-<section id="about" class="section about">
-  <h2>About Earn Unlimited Funds</h2>
+    <div class="products">
 
-  <p>
-    Earn Unlimited Funds provides practical digital products and resources
-    designed to help people learn, improve their skills and discover new
-    opportunities online.
-  </p>
-</section>
+      <!-- PRODUCT 1 -->
+      <div class="product-card">
+        <div class="product-icon">📚</div>
 
-<footer>
-  <p>© 2026 Earn Unlimited Funds. All rights reserved.</p>
-</footer>
+        <h3>How to Pass High in Exams</h3>
+
+        <p>
+          Learn practical study strategies, preparation techniques,
+          examination tips and methods for improving your academic
+          performance.
+        </p>
+
+        <div class="price">₦25,000</div>
+
+        <a
+          href="/product.html?id=how-to-pass-high-in-exams"
+          class="buy-button"
+        >
+          Buy Now
+        </a>
+      </div>
+
+
+      <!-- PRODUCT 2 -->
+      <div class="product-card">
+        <div class="product-icon">🤖</div>
+
+        <h3>AI Response Complete Guide</h3>
+
+        <p>
+          Learn practical ways to use AI for better responses,
+          ideas, productivity, communication and online work.
+        </p>
+
+        <div class="price">₦40,000</div>
+
+        <a
+          href="/product.html?id=ai-response-complete-guide"
+          class="buy-button"
+        >
+          Buy Now
+        </a>
+      </div>
+
+
+      <!-- PRODUCT 3 -->
+      <div class="product-card">
+        <div class="product-icon">📱</div>
+
+        <h3>Facebook Automation</h3>
+
+        <p>
+          Learn practical Facebook automation strategies for
+          managing your online presence, responding to customers
+          and improving your digital marketing workflow.
+        </p>
+
+        <div class="price">₦60,000</div>
+
+        <a
+          href="/product.html?id=facebook-automation"
+          class="buy-button"
+        >
+          Buy Now
+        </a>
+      </div>
+
+
+      <!-- PRODUCT 4 -->
+      <div class="product-card">
+        <div class="product-icon">💰</div>
+
+        <h3>How to Save a Billion from a Zero Account</h3>
+
+        <p>
+          Explore practical money habits, saving strategies,
+          financial planning and long-term approaches to building
+          better financial discipline.
+        </p>
+
+        <div class="price">₦80,000</div>
+
+        <a
+          href="/product.html?id=save-a-billion-from-zero-account"
+          class="buy-button"
+        >
+          Buy Now
+        </a>
+      </div>
+
+
+      <!-- PRODUCT 5 -->
+      <div class="product-card">
+        <div class="product-icon">🤰</div>
+
+        <h3>Pregnancy Care Guide</h3>
+
+        <p>
+          A practical guide containing useful pregnancy-care
+          information, preparation tips, healthy routines and
+          important considerations.
+        </p>
+
+        <div class="price">₦150,000</div>
+
+        <a
+          href="/product.html?id=pregnancy-care"
+          class="buy-button"
+        >
+          Buy Now
+        </a>
+      </div>
+
+
+      <!-- PRODUCT 6 -->
+      <div class="product-card">
+        <div class="product-icon">🚀</div>
+
+        <h3>Sell Faster Professional Ebook</h3>
+
+        <p>
+          Learn practical selling approaches, customer attraction,
+          offer presentation and strategies that can help improve
+          your chances of making sales.
+        </p>
+
+        <div class="price">₦150,200</div>
+
+        <a
+          href="/product.html?id=sell-faster"
+          class="buy-button"
+        >
+          Buy Now
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ABOUT -->
+  <section class="section" id="about">
+
+    <div class="about">
+
+      <h2>About Earn Unlimited Funds</h2>
+
+      <p>
+        Earn Unlimited Funds is a digital platform created to provide
+        practical resources, guides and educational materials that
+        can help people develop useful knowledge and skills.
+      </p>
+
+      <p>
+        Our goal is to make valuable digital information easily
+        accessible while providing a simple and secure purchasing
+        experience.
+      </p>
+
+      <p>
+        After successful payment, customers receive secure access
+        to their purchased digital product.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer>
+
+    <p><strong>Earn Unlimited Funds</strong></p>
+
+    <p>
+      Build your knowledge. Take action. Move forward.
+    </p>
+
+    <p>
+      © 2026 Earn Unlimited Funds. All rights reserved.
+    </p>
+
+  </footer>
 
 </body>
 </html>
