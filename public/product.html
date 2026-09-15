@@ -2,222 +2,182 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>How to Pass High in Exams | Earn Unlimited Funds</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Product | Earn Unlimited Funds</title>
 
   <style>
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
-      font-family: Arial, sans-serif;
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
       background: #f5f7fb;
-      color: #172033;
-      line-height: 1.7;
+      color: #111827;
     }
 
     header {
       background: #071a3d;
       color: white;
-      padding: 18px 6%;
+      padding: 18px 20px;
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: auto;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 15px;
+      justify-content: space-between;
+      gap: 20px;
     }
 
-    header h2 {
-      font-size: 21px;
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
     }
 
-    nav a {
+    .home-link {
       color: white;
       text-decoration: none;
-      margin-left: 15px;
-      font-weight: bold;
-    }
-
-    .hero {
-      background: linear-gradient(135deg, #071a3d, #1261c9);
-      color: white;
-      text-align: center;
-      padding: 55px 20px;
-    }
-
-    .hero h1 {
-      font-size: 38px;
-      margin-bottom: 12px;
-    }
-
-    .hero p {
-      max-width: 700px;
-      margin: auto;
-      font-size: 17px;
+      font-weight: 600;
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 40px auto;
       padding: 0 20px;
     }
 
     .product-card {
       background: white;
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 30px;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
     }
 
-    .cover {
-      max-width: 420px;
-      min-height: 300px;
-      margin: 0 auto 30px;
-      border-radius: 15px;
-      background: linear-gradient(135deg, #071a3d, #d9a400);
-      color: white;
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 35px;
+      align-items: center;
+    }
+
+    .product-image {
+      min-height: 350px;
+      border-radius: 16px;
+      background: linear-gradient(
+        135deg,
+        #071a3d,
+        #123d87
+      );
+
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
+      color: white;
       padding: 30px;
     }
 
-    .cover h2 {
-      font-size: 30px;
+    .product-image h2 {
+      font-size: 34px;
+      line-height: 1.2;
+      margin: 0;
     }
 
-    h2 {
-      margin-bottom: 15px;
+    .product-title {
+      font-size: 36px;
+      color: #071a3d;
+      margin: 0 0 15px;
     }
 
-    h3 {
-      margin-top: 25px;
-      margin-bottom: 10px;
-    }
-
-    ul {
-      margin: 15px 0 20px 25px;
+    .description {
+      font-size: 17px;
+      line-height: 1.7;
+      color: #4b5563;
     }
 
     .price {
-      text-align: center;
-      font-size: 36px;
-      font-weight: bold;
+      font-size: 32px;
+      font-weight: 800;
       color: #071a3d;
       margin: 25px 0;
     }
 
-    .buy-box {
-      text-align: center;
-      padding: 25px;
-      background: #f0f4fa;
-      border-radius: 12px;
-      margin-top: 30px;
-    }
-
     .buy-button {
-      display: inline-block;
+      width: 100%;
+      border: none;
+      border-radius: 10px;
       background: #071a3d;
       color: white;
-      padding: 15px 35px;
-      border: none;
-      border-radius: 8px;
-      text-decoration: none;
+      padding: 16px;
       font-size: 18px;
-      font-weight: bold;
-      margin-top: 15px;
+      font-weight: 700;
       cursor: pointer;
     }
 
     .buy-button:hover {
-      opacity: 0.9;
+      opacity: 0.92;
     }
 
-    .payment-form {
-      display: none;
-      max-width: 500px;
-      margin: 20px auto 0;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      text-align: left;
-    }
-
-    .payment-form label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .payment-form input {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #ccd3df;
-      border-radius: 8px;
-      font-size: 16px;
-      margin-bottom: 12px;
-    }
-
-    .continue-button {
-      width: 100%;
-      background: #071a3d;
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 8px;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .continue-button:disabled {
+    .buy-button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
 
+    .email-box {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
     .message {
-      margin-top: 12px;
-      font-weight: bold;
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .loading {
+      display: block;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .secure-note {
+      margin-top: 18px;
+      font-size: 14px;
+      color: #6b7280;
       text-align: center;
     }
 
-    footer {
-      background: #071a3d;
-      color: white;
-      text-align: center;
-      padding: 25px;
-      margin-top: 50px;
-    }
-
-    @media (max-width: 700px) {
-      .hero h1 {
-        font-size: 30px;
+    @media (max-width: 750px) {
+      .product-layout {
+        grid-template-columns: 1fr;
       }
 
-      header {
-        justify-content: center;
-        text-align: center;
+      .product-title {
+        font-size: 28px;
       }
 
-      nav a {
-        margin: 0 7px;
-      }
-
-      .product-card {
-        padding: 20px;
-      }
-
-      .cover h2 {
-        font-size: 25px;
-      }
-
-      .price {
-        font-size: 32px;
+      .product-image {
+        min-height: 250px;
       }
     }
   </style>
@@ -225,211 +185,316 @@
 
 <body>
 
-<header>
-  <h2>Earn Unlimited Funds</h2>
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        Earn Unlimited Funds
+      </div>
 
-  <nav>
-    <a href="/">Home</a>
-    <a href="/product.html">Product</a>
-  </nav>
-</header>
-
-<section class="hero">
-  <h1>How to Pass High in Exams</h1>
-
-  <p>
-    Study smarter, remember more, manage exam pressure,
-    and prepare with confidence.
-  </p>
-</section>
-
-<div class="container">
-
-  <div class="product-card">
-
-    <div class="cover">
-      <h2>
-        HOW TO PASS<br>
-        HIGH IN EXAMS
-      </h2>
+      <a class="home-link" href="/">
+        Home
+      </a>
     </div>
+  </header>
 
-    <h2>How to Pass High in Exams</h2>
+  <main class="container">
 
-    <p>
-      A practical student guide designed to help you improve your
-      preparation, confidence, study habits, memory, revision and
-      examination performance.
-    </p>
+    <div class="product-card">
 
-    <h3>What You Will Learn</h3>
+      <div class="product-layout">
 
-    <ul>
-      <li>How to build a powerful study timetable</li>
-      <li>How to study effectively using active learning</li>
-      <li>How to understand difficult topics</li>
-      <li>Powerful memory and revision techniques</li>
-      <li>How to use past questions effectively</li>
-      <li>How to overcome procrastination and distractions</li>
-      <li>How to prepare during the final week</li>
-      <li>How to manage exam anxiety and pressure</li>
-      <li>How to manage your time during examinations</li>
-      <li>A 30-day high-score study plan</li>
-      <li>A 7-day emergency revision plan</li>
-      <li>A daily study checklist</li>
-    </ul>
+        <div class="product-image">
+          <h2 id="imageTitle">
+            Loading Product...
+          </h2>
+        </div>
 
-    <h3>Who Is This For?</h3>
+        <div>
 
-    <p>
-      This ebook is for students who want a practical approach to
-      preparing for examinations, improving their study habits and
-      becoming more confident before and during exams.
-    </p>
+          <h1
+            id="productTitle"
+            class="product-title"
+          >
+            Loading Product...
+          </h1>
 
-    <h3>Inside the Ebook</h3>
+          <p
+            id="productDescription"
+            class="description"
+          >
+            Please wait...
+          </p>
 
-    <p>
-      The guide covers mindset, academic goals, study timetables,
-      effective learning, understanding versus memorization,
-      memory techniques, past questions, difficult subjects,
-      distractions, revision, final-week preparation, exam pressure,
-      healthy preparation, question-answering strategies and
-      examination time management.
-    </p>
+          <div
+            id="productPrice"
+            class="price"
+          >
+            Loading...
+          </div>
 
-    <div class="price">
-      ₦25,000
-    </div>
+          <input
+            id="email"
+            class="email-box"
+            type="email"
+            placeholder="Enter your email address"
+            autocomplete="email"
+          >
 
-    <div class="buy-box">
+          <button
+            id="buyButton"
+            class="buy-button"
+            type="button"
+          >
+            Buy Now
+          </button>
 
-      <h2>Get Your Copy Today</h2>
+          <div
+            id="message"
+            class="message"
+          ></div>
 
-      <p>
-        Take your preparation seriously and start building better
-        study habits today.
-      </p>
+          <div class="secure-note">
+            🔒 Secure payment powered by Paystack
+          </div>
 
-      <button class="buy-button" id="buyButton">
-        BUY NOW — ₦25,000
-      </button>
-
-      <div class="payment-form" id="paymentForm">
-
-        <label for="email">
-          Enter your email address
-        </label>
-
-        <input
-          type="email"
-          id="email"
-          placeholder="you@example.com"
-          required
-        >
-
-        <button
-          class="continue-button"
-          id="continueButton"
-        >
-          Continue to Payment
-        </button>
-
-        <div class="message" id="message"></div>
+        </div>
 
       </div>
 
     </div>
 
-  </div>
+  </main>
 
-</div>
+  <script>
 
-<footer>
-  <p>© 2026 Earn Unlimited Funds. All rights reserved.</p>
-</footer>
+    /*
+    ==================================================
+    GET PRODUCT ID
+    ==================================================
 
-<script>
+    Example URL:
 
-  const buyButton = document.getElementById("buyButton");
-  const paymentForm = document.getElementById("paymentForm");
-  const continueButton = document.getElementById("continueButton");
-  const emailInput = document.getElementById("email");
-  const message = document.getElementById("message");
+    /product.html?id=how-to-pass-high-in-exams
 
-  buyButton.addEventListener("click", function () {
+    If no ID is provided, the current exam product
+    is used automatically.
+    */
 
-    paymentForm.style.display = "block";
+    const params = new URLSearchParams(
+      window.location.search
+    );
 
-    emailInput.focus();
+    const productId =
+      params.get("id") ||
+      "how-to-pass-high-in-exams";
 
-    buyButton.style.display = "none";
 
-  });
+    const productTitle =
+      document.getElementById("productTitle");
 
-  continueButton.addEventListener("click", async function () {
+    const imageTitle =
+      document.getElementById("imageTitle");
 
-    const email = emailInput.value.trim();
+    const productDescription =
+      document.getElementById("productDescription");
 
-    if (!email) {
-      message.textContent = "Please enter your email address.";
-      return;
-    }
+    const productPrice =
+      document.getElementById("productPrice");
 
-    if (!emailInput.checkValidity()) {
-      message.textContent = "Please enter a valid email address.";
-      return;
-    }
+    const emailInput =
+      document.getElementById("email");
 
-    continueButton.disabled = true;
-    continueButton.textContent = "Connecting to Paystack...";
-    message.textContent = "";
+    const buyButton =
+      document.getElementById("buyButton");
 
-    try {
+    const message =
+      document.getElementById("message");
 
-      const response = await fetch("/api/pay", {
 
-        method: "POST",
+    /*
+    ==================================================
+    LOAD PRODUCT
+    ==================================================
+    */
 
-        headers: {
-          "Content-Type": "application/json"
-        },
+    async function loadProduct() {
 
-        body: JSON.stringify({
-          email: email
-        })
+      try {
 
-      });
+        const response = await fetch(
+          `/api/products/${encodeURIComponent(productId)}`
+        );
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.authorization_url) {
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Product not found."
+          );
+        }
 
-        window.location.href = data.authorization_url;
+        productTitle.textContent =
+          data.name;
 
-      } else {
+        imageTitle.textContent =
+          data.name;
 
-        message.textContent =
-          data.message || "Unable to start payment.";
+        productDescription.textContent =
+          data.description;
 
-        continueButton.disabled = false;
-        continueButton.textContent = "Continue to Payment";
+        productPrice.textContent =
+          `₦${Number(data.price).toLocaleString()}`;
 
+        document.title =
+          `${data.name} | Earn Unlimited Funds`;
+
+      } catch (error) {
+
+        productTitle.textContent =
+          "Product Not Found";
+
+        imageTitle.textContent =
+          "Product Not Found";
+
+        productDescription.textContent =
+          error.message;
+
+        productPrice.textContent =
+          "";
+
+        buyButton.disabled = true;
       }
-
-    } catch (error) {
-
-      message.textContent =
-        "Unable to connect to the payment system. Please try again.";
-
-      continueButton.disabled = false;
-      continueButton.textContent = "Continue to Payment";
-
     }
 
-  });
 
-</script>
+    /*
+    ==================================================
+    BUY PRODUCT
+    ==================================================
+    */
+
+    buyButton.addEventListener(
+      "click",
+      async function () {
+
+        const email =
+          emailInput.value.trim();
+
+        if (!email) {
+
+          showError(
+            "Please enter your email address."
+          );
+
+          emailInput.focus();
+
+          return;
+        }
+
+        if (
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+        ) {
+
+          showError(
+            "Please enter a valid email address."
+          );
+
+          emailInput.focus();
+
+          return;
+        }
+
+        buyButton.disabled = true;
+
+        showLoading(
+          "Connecting to secure Paystack checkout..."
+        );
+
+        try {
+
+          const response = await fetch(
+            "/api/pay",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+                email: email,
+                productId: productId
+              })
+            }
+          );
+
+          const data =
+            await response.json();
+
+          if (
+            !response.ok ||
+            !data.authorization_url
+          ) {
+
+            throw new Error(
+              data.message ||
+              "Unable to start payment."
+            );
+          }
+
+          /*
+          Send customer to Paystack.
+          */
+
+          window.location.href =
+            data.authorization_url;
+
+        } catch (error) {
+
+          showError(
+            error.message ||
+            "Payment could not be started."
+          );
+
+          buyButton.disabled = false;
+        }
+      }
+    );
+
+
+    /*
+    ==================================================
+    MESSAGE HELPERS
+    ==================================================
+    */
+
+    function showLoading(text) {
+
+      message.textContent = text;
+
+      message.className =
+        "message loading";
+    }
+
+    function showError(text) {
+
+      message.textContent = text;
+
+      message.className =
+        "message error";
+    }
+
+
+    /*
+    ==================================================
+    START
+    ==================================================
+    */
+
+    loadProduct();
+
+  </script>
 
 </body>
 </html>
