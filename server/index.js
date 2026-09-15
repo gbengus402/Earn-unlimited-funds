@@ -1,9 +1,12 @@
 import express from "express";
 import path from "path";
 import crypto from "crypto";
-import Database from "better-sqlite3";
 import { fileURLToPath } from "url";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { Pool } from "pg";
+import {
+  S3Client,
+  GetObjectCommand
+} from "@aws-sdk/client-s3";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,38 +44,60 @@ const PRODUCTS = {
 
 /*
 ====================================================
-DATABASE
+POSTGRESQL DATABASE
 ====================================================
 */
 
-const dbPath = path.join(__dirname, "store.db");
-const db = new Database(dbPath);
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL is not configured.");
+}
 
-db.pragma("journal_mode = WAL");
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS payments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    reference TEXT UNIQUE NOT NULL,
-    email TEXT NOT NULL,
-    product_id TEXT NOT NULL,
-    amount INTEGER NOT NULL,
-    currency TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending',
-    created_at INTEGER NOT NULL
-  );
+/*
+====================================================
+CREATE DATABASE TABLES
+====================================================
+*/
 
-  CREATE TABLE IF NOT EXISTS downloads (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    token_hash TEXT UNIQUE NOT NULL,
-    reference TEXT NOT NULL,
-    product_id TEXT NOT NULL,
-    email TEXT NOT NULL,
-    used INTEGER NOT NULL DEFAULT 0,
-    created_at INTEGER NOT NULL,
-    expires_at INTEGER NOT NULL
-  );
-`);
+async function initializeDatabase() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id BIGSERIAL PRIMARY KEY,
+      reference TEXT UNIQUE NOT NULL,
+      email TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      amount BIGINT NOT NULL,
+      currency TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at BIGINT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS downloads (
+      id BIGSERIAL PRIMARY KEY,
+      token_hash TEXT UNIQUE NOT NULL,
+      reference TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0,
+      created_at BIGINT NOT NULL,
+      expires_at BIGINT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_downloads_token_hash
+    ON downloads(token_hash);
+
+    CREATE INDEX IF NOT EXISTS idx_payments_reference
+    ON payments(reference);
+  `);
+
+  console.log("PostgreSQL database initialized.");
+}
 
 /*
 ====================================================
@@ -294,8 +319,9 @@ app.post("/api/pay", async (req, res) => {
     const reference =
       data.data.reference;
 
-    db.prepare(`
-      INSERT OR REPLACE INTO payments
+    await pool.query(
+      `
+      INSERT INTO payments
       (
         reference,
         email,
@@ -305,15 +331,23 @@ app.post("/api/pay", async (req, res) => {
         status,
         created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      reference,
-      email,
-      product.id,
-      product.amount,
-      product.currency,
-      "pending",
-      Date.now()
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (reference)
+      DO UPDATE SET
+        email = EXCLUDED.email,
+        product_id = EXCLUDED.product_id,
+        amount = EXCLUDED.amount,
+        currency = EXCLUDED.currency
+      `,
+      [
+        reference,
+        email,
+        product.id,
+        product.amount,
+        product.currency,
+        "pending",
+        Date.now()
+      ]
     );
 
     res.json({
@@ -362,13 +396,17 @@ app.get("/payment-callback", async (req, res) => {
       );
     }
 
-    const payment = db
-      .prepare(`
-        SELECT *
-        FROM payments
-        WHERE reference = ?
-      `)
-      .get(reference);
+    const paymentResult = await pool.query(
+      `
+      SELECT *
+      FROM payments
+      WHERE reference = $1
+      `,
+      [reference]
+    );
+
+    const payment =
+      paymentResult.rows[0];
 
     if (!payment) {
       return res.status(400).send(
@@ -427,8 +465,8 @@ app.get("/payment-callback", async (req, res) => {
     */
 
     if (
-      transaction.amount !==
-      payment.amount
+      Number(transaction.amount) !==
+      Number(payment.amount)
     ) {
       return res.status(400).send(
         "Payment amount does not match the product."
@@ -463,11 +501,14 @@ app.get("/payment-callback", async (req, res) => {
     Mark payment successful.
     */
 
-    db.prepare(`
+    await pool.query(
+      `
       UPDATE payments
       SET status = 'success'
-      WHERE reference = ?
-    `).run(reference);
+      WHERE reference = $1
+      `,
+      [reference]
+    );
 
     /*
     Create ONE-TIME download token.
@@ -488,7 +529,8 @@ app.get("/payment-callback", async (req, res) => {
     const expiresAt =
       now + 15 * 60 * 1000;
 
-    db.prepare(`
+    await pool.query(
+      `
       INSERT INTO downloads
       (
         token_hash,
@@ -499,15 +541,17 @@ app.get("/payment-callback", async (req, res) => {
         created_at,
         expires_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      tokenHash,
-      reference,
-      product.id,
-      payment.email,
-      0,
-      now,
-      expiresAt
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `,
+      [
+        tokenHash,
+        reference,
+        product.id,
+        payment.email,
+        0,
+        now,
+        expiresAt
+      ]
     );
 
     /*
@@ -546,14 +590,6 @@ app.get("/payment-callback", async (req, res) => {
 /*
 ====================================================
 ONE-TIME DOWNLOAD
-====================================================
-
-IMPORTANT:
-The customer's browser NEVER receives an R2 URL.
-
-The server reads the PDF from R2 and streams it
-directly to the customer.
-
 ====================================================
 */
 
@@ -595,15 +631,21 @@ app.get("/api/download", async (req, res) => {
       hashToken(token);
 
     /*
-    Find token.
+    Find token in PostgreSQL.
     */
 
-    const download =
-      db.prepare(`
+    const downloadResult =
+      await pool.query(
+        `
         SELECT *
         FROM downloads
-        WHERE token_hash = ?
-      `).get(tokenHash);
+        WHERE token_hash = $1
+        `,
+        [tokenHash]
+      );
+
+    const download =
+      downloadResult.rows[0];
 
     if (!download) {
       return res.status(403).send(
@@ -617,7 +659,7 @@ app.get("/api/download", async (req, res) => {
 
     if (
       Date.now() >
-      download.expires_at
+      Number(download.expires_at)
     ) {
 
       res.clearCookie(
@@ -639,7 +681,9 @@ app.get("/api/download", async (req, res) => {
     Check whether token was already used.
     */
 
-    if (download.used === 1) {
+    if (
+      Number(download.used) === 1
+    ) {
       return res.status(403).send(
         "This download link has already been used."
       );
@@ -661,9 +705,10 @@ app.get("/api/download", async (req, res) => {
     }
 
     /*
-    Get the PDF directly from R2.
+    Get PDF directly from R2.
 
-    NO signed URL is created.
+    The browser NEVER receives
+    an R2 signed URL.
     */
 
     const command =
@@ -684,26 +729,29 @@ app.get("/api/download", async (req, res) => {
     /*
     ONE-TIME LOCK
 
-    Atomically change the token from unused
-    to used.
-
-    If another request tries to use the same
-    token at the same time, it will fail.
+    Only one request can successfully
+    change this token from unused to used.
     */
 
-    const update =
-      db.prepare(`
+    const updateResult =
+      await pool.query(
+        `
         UPDATE downloads
         SET used = 1
-        WHERE token_hash = ?
+        WHERE token_hash = $1
         AND used = 0
-        AND expires_at > ?
-      `).run(
-        tokenHash,
-        Date.now()
+        AND expires_at > $2
+        RETURNING id
+        `,
+        [
+          tokenHash,
+          Date.now()
+        ]
       );
 
-    if (update.changes !== 1) {
+    if (
+      updateResult.rowCount !== 1
+    ) {
       return res.status(403).send(
         "This download link has already been used."
       );
@@ -738,8 +786,7 @@ app.get("/api/download", async (req, res) => {
     );
 
     /*
-    Stream PDF directly from R2
-    to the customer.
+    Stream PDF directly from R2.
     */
 
     if (
@@ -771,10 +818,6 @@ app.get("/api/download", async (req, res) => {
       "Secure download error:",
       error
     );
-
-    /*
-    If R2 says the file does not exist.
-    */
 
     if (
       error.name ===
@@ -813,14 +856,33 @@ START SERVER
 ====================================================
 */
 
-app.listen(
-  PORT,
-  "0.0.0.0",
-  () => {
+async function startServer() {
 
-    console.log(
-      `Earn Unlimited Funds server running on port ${PORT}`
+  try {
+
+    await initializeDatabase();
+
+    app.listen(
+      PORT,
+      "0.0.0.0",
+      () => {
+
+        console.log(
+          `Earn Unlimited Funds server running on port ${PORT}`
+        );
+
+      }
     );
 
+  } catch (error) {
+
+    console.error(
+      "Failed to initialize PostgreSQL:",
+      error
+    );
+
+    process.exit(1);
   }
-);
+}
+
+startServer();
