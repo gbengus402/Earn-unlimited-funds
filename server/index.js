@@ -1,8 +1,8 @@
 import express from "express";
 import path from "path";
 import crypto from "crypto";
+import Database from "better-sqlite3";
 import { fileURLToPath } from "url";
-
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -12,42 +12,113 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-const publicFolder = path.join(__dirname, "..", "public");
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const publicFolder = path.join(__dirname, "..", "public");
 app.use(express.static(publicFolder));
 
-/* ================================
-   CLOUDFLARE R2 SETTINGS
-================================ */
+/*
+====================================================
+PRODUCTS
+====================================================
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
+To add another product later, add another item here.
 
-const R2_PRODUCT_KEY =
-  process.env.R2_PRODUCT_KEY || "how-to-pass-high-in-exams.pdf";
+Example:
 
-const DOWNLOAD_SIGNING_SECRET =
-  process.env.DOWNLOAD_SIGNING_SECRET;
+"facebook-automation": {
+  id: "facebook-automation",
+  name: "Facebook Automation",
+  price: 15000,
+  amount: 1500000,
+  currency: "NGN",
+  description: "Learn how to automate your Facebook marketing.",
+  r2Key: "facebook-automation.pdf",
+  downloadName: "Facebook-Automation.pdf"
+}
 
-/* ================================
-   R2 CLIENT
-================================ */
+price = amount customers see in Naira
+amount = price in kobo for Paystack
+*/
+
+const PRODUCTS = {
+  "how-to-pass-high-in-exams": {
+    id: "how-to-pass-high-in-exams",
+    name: "How to Pass High in Exams",
+    price: 25000,
+    amount: 2500000,
+    currency: "NGN",
+    description:
+      "A practical guide designed to help students prepare better, study smarter and improve their examination performance.",
+    r2Key: "how-to-pass-high-in-exams.pdf",
+    downloadName: "How-to-Pass-High-in-Exams.pdf"
+  }
+
+  // ADD MORE PRODUCTS HERE LATER
+};
+
+/*
+====================================================
+DATABASE
+====================================================
+*/
+
+const dbPath = path.join(__dirname, "store.db");
+const db = new Database(dbPath);
+
+db.pragma("journal_mode = WAL");
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reference TEXT UNIQUE NOT NULL,
+    email TEXT NOT NULL,
+    product_id TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    currency TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS downloads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token_hash TEXT UNIQUE NOT NULL,
+    reference TEXT NOT NULL,
+    product_id TEXT NOT NULL,
+    email TEXT NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+`);
+
+/*
+====================================================
+CLOUDFLARE R2
+====================================================
+*/
+
+const {
+  R2_ACCOUNT_ID,
+  R2_ACCESS_KEY_ID,
+  R2_SECRET_ACCESS_KEY,
+  R2_BUCKET_NAME,
+  DOWNLOAD_SIGNING_SECRET,
+  PAYSTACK_SECRET_KEY
+} = process.env;
 
 let r2Client = null;
 
 if (
   R2_ACCOUNT_ID &&
   R2_ACCESS_KEY_ID &&
-  R2_SECRET_ACCESS_KEY
+  R2_SECRET_ACCESS_KEY &&
+  R2_BUCKET_NAME
 ) {
   r2Client = new S3Client({
     region: "auto",
-    endpoint:
-      `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
       accessKeyId: R2_ACCESS_KEY_ID,
       secretAccessKey: R2_SECRET_ACCESS_KEY
@@ -55,446 +126,496 @@ if (
   });
 }
 
-/* ================================
-   CREATE DOWNLOAD TOKEN
-================================ */
+/*
+====================================================
+HELPER FUNCTIONS
+====================================================
+*/
 
-function createDownloadToken(reference) {
-  if (!DOWNLOAD_SIGNING_SECRET) {
-    throw new Error(
-      "DOWNLOAD_SIGNING_SECRET is not configured."
-    );
-  }
-
-  const expiresAt =
-    Date.now() + 15 * 60 * 1000;
-
-  const payload =
-    `${reference}.${expiresAt}`;
-
-  const signature =
-    crypto
-      .createHmac(
-        "sha256",
-        DOWNLOAD_SIGNING_SECRET
-      )
-      .update(payload)
-      .digest("hex");
-
-  return `${reference}.${expiresAt}.${signature}`;
+function createDownloadToken() {
+  return crypto.randomBytes(32).toString("hex");
 }
 
-/* ================================
-   VERIFY DOWNLOAD TOKEN
-================================ */
-
-function verifyDownloadToken(token) {
-  try {
-    if (
-      !token ||
-      !DOWNLOAD_SIGNING_SECRET
-    ) {
-      return null;
-    }
-
-    const parts = token.split(".");
-
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const [
-      reference,
-      expiresAt,
-      signature
-    ] = parts;
-
-    if (
-      !reference ||
-      !expiresAt ||
-      !signature
-    ) {
-      return null;
-    }
-
-    if (
-      Date.now() > Number(expiresAt)
-    ) {
-      return null;
-    }
-
-    const payload =
-      `${reference}.${expiresAt}`;
-
-    const expectedSignature =
-      crypto
-        .createHmac(
-          "sha256",
-          DOWNLOAD_SIGNING_SECRET
-        )
-        .update(payload)
-        .digest("hex");
-
-    if (
-      signature.length !==
-      expectedSignature.length
-    ) {
-      return null;
-    }
-
-    if (
-      !crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      )
-    ) {
-      return null;
-    }
-
-    return reference;
-
-  } catch (error) {
-    console.error(
-      "Download token verification error:",
-      error
-    );
-
-    return null;
-  }
+function hashToken(token) {
+  return crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
 }
 
-/* ================================
-   HOME PAGE
-================================ */
+function getProduct(productId) {
+  return PRODUCTS[productId] || null;
+}
+
+function isValidEmail(email) {
+  return (
+    typeof email === "string" &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  );
+}
+
+/*
+====================================================
+HOME PAGE
+====================================================
+*/
 
 app.get("/", (req, res) => {
-  res.sendFile(
-    path.join(
-      publicFolder,
-      "index.html"
-    )
-  );
+  res.sendFile(path.join(publicFolder, "hex.html"));
 });
 
-/* ================================
-   INITIALIZE PAYSTACK PAYMENT
-================================ */
+/*
+====================================================
+PRODUCT API
+====================================================
+*/
+
+app.get("/api/products", (req, res) => {
+  const products = Object.values(PRODUCTS).map((product) => ({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    currency: product.currency,
+    description: product.description
+  }));
+
+  res.json(products);
+});
+
+app.get("/api/products/:id", (req, res) => {
+  const product = getProduct(req.params.id);
+
+  if (!product) {
+    return res.status(404).json({
+      message: "Product not found."
+    });
+  }
+
+  res.json({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    currency: product.currency,
+    description: product.description
+  });
+});
+
+/*
+====================================================
+PAYSTACK PAYMENT INITIALIZATION
+====================================================
+*/
 
 app.post("/api/pay", async (req, res) => {
   try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({
-        message:
-          "Email address is required."
-      });
-    }
-
-    const secretKey =
-      process.env.PAYSTACK_SECRET_KEY;
-
-    if (!secretKey) {
+    if (!PAYSTACK_SECRET_KEY) {
       return res.status(500).json({
-        message:
-          "Paystack secret key is not configured."
+        message: "Paystack secret key is not configured."
       });
     }
+
+    const { email, productId } = req.body;
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        message: "Please enter a valid email address."
+      });
+    }
+
+    const product = getProduct(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Selected product was not found."
+      });
+    }
+
+    const callbackUrl =
+      "https://earn-unlimited-funds.onrender.com/payment-callback";
 
     const response = await fetch(
       "https://api.paystack.co/transaction/initialize",
       {
         method: "POST",
         headers: {
-          Authorization:
-            `Bearer ${secretKey}`,
-          "Content-Type":
-            "application/json"
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           email,
-          amount: 2500000,
-          currency: "NGN",
-          callback_url:
-            "https://earn-unlimited-funds.onrender.com/payment-callback"
+          amount: product.amount,
+          currency: product.currency,
+          callback_url: callbackUrl,
+          metadata: {
+            product_id: product.id,
+            product_name: product.name
+          }
         })
       }
     );
 
-    const data =
-      await response.json();
+    const data = await response.json();
 
-    if (
-      !response.ok ||
-      !data.status ||
-      !data.data
-    ) {
-      return res.status(400).json({
-        message:
-          data.message ||
-          "Unable to initialize payment."
+    if (!response.ok || !data.status) {
+      console.error("Paystack initialize error:", data);
+
+      return res.status(500).json({
+        message: "Unable to initialize payment."
       });
     }
 
-    res.json({
-      authorization_url:
-        data.data.authorization_url,
-      reference:
-        data.data.reference
-    });
+    const reference = data.data.reference;
 
-  } catch (error) {
-    console.error(
-      "Paystack initialization error:",
-      error
+    db.prepare(`
+      INSERT OR REPLACE INTO payments
+      (reference, email, product_id, amount, currency, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      reference,
+      email,
+      product.id,
+      product.amount,
+      product.currency,
+      "pending",
+      Date.now()
     );
 
+    res.json({
+      status: true,
+      authorization_url: data.data.authorization_url,
+      reference
+    });
+  } catch (error) {
+    console.error("Payment initialization error:", error);
+
     res.status(500).json({
-      message:
-        "Payment service is temporarily unavailable."
+      message: "Something went wrong while starting payment."
     });
   }
 });
 
-/* ================================
-   PAYSTACK CALLBACK
-   VERIFY PAYMENT
-   CREATE DOWNLOAD ACCESS
-================================ */
+/*
+====================================================
+PAYSTACK CALLBACK / PAYMENT VERIFICATION
+====================================================
+*/
 
-app.get(
-  "/payment-callback",
-  async (req, res) => {
-    try {
-      const reference =
-        req.query.reference ||
-        req.query.trxref;
-
-      console.log(
-        "Paystack callback:",
-        req.query
-      );
-
-      if (!reference) {
-        return res.status(400).send(`
-          <h1>Payment reference is missing</h1>
-          <p>Please contact support if money was deducted.</p>
-        `);
-      }
-
-      const secretKey =
-        process.env.PAYSTACK_SECRET_KEY;
-
-      if (!secretKey) {
-        return res.status(500).send(
-          "Payment verification is not configured."
-        );
-      }
-
-      const response =
-        await fetch(
-          `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization:
-                `Bearer ${secretKey}`,
-              "Content-Type":
-                "application/json"
-            }
-          }
-        );
-
-      const data =
-        await response.json();
-
-      console.log(
-        "Paystack verification:",
-        data
-      );
-
-      if (
-        !response.ok ||
-        !data.status ||
-        !data.data ||
-        data.data.status !==
-          "success" ||
-        Number(data.data.amount) !==
-          2500000 ||
-        data.data.currency !==
-          "NGN"
-      ) {
-        return res.status(400).send(`
-          <h1>Payment could not be verified</h1>
-          <p>Please contact support if money was deducted.</p>
-        `);
-      }
-
-      /*
-       * Payment is verified.
-       * Create secure 15-minute download access.
-       */
-
-      const downloadToken =
-        createDownloadToken(
-          reference
-        );
-
-      res.setHeader(
-        "Set-Cookie",
-        `download_token=${encodeURIComponent(downloadToken)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=900`
-      );
-
-      res.redirect(
-        "/payment-success.html"
-      );
-
-    } catch (error) {
-      console.error(
-        "Paystack verification error:",
-        error
-      );
-
-      res.status(500).send(`
-        <h1>Payment verification failed</h1>
-        <p>Please contact support.</p>
-      `);
+app.get("/payment-callback", async (req, res) => {
+  try {
+    if (!PAYSTACK_SECRET_KEY) {
+      return res.status(500).send("Paystack is not configured.");
     }
-  }
-);
 
-/* ================================
-   SECURE R2 DOWNLOAD
-================================ */
+    const reference = req.query.reference || req.query.trxref;
 
-app.get(
-  "/api/download",
-  async (req, res) => {
-    try {
-
-      if (!r2Client) {
-        return res.status(500).json({
-          message:
-            "R2 storage is not configured."
-        });
-      }
-
-      if (!R2_BUCKET_NAME) {
-        return res.status(500).json({
-          message:
-            "R2 bucket name is missing."
-        });
-      }
-
-      const cookieHeader =
-        req.headers.cookie || "";
-
-      const match =
-        cookieHeader.match(
-          /(?:^|;\s*)download_token=([^;]+)/
-        );
-
-      if (!match) {
-        return res.status(403).json({
-          message:
-            "Download access denied. Please complete a verified purchase."
-        });
-      }
-
-      const token =
-        decodeURIComponent(
-          match[1]
-        );
-
-      const reference =
-        verifyDownloadToken(
-          token
-        );
-
-      if (!reference) {
-        return res.status(403).json({
-          message:
-            "Download access has expired."
-        });
-      }
-
-      /*
-       * Create a temporary R2 signed URL.
-       * It expires after 5 minutes.
-       */
-
-      const command =
-        new GetObjectCommand({
-          Bucket:
-            R2_BUCKET_NAME,
-
-          Key:
-            R2_PRODUCT_KEY,
-
-          ResponseContentDisposition:
-            'attachment; filename="How-to-Pass-High-in-Exams.pdf"',
-
-          ResponseContentType:
-            "application/pdf"
-        });
-
-      const downloadUrl =
-        await getSignedUrl(
-          r2Client,
-          command,
-          {
-            expiresIn: 300
-          }
-        );
-
-      /*
-       * Redirect to temporary
-       * protected R2 URL.
-       */
-
-      res.redirect(
-        downloadUrl
-      );
-
-    } catch (error) {
-      console.error(
-        "Secure download error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Unable to prepare your download."
-      });
+    if (!reference) {
+      return res.status(400).send("Payment reference is missing.");
     }
-  }
-);
 
-/* ================================
-   HEALTH CHECK
-================================ */
+    const payment = db
+      .prepare(
+        "SELECT * FROM payments WHERE reference = ?"
+      )
+      .get(reference);
 
-app.get(
-  "/health",
-  (req, res) => {
-    res.json({
-      status: "OK",
-      message:
-        "Earn Unlimited Funds server is running"
+    if (!payment) {
+      return res.status(400).send(
+        "Payment record was not found."
+      );
+    }
+
+    const verifyResponse = await fetch(
+      `https://api.paystack.co/transaction/verify/${encodeURIComponent(
+        reference
+      )}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+        }
+      }
+    );
+
+    const verifyData = await verifyResponse.json();
+
+    if (!verifyResponse.ok || !verifyData.status) {
+      return res.status(400).send(
+        "Unable to verify payment."
+      );
+    }
+
+    const transaction = verifyData.data;
+
+    if (transaction.status !== "success") {
+      return res.status(400).send(
+        "Payment was not successful."
+      );
+    }
+
+    /*
+    Make sure the amount paid matches the product price.
+    */
+
+    if (transaction.amount !== payment.amount) {
+      return res.status(400).send(
+        "Payment amount does not match the product."
+      );
+    }
+
+    if (
+      String(transaction.currency).toUpperCase() !==
+      String(payment.currency).toUpperCase()
+    ) {
+      return res.status(400).send(
+        "Payment currency does not match."
+      );
+    }
+
+    const product = getProduct(payment.product_id);
+
+    if (!product) {
+      return res.status(400).send(
+        "The purchased product could not be found."
+      );
+    }
+
+    /*
+    Mark payment as successful.
+    */
+
+    db.prepare(`
+      UPDATE payments
+      SET status = 'success'
+      WHERE reference = ?
+    `).run(reference);
+
+    /*
+    Create a one-time download token.
+    The token expires after 15 minutes.
+    */
+
+    const token = createDownloadToken();
+    const tokenHash = hashToken(token);
+
+    const now = Date.now();
+    const expiresAt = now + 15 * 60 * 1000;
+
+    db.prepare(`
+      INSERT INTO downloads
+      (token_hash, reference, product_id, email, used, created_at, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      tokenHash,
+      reference,
+      product.id,
+      payment.email,
+      0,
+      now,
+      expiresAt
+    );
+
+    /*
+    Store the raw token only in the customer's browser.
+    The database stores only the hash.
+    */
+
+    res.cookie("download_token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+      path: "/"
     });
-  }
-);
 
-/* ================================
-   START SERVER
-================================ */
+    res.redirect("/payment-success.html");
+  } catch (error) {
+    console.error("Payment callback error:", error);
 
-app.listen(
-  PORT,
-  "0.0.0.0",
-  () => {
-    console.log(
-      `Server running on port ${PORT}`
+    res.status(500).send(
+      "An error occurred while processing your payment."
     );
   }
-);
+});
+
+/*
+====================================================
+ONE-TIME SECURE DOWNLOAD
+====================================================
+*/
+
+app.get("/api/download", async (req, res) => {
+  try {
+    if (!r2Client) {
+      return res.status(500).json({
+        message: "R2 storage is not configured."
+      });
+    }
+
+    if (!R2_BUCKET_NAME) {
+      return res.status(500).json({
+        message: "R2 bucket name is missing."
+      });
+    }
+
+    const token = req.cookies?.download_token;
+
+    /*
+    Express does not read cookies automatically.
+    We therefore read the Cookie header manually.
+    */
+
+    let downloadToken = null;
+
+    const cookieHeader = req.headers.cookie || "";
+
+    const cookieParts = cookieHeader.split(";");
+
+    for (const part of cookieParts) {
+      const [name, ...valueParts] = part.trim().split("=");
+
+      if (name === "download_token") {
+        downloadToken = decodeURIComponent(
+          valueParts.join("=")
+        );
+        break;
+      }
+    }
+
+    if (!downloadToken) {
+      return res.status(403).send(
+        "Download access denied. Please complete your purchase first."
+      );
+    }
+
+    const tokenHash = hashToken(downloadToken);
+
+    const download = db
+      .prepare(`
+        SELECT *
+        FROM downloads
+        WHERE token_hash = ?
+      `)
+      .get(tokenHash);
+
+    if (!download) {
+      return res.status(403).send(
+        "Invalid download access."
+      );
+    }
+
+    if (Date.now() > download.expires_at) {
+      res.clearCookie("download_token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/"
+      });
+
+      return res.status(403).send(
+        "Download access has expired."
+      );
+    }
+
+    if (download.used === 1) {
+      return res.status(403).send(
+        "This download link has already been used."
+      );
+    }
+
+    const product = getProduct(download.product_id);
+
+    if (!product) {
+      return res.status(404).send(
+        "Product not found."
+      );
+    }
+
+    /*
+    Confirm that the R2 object exists by creating
+    a signed URL for the exact product key.
+    */
+
+    const command = new GetObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: product.r2Key,
+      ResponseContentDisposition:
+        `attachment; filename="${product.downloadName}"`,
+      ResponseContentType: "application/pdf"
+    });
+
+    const signedUrl = await getSignedUrl(
+      r2Client,
+      command,
+      {
+        expiresIn: 300
+      }
+    );
+
+    /*
+    ONE-TIME USE:
+    Mark the token as used only after the signed URL
+    has been successfully created.
+    */
+
+    const update = db.prepare(`
+      UPDATE downloads
+      SET used = 1
+      WHERE token_hash = ?
+      AND used = 0
+    `).run(tokenHash);
+
+    if (update.changes !== 1) {
+      return res.status(403).send(
+        "This download link has already been used."
+      );
+    }
+
+    /*
+    Remove the browser token.
+    */
+
+    res.clearCookie("download_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/"
+    });
+
+    /*
+    Redirect to the temporary R2 signed URL.
+    */
+
+    res.redirect(signedUrl);
+  } catch (error) {
+    console.error("Download error:", error);
+
+    res.status(500).send(
+      "Unable to prepare the secure download."
+    );
+  }
+});
+
+/*
+====================================================
+HEALTH CHECK
+====================================================
+*/
+
+app.get("/health", (req, res) => {
+  res.json({
+    status: "OK",
+    message: "Earn Unlimited Funds server is running"
+  });
+});
+
+/*
+====================================================
+START SERVER
+====================================================
+*/
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(
+    `Earn Unlimited Funds server running on port ${PORT}`
+  );
+});
