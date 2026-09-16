@@ -2,11 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Product | Earn Unlimited Funds</title>
 
@@ -17,9 +13,9 @@
 
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: Arial, sans-serif;
       background: #f5f7fb;
-      color: #111827;
+      color: #172033;
     }
 
     header {
@@ -28,7 +24,7 @@
       padding: 18px 20px;
     }
 
-    .header-inner {
+    .nav {
       max-width: 1100px;
       margin: auto;
       display: flex;
@@ -39,462 +35,98 @@
 
     .logo {
       font-size: 22px;
-      font-weight: 800;
+      font-weight: bold;
     }
 
-    .home-link {
+    .back {
       color: white;
       text-decoration: none;
-      font-weight: 600;
+      font-size: 15px;
     }
 
     .container {
-      max-width: 1000px;
-      margin: 40px auto;
+      max-width: 900px;
+      margin: 50px auto;
       padding: 0 20px;
     }
 
-    .product-card {
+    .product-box {
       background: white;
-      border-radius: 18px;
-      padding: 30px;
-      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
-    }
-
-    .product-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 35px;
-      align-items: center;
-    }
-
-    .product-image {
-      min-height: 350px;
       border-radius: 16px;
-      background: linear-gradient(
-        135deg,
-        #071a3d,
-        #123d87
-      );
+      padding: 40px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
 
+    .icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #e9f0ff;
       display: flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      color: white;
-      padding: 30px;
+      font-size: 32px;
+      margin-bottom: 20px;
     }
 
-    .product-image h2 {
-      font-size: 34px;
-      line-height: 1.2;
-      margin: 0;
-    }
-
-    .product-title {
-      font-size: 36px;
+    h1 {
       color: #071a3d;
+      font-size: 34px;
+      line-height: 1.3;
       margin: 0 0 15px;
     }
 
     .description {
+      color: #596579;
+      line-height: 1.8;
       font-size: 17px;
-      line-height: 1.7;
-      color: #4b5563;
+      margin-bottom: 25px;
     }
 
     .price {
-      font-size: 32px;
-      font-weight: 800;
       color: #071a3d;
-      margin: 25px 0;
+      font-size: 30px;
+      font-weight: bold;
+      margin: 20px 0 30px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #172033;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #ccd3df;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+      margin-bottom: 18px;
+    }
+
+    input:focus {
+      border-color: #071a3d;
     }
 
     .buy-button {
       width: 100%;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
+      padding: 16px;
       background: #071a3d;
       color: white;
-      padding: 16px;
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 17px;
+      font-weight: bold;
       cursor: pointer;
     }
 
     .buy-button:hover {
-      opacity: 0.92;
+      background: #123d7a;
     }
 
     .buy-button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .email-box {
-      width: 100%;
-      padding: 15px;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      font-size: 16px;
-      margin-bottom: 15px;
-    }
-
-    .message {
-      margin-top: 15px;
-      padding: 12px;
-      border-radius: 8px;
-      display: none;
-      line-height: 1.5;
-    }
-
-    .loading {
-      display: block;
-      background: #eef2ff;
-      color: #3730a3;
-    }
-
-    .error {
-      display: block;
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .secure-note {
-      margin-top: 18px;
-      font-size: 14px;
-      color: #6b7280;
-      text-align: center;
-    }
-
-    @media (max-width: 750px) {
-      .product-layout {
-        grid-template-columns: 1fr;
-      }
-
-      .product-title {
-        font-size: 28px;
-      }
-
-      .product-image {
-        min-height: 250px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-  <header>
-    <div class="header-inner">
-      <div class="logo">
-        Earn Unlimited Funds
-      </div>
-
-      <a class="home-link" href="/">
-        Home
-      </a>
-    </div>
-  </header>
-
-  <main class="container">
-
-    <div class="product-card">
-
-      <div class="product-layout">
-
-        <div class="product-image">
-          <h2 id="imageTitle">
-            Loading Product...
-          </h2>
-        </div>
-
-        <div>
-
-          <h1
-            id="productTitle"
-            class="product-title"
-          >
-            Loading Product...
-          </h1>
-
-          <p
-            id="productDescription"
-            class="description"
-          >
-            Please wait...
-          </p>
-
-          <div
-            id="productPrice"
-            class="price"
-          >
-            Loading...
-          </div>
-
-          <input
-            id="email"
-            class="email-box"
-            type="email"
-            placeholder="Enter your email address"
-            autocomplete="email"
-          >
-
-          <button
-            id="buyButton"
-            class="buy-button"
-            type="button"
-          >
-            Buy Now
-          </button>
-
-          <div
-            id="message"
-            class="message"
-          ></div>
-
-          <div class="secure-note">
-            🔒 Secure payment powered by Paystack
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </main>
-
-  <script>
-
-    /*
-    ==================================================
-    GET PRODUCT ID
-    ==================================================
-
-    Example URL:
-
-    /product.html?id=how-to-pass-high-in-exams
-
-    If no ID is provided, the current exam product
-    is used automatically.
-    */
-
-    const params = new URLSearchParams(
-      window.location.search
-    );
-
-    const productId =
-      params.get("id") ||
-      "how-to-pass-high-in-exams";
-
-
-    const productTitle =
-      document.getElementById("productTitle");
-
-    const imageTitle =
-      document.getElementById("imageTitle");
-
-    const productDescription =
-      document.getElementById("productDescription");
-
-    const productPrice =
-      document.getElementById("productPrice");
-
-    const emailInput =
-      document.getElementById("email");
-
-    const buyButton =
-      document.getElementById("buyButton");
-
-    const message =
-      document.getElementById("message");
-
-
-    /*
-    ==================================================
-    LOAD PRODUCT
-    ==================================================
-    */
-
-    async function loadProduct() {
-
-      try {
-
-        const response = await fetch(
-          `/api/products/${encodeURIComponent(productId)}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.message || "Product not found."
-          );
-        }
-
-        productTitle.textContent =
-          data.name;
-
-        imageTitle.textContent =
-          data.name;
-
-        productDescription.textContent =
-          data.description;
-
-        productPrice.textContent =
-          `₦${Number(data.price).toLocaleString()}`;
-
-        document.title =
-          `${data.name} | Earn Unlimited Funds`;
-
-      } catch (error) {
-
-        productTitle.textContent =
-          "Product Not Found";
-
-        imageTitle.textContent =
-          "Product Not Found";
-
-        productDescription.textContent =
-          error.message;
-
-        productPrice.textContent =
-          "";
-
-        buyButton.disabled = true;
-      }
-    }
-
-
-    /*
-    ==================================================
-    BUY PRODUCT
-    ==================================================
-    */
-
-    buyButton.addEventListener(
-      "click",
-      async function () {
-
-        const email =
-          emailInput.value.trim();
-
-        if (!email) {
-
-          showError(
-            "Please enter your email address."
-          );
-
-          emailInput.focus();
-
-          return;
-        }
-
-        if (
-          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-        ) {
-
-          showError(
-            "Please enter a valid email address."
-          );
-
-          emailInput.focus();
-
-          return;
-        }
-
-        buyButton.disabled = true;
-
-        showLoading(
-          "Connecting to secure Paystack checkout..."
-        );
-
-        try {
-
-          const response = await fetch(
-            "/api/pay",
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-
-              body: JSON.stringify({
-                email: email,
-                productId: productId
-              })
-            }
-          );
-
-          const data =
-            await response.json();
-
-          if (
-            !response.ok ||
-            !data.authorization_url
-          ) {
-
-            throw new Error(
-              data.message ||
-              "Unable to start payment."
-            );
-          }
-
-          /*
-          Send customer to Paystack.
-          */
-
-          window.location.href =
-            data.authorization_url;
-
-        } catch (error) {
-
-          showError(
-            error.message ||
-            "Payment could not be started."
-          );
-
-          buyButton.disabled = false;
-        }
-      }
-    );
-
-
-    /*
-    ==================================================
-    MESSAGE HELPERS
-    ==================================================
-    */
-
-    function showLoading(text) {
-
-      message.textContent = text;
-
-      message.className =
-        "message loading";
-    }
-
-    function showError(text) {
-
-      message.textContent = text;
-
-      message.className =
-        "message error";
-    }
-
-
-    /*
-    ==================================================
-    START
-    ==================================================
-    */
-
-    loadProduct();
-
-  </script>
-
-</body>
-</html>
+      background: #7b8493;
+      cursor: not-
