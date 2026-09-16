@@ -337,12 +337,87 @@ app.post("/api/pay", async (req, res) => {
 // PAYMENT SUCCESS PAGE
 // ======================================================
 
-app.get("/payment-success.html", (req, res) => {
-  res.sendFile(
-    path.join(publicFolder, "payment-success.html")
-  );
-});
+// ======================================================
+// TEMPORARY R2 DOWNLOAD TEST
+// REMOVE AFTER TESTING
+// ======================================================
 
+app.get("/api/test-download", async (req, res) => {
+  try {
+    const productId = "how-to-pass-high-in-exams";
+    const product = PRODUCTS[productId];
+
+    if (!product) {
+      return res.status(404).send("Product not found.");
+    }
+
+    if (!r2Client) {
+      return res.status(500).send(
+        "Cloudflare R2 is not configured correctly."
+      );
+    }
+
+    if (!r2BucketName) {
+      return res.status(500).send(
+        "R2_BUCKET_NAME is missing."
+      );
+    }
+
+    // Create temporary download token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    // BIGINT expiry: 10 minutes from now
+    const expiresAt = Date.now() + (10 * 60 * 1000);
+
+    // Test payment/reference
+    const testReference = "TEST-" + Date.now();
+
+    // Save temporary download access
+    await pool.query(
+      `
+      INSERT INTO downloads
+      (
+        token_hash,
+        reference,
+        payment_reference,
+        product_id,
+        email,
+        used,
+        expires_at
+      )
+      VALUES ($1, $2, $2, $3, $4, 0, $5)
+      `,
+      [
+        tokenHash,
+        testReference,
+        productId,
+        "test@example.com",
+        expiresAt
+      ]
+    );
+
+    // Give browser the temporary download token
+    res.setHeader(
+      "Set-Cookie",
+      `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
+    );
+
+    // Send browser to secure download route
+    return res.redirect("/api/download");
+
+  } catch (error) {
+    console.error("Test download error:", error);
+
+    return res.status(500).send(
+      "Unable to start test download: " + error.message
+    );
+  }
+});
 // ======================================================
 // MANUAL PURCHASE ACCESS CHECK
 // ======================================================
