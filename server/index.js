@@ -14,6 +14,10 @@ const PORT = process.env.PORT || 10000;
 
 const publicFolder = path.join(__dirname, "..", "public");
 
+const SITE_URL =
+  process.env.RENDER_EXTERNAL_URL ||
+  "https://earn-unlimited-funds.onrender.com";
+
 // ======================================================
 // PRODUCTS
 // ======================================================
@@ -28,7 +32,10 @@ const PRODUCTS = {
     amountKobo: 2500000,
     fileKey: "how-to-pass-high-in-exams.pdf",
     downloadName: "How-to-Pass-High-in-Exams.pdf",
-    contentType: "application/pdf"
+    contentType: "application/pdf",
+
+    // YOUR REAL SELAR LINK
+    selarUrl: "https://selar.com/5m7y791u94"
   },
 
   "ai-response-complete-guide": {
@@ -40,7 +47,10 @@ const PRODUCTS = {
     amountKobo: 4000000,
     fileKey: "AI_Response_Complete_Guide-3.pdf",
     downloadName: "AI-Response-Complete-Guide.pdf",
-    contentType: "application/pdf"
+    contentType: "application/pdf",
+
+    // REPLACE WITH YOUR SELAR LINK
+    selarUrl: ""
   },
 
   "facebook-automation": {
@@ -52,7 +62,10 @@ const PRODUCTS = {
     amountKobo: 6000000,
     fileKey: "Facebook_Automation_Ebook_GBENGA-1.pdf",
     downloadName: "Facebook-Automation.pdf",
-    contentType: "application/pdf"
+    contentType: "application/pdf",
+
+    // REPLACE WITH YOUR SELAR LINK
+    selarUrl: ""
   },
 
   "save-a-billion-from-zero-account": {
@@ -64,7 +77,10 @@ const PRODUCTS = {
     amountKobo: 8000000,
     fileKey: "How_to_Save_a_Billion_from_a_Zero_Account-1.pdf",
     downloadName: "How-to-Save-a-Billion-from-a-Zero-Account.pdf",
-    contentType: "application/pdf"
+    contentType: "application/pdf",
+
+    // REPLACE WITH YOUR SELAR LINK
+    selarUrl: ""
   },
 
   "pregnancy-care": {
@@ -77,7 +93,10 @@ const PRODUCTS = {
     fileKey: "Pregnancy_Care_Guide_Ebook-1.docx",
     downloadName: "Pregnancy-Care-Guide.docx",
     contentType:
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+    // REPLACE WITH YOUR SELAR LINK
+    selarUrl: ""
   },
 
   "sell-faster": {
@@ -89,7 +108,10 @@ const PRODUCTS = {
     amountKobo: 15020000,
     fileKey: "Sell_Faster_Professional_Ebook-2.pdf",
     downloadName: "Sell-Faster-Professional-Ebook.pdf",
-    contentType: "application/pdf"
+    contentType: "application/pdf",
+
+    // REPLACE WITH YOUR SELAR LINK
+    selarUrl: ""
   }
 };
 
@@ -143,7 +165,9 @@ if (
     }
   });
 } else {
-  console.warn("WARNING: Cloudflare R2 environment variables are incomplete.");
+  console.warn(
+    "WARNING: Cloudflare R2 environment variables are incomplete."
+  );
 }
 
 // ======================================================
@@ -246,7 +270,7 @@ app.get("/api/products/:id", (req, res) => {
 });
 
 // ======================================================
-// START PAYSTACK PAYMENT
+// START SELAR PAYMENT
 // ======================================================
 
 app.post("/api/pay", async (req, res) => {
@@ -269,51 +293,18 @@ app.post("/api/pay", async (req, res) => {
       });
     }
 
-    if (!process.env.PAYSTACK_SECRET_KEY) {
+    if (!product.selarUrl) {
       return res.status(500).json({
         success: false,
-        message: "Paystack secret key is not configured."
+        message:
+          "Selar payment link has not been configured for this product yet."
       });
     }
 
     const reference =
       `EUF-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
 
-    const paystackResponse = await fetch(
-      "https://api.paystack.co/transaction/initialize",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          amount: product.amountKobo,
-          currency: "NGN",
-          reference,
-          callback_url:
-            `${process.env.RENDER_EXTERNAL_URL || ""}/payment-callback`,
-          metadata: {
-            product_id: product.id,
-            product_name: product.name
-          }
-        })
-      }
-    );
-
-    const paystackData = await paystackResponse.json();
-
-    if (!paystackResponse.ok || !paystackData.status) {
-      console.error("Paystack initialize error:", paystackData);
-
-      return res.status(500).json({
-        success: false,
-        message:
-          paystackData.message || "Unable to initialize payment."
-      });
-    }
-
+    // Save a pending payment record.
     await pool.query(
       `
       INSERT INTO payments
@@ -324,47 +315,70 @@ app.post("/api/pay", async (req, res) => {
         reference,
         email.trim(),
         product.id,
-        product.amountKobo,
+        product.priceNaira,
         "NGN",
         "pending"
       ]
     );
 
+    /*
+      Selar handles the actual checkout.
+
+      The customer is sent to the Selar product page.
+      After purchase, configure Selar's
+      "Automatically redirect the buyer to an external URL
+      after a purchase" option to:
+
+      https://earn-unlimited-funds.onrender.com/payment-success.html
+    */
+
     return res.json({
       success: true,
       reference,
-      authorization_url: paystackData.data.authorization_url
+      productId: product.id,
+      checkout_url: product.selarUrl,
+      return_url: `${SITE_URL}/payment-success.html?product=${encodeURIComponent(
+        product.id
+      )}`
     });
   } catch (error) {
-    console.error("Payment initialization error:", error);
+    console.error("Selar payment initialization error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Payment initialization failed."
+      message: "Unable to start payment."
     });
   }
 });
 
 // ======================================================
-// PAYSTACK PAYMENT CALLBACK
+// PAYMENT SUCCESS PAGE
 // ======================================================
 
-app.get("/payment-callback", async (req, res) => {
+app.get("/payment-success.html", (req, res) => {
+  res.sendFile(
+    path.join(publicFolder, "payment-success.html")
+  );
+});
+
+// ======================================================
+// MANUAL PURCHASE ACCESS CHECK
+// ======================================================
+
+app.get("/api/purchase-status", async (req, res) => {
   try {
-    const reference = req.query.reference;
+    const { reference } = req.query;
 
     if (!reference) {
-      return res.status(400).send("Missing payment reference.");
+      return res.status(400).json({
+        success: false,
+        message: "Payment reference is required."
+      });
     }
 
-    if (!process.env.PAYSTACK_SECRET_KEY) {
-      return res.status(500).send("Paystack secret key is not configured.");
-    }
-
-    // Find our payment record
-    const paymentResult = await pool.query(
+    const result = await pool.query(
       `
-      SELECT *
+      SELECT reference, email, product_id, amount, currency, status
       FROM payments
       WHERE reference = $1
       LIMIT 1
@@ -372,131 +386,31 @@ app.get("/payment-callback", async (req, res) => {
       [reference]
     );
 
-    if (paymentResult.rows.length === 0) {
-      return res.status(404).send("Payment record not found.");
-    }
-
-    const payment = paymentResult.rows[0];
-
-    // Verify transaction directly with Paystack
-    const verifyResponse = await fetch(
-      `https://api.paystack.co/transaction/verify/${encodeURIComponent(
-        reference
-      )}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
-        }
-      }
-    );
-
-    const verifyData = await verifyResponse.json();
-
-    if (!verifyResponse.ok || !verifyData.status) {
-      console.error("Paystack verification error:", verifyData);
-
-      return res.status(400).send("Payment verification failed.");
-    }
-
-    const transaction = verifyData.data;
-
-    // Check payment status
-    if (transaction.status !== "success") {
-      return res.status(400).send(
-        `Payment was not successful. Current status: ${transaction.status}`
-      );
-    }
-
-    // Check amount
-    if (Number(transaction.amount) !== Number(payment.amount)) {
-      console.error("Payment amount mismatch.", {
-        expected: payment.amount,
-        received: transaction.amount
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment record not found."
       });
-
-      return res.status(400).send("Payment amount verification failed.");
     }
 
-    // Check currency
-    if (transaction.currency !== payment.currency) {
-      return res.status(400).send("Payment currency verification failed.");
-    }
+    const payment = result.rows[0];
 
-    const product = PRODUCTS[payment.product_id];
-
-    if (!product) {
-      return res.status(404).send("Product no longer exists.");
-    }
-
-    // Mark payment successful
-    await pool.query(
-      `
-      UPDATE payments
-      SET status = 'successful',
-          updated_at = NOW()
-      WHERE reference = $1
-      `,
-      [reference]
-    );
-
-    // Generate one-time download token
-    const rawToken = crypto.randomBytes(48).toString("hex");
-
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-
-    // Token expires after 24 hours
-    const expiresAt = new Date(
-      Date.now() + 24 * 60 * 60 * 1000
-    );
-
-    await pool.query(
-      `
-      INSERT INTO downloads
-      (
-        token_hash,
-        payment_reference,
-        product_id,
-        email,
-        used,
-        expires_at
-      )
-      VALUES ($1, $2, $3, $4, $5, $6)
-      `,
-      [
-        tokenHash,
-        reference,
-        product.id,
-        payment.email,
-        0,
-        expiresAt
-      ]
-    );
-
-    // Store token securely in HttpOnly cookie
-    res.cookie("download_token", rawToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000
+    return res.json({
+      success: true,
+      payment
     });
-
-    // Send customer to success page
-    return res.redirect("/payment-success.html");
   } catch (error) {
-    console.error("Payment callback error:", error);
+    console.error("Purchase status error:", error);
 
-    return res.status(500).send(
-      "Something went wrong while verifying your payment."
-    );
+    return res.status(500).json({
+      success: false,
+      message: "Unable to check purchase status."
+    });
   }
 });
 
 // ======================================================
-// SECURE ONE-TIME DOWNLOAD
+// SECURE DOWNLOAD
 // ======================================================
 
 app.get("/api/download", async (req, res) => {
@@ -520,7 +434,6 @@ app.get("/api/download", async (req, res) => {
       .update(rawToken)
       .digest("hex");
 
-    // Find token
     const downloadResult = await pool.query(
       `
       SELECT *
@@ -539,14 +452,12 @@ app.get("/api/download", async (req, res) => {
 
     const download = downloadResult.rows[0];
 
-    // Check if already used
     if (download.used === 1) {
       return res.status(403).send(
         "This download link has already been used."
       );
     }
 
-    // Check expiration
     if (new Date(download.expires_at) <= new Date()) {
       return res.status(403).send(
         "This download link has expired."
@@ -556,7 +467,9 @@ app.get("/api/download", async (req, res) => {
     const product = PRODUCTS[download.product_id];
 
     if (!product) {
-      return res.status(404).send("Product not found.");
+      return res.status(404).send(
+        "Product not found."
+      );
     }
 
     if (!r2Client) {
@@ -565,7 +478,6 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // Get file from Cloudflare R2
     const r2Response = await r2Client.send(
       new GetObjectCommand({
         Bucket: r2BucketName,
@@ -579,8 +491,6 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // Atomically mark token as used.
-    // Only the first successful request can use it.
     const usedResult = await pool.query(
       `
       UPDATE downloads
@@ -599,19 +509,16 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // Remove cookie after successful token claim
     res.setHeader(
       "Set-Cookie",
       "download_token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
     );
 
-    // Correct file type
     res.setHeader(
       "Content-Type",
       product.contentType
     );
 
-    // Correct filename
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="${product.downloadName}"`
@@ -624,7 +531,6 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // Stream file directly from Cloudflare R2
     r2Response.Body.pipe(res);
   } catch (error) {
     console.error("Download error:", error);
@@ -646,7 +552,9 @@ app.get("/api/download", async (req, res) => {
 // ======================================================
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(publicFolder, "hex.html"));
+  res.sendFile(
+    path.join(publicFolder, "hex.html")
+  );
 });
 
 // ======================================================
@@ -674,7 +582,11 @@ async function startServer() {
       );
     });
   } catch (error) {
-    console.error("Server startup failed:", error);
+    console.error(
+      "Server startup failed:",
+      error
+    );
+
     process.exit(1);
   }
 }
