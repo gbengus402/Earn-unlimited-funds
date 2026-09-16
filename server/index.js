@@ -408,7 +408,79 @@ app.get("/api/purchase-status", async (req, res) => {
     });
   }
 });
+// ======================================================
+// TEMPORARY R2 DOWNLOAD TEST
+// REMOVE AFTER TESTING
+// ======================================================
 
+app.get("/api/test-download", async (req, res) => {
+  try {
+    const testKey = process.env.TEST_DOWNLOAD_KEY;
+
+    if (!testKey || req.query.key !== testKey) {
+      return res.status(403).send("Test access denied.");
+    }
+
+    const productId = "how-to-pass-high-in-exams";
+    const product = PRODUCTS[productId];
+
+    if (!product) {
+      return res.status(404).send("Product not found.");
+    }
+
+    if (!r2Client) {
+      return res.status(500).send(
+        "Cloudflare R2 is not configured correctly."
+      );
+    }
+
+    // Create a temporary download token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    // Save temporary download access
+    await pool.query(
+      `
+      INSERT INTO downloads
+      (
+        token_hash,
+        payment_reference,
+        product_id,
+        email,
+        used,
+        expires_at
+      )
+      VALUES ($1, $2, $3, $4, 0, NOW() + INTERVAL '10 minutes')
+      `,
+      [
+        tokenHash,
+        "TEST-" + Date.now(),
+        productId,
+        "test@example.com"
+      ]
+    );
+
+    // Give browser the temporary download token
+    res.setHeader(
+      "Set-Cookie",
+      `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
+    );
+
+    // Send the browser to the real secure download route
+    return res.redirect("/api/download");
+
+  } catch (error) {
+    console.error("Test download error:", error);
+
+    return res.status(500).send(
+      "Unable to start test download."
+    );
+  }
+});
 // ======================================================
 // SECURE DOWNLOAD
 // ======================================================
