@@ -149,7 +149,7 @@ if (
     endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
     credentials: {
       accessKeyId: r2AccessKeyId,
-      secretAccessKey: r2Secret_ACCESS_KEY
+      secretAccessKey: r2SecretAccessKey
     }
   });
 } else {
