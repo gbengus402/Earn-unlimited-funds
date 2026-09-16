@@ -415,9 +415,127 @@ app.get("/api/purchase-status", async (req, res) => {
 // TEMPORARY R2 DOWNLOAD TEST
 // REMOVE AFTER TESTING
 // ======================================================
+// ======================================================
+// R2 DOWNLOAD TEST - NEW VERSION
+// ======================================================
 
-app.get("/api/test-download", async (req, res) => {
+app.get("/api/test-download-v2", async (req, res) => {
   try {
+    const productId = "how-to-pass-high-in-exams";
+    const product = PRODUCTS[productId];
+
+    if (!product) {
+      return res.status(404).send("Product not found.");
+    }
+
+    if (!r2Client) {
+      return res.status(500).send(
+        "Cloudflare R2 is not configured correctly."
+      );
+    }
+
+    if (!r2BucketName) {
+      return res.status(500).send(
+        "R2_BUCKET_NAME is missing."
+      );
+    }
+
+    // ----------------------------------------------
+    // CREATE TOKEN
+    // ----------------------------------------------
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    // IMPORTANT:
+    // Your existing database uses BIGINT.
+    // Therefore use Date.now() for BOTH fields.
+
+    const now = Date.now();
+
+    const expiresAt = now + 10 * 60 * 1000;
+
+    const testReference = `TEST-V2-${now}`;
+
+    // ----------------------------------------------
+    // INSERT TEST DOWNLOAD
+    // ----------------------------------------------
+
+    await pool.query(
+      `
+      INSERT INTO downloads
+      (
+        token_hash,
+        reference,
+        payment_reference,
+        product_id,
+        email,
+        used,
+        expires_at,
+        created_at
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8
+      )
+      `,
+      [
+        tokenHash,
+        testReference,
+        testReference,
+        productId,
+        "test@example.com",
+        0,
+        expiresAt,
+        now
+      ]
+    );
+
+    console.log(
+      "R2 TEST V2 CREATED:",
+      testReference
+    );
+
+    // ----------------------------------------------
+    // CREATE DOWNLOAD COOKIE
+    // ----------------------------------------------
+
+    res.setHeader(
+      "Set-Cookie",
+      `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
+    );
+
+    // ----------------------------------------------
+    // GO TO SECURE DOWNLOAD
+    // ----------------------------------------------
+
+    return res.redirect("/api/download");
+
+  } catch (error) {
+
+    console.error(
+      "R2 TEST V2 ERROR:",
+      error
+    );
+
+    return res.status(500).send(
+      "R2 TEST V2 failed: " +
+      error.message
+    );
+  }
+});
+
     const productId = "how-to-pass-high-in-exams";
     const product = PRODUCTS[productId];
 
