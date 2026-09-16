@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>How to Pass High in Exams | Earn Unlimited Funds</title>
+  <title>Product | Earn Unlimited Funds</title>
 
   <style>
     * {
@@ -30,7 +30,6 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
     }
 
     .logo {
@@ -54,18 +53,18 @@
       background: white;
       border-radius: 16px;
       padding: 40px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
     }
 
     .icon {
-      width: 70px;
-      height: 70px;
+      width: 75px;
+      height: 75px;
       border-radius: 50%;
       background: #e9f0ff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
+      font-size: 34px;
       margin-bottom: 20px;
     }
 
@@ -80,42 +79,28 @@
       color: #596579;
       line-height: 1.8;
       font-size: 17px;
-      margin-bottom: 25px;
-    }
-
-    .benefits {
-      margin: 25px 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .benefits li {
-      padding: 10px 0;
-      color: #39445a;
-      font-size: 16px;
     }
 
     .price {
       color: #071a3d;
       font-size: 30px;
       font-weight: bold;
-      margin: 20px 0 30px;
+      margin: 25px 0;
     }
 
     .buy-button {
       display: block;
       width: 100%;
+      padding: 17px;
       border: none;
       border-radius: 8px;
-      padding: 17px;
       background: #071a3d;
       color: white;
+      text-decoration: none;
+      text-align: center;
       font-size: 18px;
       font-weight: bold;
       cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      transition: 0.2s;
     }
 
     .buy-button:hover {
@@ -124,16 +109,16 @@
 
     .secure {
       text-align: center;
-      margin-top: 18px;
       color: #6b7485;
       font-size: 14px;
+      margin-top: 18px;
     }
 
-    footer {
+    .error {
       text-align: center;
-      padding: 30px 20px;
-      color: #70798a;
-      font-size: 14px;
+      color: #b42318;
+      font-size: 18px;
+      padding: 30px;
     }
 
     @media (max-width: 600px) {
@@ -162,55 +147,142 @@
 
 <body>
 
-  <header>
-    <div class="nav">
-      <div class="logo">Earn Unlimited Funds</div>
-      <a class="back" href="/">Home</a>
-    </div>
-  </header>
+<header>
+  <div class="nav">
+    <div class="logo">Earn Unlimited Funds</div>
+    <a href="/" class="back">← Back to Products</a>
+  </div>
+</header>
 
-  <main class="container">
-    <section class="product-box">
+<main class="container">
+  <div class="product-box" id="productBox">
+    Loading product...
+  </div>
+</main>
 
-      <div class="icon">📚</div>
+<script>
 
-      <h1>How to Pass High in Exams</h1>
+const products = {
 
-      <p class="description">
-        A practical guide designed to help students prepare better,
-        study effectively, manage examination pressure and improve
-        their academic performance.
-      </p>
+  "how-to-pass-high-in-exams": {
+    name: "How to Pass High in Exams",
+    price: "₦25,000",
+    icon: "📚",
+    description:
+      "Learn practical study strategies, examination preparation techniques, time-management methods and useful approaches that can help you prepare more effectively for your exams."
+  },
 
-      <ul class="benefits">
-        <li>✅ Learn practical study techniques</li>
-        <li>✅ Improve your exam preparation</li>
-        <li>✅ Manage your study time effectively</li>
-        <li>✅ Understand how to approach difficult questions</li>
-        <li>✅ Build better examination confidence</li>
-      </ul>
+  "ai-response-complete-guide": {
+    name: "AI Response Complete Guide",
+    price: "₦40,000",
+    icon: "🤖",
+    description:
+      "Learn practical ways to use AI for better responses, generating ideas, improving productivity, communication, learning and online work."
+  },
 
-      <div class="price">₦25,000</div>
+  "facebook-automation": {
+    name: "Facebook Automation",
+    price: "₦60,000",
+    icon: "📱",
+    description:
+      "Learn practical Facebook automation strategies for managing your online presence, responding to customers and improving your digital marketing workflow."
+  },
 
-      <a
-        class="buy-button"
-        href="https://selar.com/5m7y791u94"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        BUY NOW
+  "save-a-billion-from-zero-account": {
+    name: "How to Save a Billion from a Zero Account",
+    price: "₦80,000",
+    icon: "💰",
+    description:
+      "Explore practical saving habits, financial planning principles, money-management strategies and long-term approaches to developing stronger financial discipline."
+  },
+
+  "pregnancy-care": {
+    name: "Pregnancy Care Guide",
+    price: "₦150,000",
+    icon: "🤰",
+    description:
+      "A practical pregnancy-care guide covering general preparation, healthy routines, important considerations and useful information for navigating pregnancy. This guide does not replace professional medical advice."
+  },
+
+  "sell-faster": {
+    name: "Sell Faster Professional Ebook",
+    price: "₦150,200",
+    icon: "🚀",
+    description:
+      "Learn practical selling approaches, customer attraction methods, offer presentation techniques and strategies that can help you improve your sales process."
+  }
+
+};
+
+
+const params = new URLSearchParams(window.location.search);
+
+const productId = params.get("id");
+
+const product = products[productId];
+
+const productBox = document.getElementById("productBox");
+
+
+if (!product) {
+
+  productBox.innerHTML = `
+    <div class="error">
+      <h2>Product Not Found</h2>
+      <p>Please return to the products page and select a product.</p>
+      <a href="/" class="buy-button">
+        Back to Products
       </a>
+    </div>
+  `;
 
-      <div class="secure">
-        🔒 Secure checkout powered by Selar
-      </div>
+} else {
 
-    </section>
-  </main>
+  productBox.innerHTML = `
 
-  <footer>
-    © 2026 Earn Unlimited Funds. All rights reserved.
-  </footer>
+    <div class="icon">
+      ${product.icon}
+    </div>
+
+    <h1>
+      ${product.name}
+    </h1>
+
+    <p class="description">
+      ${product.description}
+    </p>
+
+    <div class="price">
+      ${product.price}
+    </div>
+
+    <a
+      href="#"
+      class="buy-button"
+      id="buyButton"
+    >
+      BUY NOW
+    </a>
+
+    <div class="secure">
+      🔒 Secure digital purchase
+    </div>
+
+  `;
+
+  document.getElementById("buyButton").addEventListener("click", function(event) {
+
+    event.preventDefault();
+
+    alert(
+      "Payment setup is not connected yet. The product has been added to your store successfully."
+    );
+
+  });
+
+}
+
+</script>
 
 </body>
 </html>
