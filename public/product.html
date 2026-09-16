@@ -249,7 +249,7 @@
 <script>
 
   // =====================================================
-  // GET PRODUCT ID FROM URL
+  // GET PRODUCT ID
   // =====================================================
 
   const params =
@@ -265,39 +265,25 @@
   // =====================================================
 
   const productName =
-    document.getElementById(
-      "productName"
-    );
+    document.getElementById("productName");
 
   const productDescription =
-    document.getElementById(
-      "productDescription"
-    );
+    document.getElementById("productDescription");
 
   const productPrice =
-    document.getElementById(
-      "productPrice"
-    );
+    document.getElementById("productPrice");
 
   const buyButton =
-    document.getElementById(
-      "buyButton"
-    );
+    document.getElementById("buyButton");
 
   const emailInput =
-    document.getElementById(
-      "email"
-    );
+    document.getElementById("email");
 
   const infoMessage =
-    document.getElementById(
-      "infoMessage"
-    );
+    document.getElementById("infoMessage");
 
   const errorMessage =
-    document.getElementById(
-      "errorMessage"
-    );
+    document.getElementById("errorMessage");
 
   // =====================================================
   // LOAD PRODUCT
@@ -313,8 +299,7 @@
       productDescription.textContent =
         "No product was selected.";
 
-      buyButton.disabled =
-        true;
+      buyButton.disabled = true;
 
       return;
     }
@@ -324,9 +309,7 @@
       const response =
         await fetch(
           "/api/products/" +
-          encodeURIComponent(
-            productId
-          )
+          encodeURIComponent(productId)
         );
 
       const data =
@@ -336,7 +319,6 @@
         !response.ok ||
         !data.success
       ) {
-
         throw new Error(
           data.message ||
           "Product not found."
@@ -366,27 +348,26 @@
       productDescription.textContent =
         error.message;
 
-      buyButton.disabled =
-        true;
+      buyButton.disabled = true;
     }
   }
 
   // =====================================================
-  // START SELAR PAYMENT
+  // BUY NOW
   // =====================================================
 
   buyButton.addEventListener(
     "click",
-    async function () {
-
-      const email =
-        emailInput.value.trim();
+    function () {
 
       errorMessage.style.display =
         "none";
 
       infoMessage.style.display =
         "none";
+
+      const email =
+        emailInput.value.trim();
 
       if (!email) {
 
@@ -413,118 +394,46 @@
         return;
       }
 
-      buyButton.disabled =
-        true;
+      // =================================================
+      // HOW TO PASS HIGH IN EXAMS
+      // =================================================
 
-      buyButton.textContent =
-        "Connecting to Selar...";
+      if (
+        productId ===
+        "how-to-pass-high-in-exams"
+      ) {
 
-      infoMessage.textContent =
-        "Please wait while we prepare your checkout.";
-
-      infoMessage.style.display =
-        "block";
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/pay",
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-
-              body: JSON.stringify({
-                email: email,
-                productId: productId
-              })
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (
-          !response.ok ||
-          !data.success
-        ) {
-
-          throw new Error(
-            data.message ||
-            "Unable to start payment."
-          );
-        }
-
-        /*
-          Save the reference temporarily.
-
-          This allows the success page to know
-          which purchase session was started.
-        */
-
-        if (data.reference) {
-
-          sessionStorage.setItem(
-            "payment_reference",
-            data.reference
-          );
-        }
-
-        if (data.productId) {
-
-          sessionStorage.setItem(
-            "payment_product",
-            data.productId
-          );
-        }
-
-        // =================================================
-        // SEND CUSTOMER TO SELAR
-        // =================================================
-
-        if (data.checkout_url) {
-
-          window.location.href =
-            data.checkout_url;
-
-          return;
-        }
-
-        throw new Error(
-          "Selar checkout URL was not returned."
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Payment error:",
-          error
-        );
-
-        errorMessage.textContent =
-          error.message;
-
-        errorMessage.style.display =
-          "block";
+        infoMessage.textContent =
+          "Opening secure Selar checkout...";
 
         infoMessage.style.display =
-          "none";
+          "block";
 
-        buyButton.disabled =
-          false;
+        buyButton.disabled = true;
 
         buyButton.textContent =
-          "Buy Now";
+          "Opening Selar...";
+
+        window.location.href =
+          "https://selar.com/5m7y791u94";
+
+        return;
       }
+
+      // =================================================
+      // OTHER PRODUCTS
+      // =================================================
+
+      errorMessage.textContent =
+        "Selar checkout has not yet been connected for this product.";
+
+      errorMessage.style.display =
+        "block";
     }
   );
 
   // =====================================================
-  // INITIALIZE
+  // START
   // =====================================================
 
   loadProduct();
