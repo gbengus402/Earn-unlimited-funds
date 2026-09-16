@@ -8,7 +8,7 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Product | Earn Unlimited Funds</title>
+  <title>How to Pass High in Exams | Earn Unlimited Funds</title>
 
   <style>
     * {
@@ -19,148 +19,313 @@
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
       background: #f5f7fb;
-      color: #111827;
+      color: #222;
     }
+
+    /* =========================
+       HEADER
+    ========================= */
 
     header {
       background: #071a3d;
       color: white;
       padding: 18px 20px;
-    }
-
-    header .inner {
-      max-width: 1100px;
-      margin: auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      text-align: center;
     }
 
     header h1 {
       margin: 0;
-      font-size: 22px;
+      font-size: 24px;
     }
 
-    header a {
-      color: white;
+    header p {
+      margin: 6px 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* =========================
+       NAVIGATION
+    ========================= */
+
+    nav {
+      background: white;
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    nav a {
+      color: #071a3d;
       text-decoration: none;
       font-weight: bold;
+      margin: 0 10px;
+      font-size: 14px;
     }
 
-    .container {
-      width: 92%;
+    /* =========================
+       MAIN
+    ========================= */
+
+    main {
       max-width: 900px;
-      margin: 45px auto;
+      margin: 35px auto;
+      padding: 0 18px;
     }
+
+    /* =========================
+       PRODUCT CARD
+    ========================= */
 
     .product-card {
       background: white;
-      border-radius: 18px;
-      padding: 35px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
     }
 
     .product-title {
       color: #071a3d;
-      font-size: 34px;
-      margin-top: 0;
-      margin-bottom: 15px;
+      font-size: 32px;
+      margin: 0 0 15px;
+      line-height: 1.2;
     }
 
-    .description {
-      color: #4b5563;
+    .product-description {
       font-size: 17px;
       line-height: 1.7;
+      color: #555;
+      margin-bottom: 25px;
     }
 
-    .price {
-      font-size: 30px;
-      font-weight: bold;
-      color: #071a3d;
+    /* =========================
+       PRODUCT FEATURES
+    ========================= */
+
+    .features {
+      margin: 25px 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .features li {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 15px;
+    }
+
+    .features li:last-child {
+      border-bottom: none;
+    }
+
+    /* =========================
+       PRICE
+    ========================= */
+
+    .price-box {
+      background: #eef4ff;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
       margin: 25px 0;
     }
 
-    .buy-box {
+    .price-label {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    .price {
+      font-size: 34px;
+      font-weight: bold;
+      color: #071a3d;
+    }
+
+    /* =========================
+       PURCHASE SECTION
+    ========================= */
+
+    .purchase-box {
       margin-top: 30px;
       padding: 25px;
-      background: #f8fafc;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background: #fafafa;
+    }
+
+    .purchase-box h2 {
+      margin-top: 0;
+      color: #071a3d;
+      font-size: 22px;
     }
 
     label {
       display: block;
-      font-weight: bold;
       margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 14px;
     }
 
-    input {
+    input[type="email"] {
       width: 100%;
       padding: 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 9px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
       font-size: 16px;
+      outline: none;
       margin-bottom: 15px;
     }
 
-    button {
+    input[type="email"]:focus {
+      border-color: #071a3d;
+    }
+
+    /* =========================
+       BUTTONS
+    ========================= */
+
+    .btn {
+      display: block;
       width: 100%;
-      padding: 16px;
+      padding: 15px;
       border: none;
-      border-radius: 10px;
-      background: #071a3d;
-      color: white;
-      font-size: 17px;
+      border-radius: 8px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-    }
-
-    button:hover {
-      background: #0d2b63;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .message {
-      display: none;
-      margin-top: 15px;
-      padding: 13px;
-      border-radius: 9px;
-      line-height: 1.5;
-    }
-
-    .error {
-      background: #fef2f2;
-      color: #991b1b;
-    }
-
-    .info {
-      background: #eff6ff;
-      color: #1e40af;
-    }
-
-    .back {
-      display: inline-block;
-      margin-top: 25px;
-      color: #071a3d;
-      font-weight: bold;
+      text-align: center;
       text-decoration: none;
     }
 
+    .buy-btn {
+      background: #071a3d;
+      color: white;
+    }
+
+    .buy-btn:hover {
+      opacity: 0.9;
+    }
+
+    .buy-btn:disabled {
+      background: #777;
+      cursor: not-allowed;
+    }
+
+    /* =========================
+       TEST DOWNLOAD
+    ========================= */
+
+    .test-section {
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 2px dashed #ddd;
+      text-align: center;
+    }
+
+    .test-section h3 {
+      color: #071a3d;
+      margin-bottom: 8px;
+    }
+
+    .test-section p {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .test-btn {
+      display: inline-block;
+      background: #f5b400;
+      color: #071a3d;
+      padding: 14px 25px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      border: 2px solid #071a3d;
+      margin-top: 10px;
+    }
+
+    .test-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* =========================
+       STATUS MESSAGE
+    ========================= */
+
+    #message {
+      display: none;
+      margin-top: 18px;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .success {
+      background: #e8f7ed;
+      color: #176b35;
+      border: 1px solid #a9dfb9;
+    }
+
+    .error {
+      background: #fdeaea;
+      color: #a11b1b;
+      border: 1px solid #efb0b0;
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+      text-align: center;
+      padding: 25px 15px;
+      color: #777;
+      font-size: 13px;
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
     @media (max-width: 600px) {
+
+      header h1 {
+        font-size: 20px;
+      }
+
+      nav a {
+        margin: 0 5px;
+        font-size: 13px;
+      }
+
+      main {
+        margin: 20px auto;
+        padding: 0 12px;
+      }
+
       .product-card {
-        padding: 23px;
+        padding: 20px;
       }
 
       .product-title {
-        font-size: 27px;
+        font-size: 26px;
+      }
+
+      .product-description {
+        font-size: 15px;
       }
 
       .price {
-        font-size: 26px;
+        font-size: 30px;
+      }
+
+      .purchase-box {
+        padding: 18px;
       }
     }
   </style>
@@ -168,277 +333,318 @@
 
 <body>
 
-<header>
-  <div class="inner">
+  <!-- =========================
+       HEADER
+  ========================= -->
+
+  <header>
     <h1>Earn Unlimited Funds</h1>
+    <p>Digital Products & Resources</p>
+  </header>
 
-    <a href="/">
-      Home
-    </a>
-  </div>
-</header>
+  <!-- =========================
+       NAVIGATION
+  ========================= -->
 
-<div class="container">
+  <nav>
+    <a href="/">Home</a>
+    <a href="/#about">About</a>
+    <a href="/#products">Products</a>
+  </nav>
 
-  <div class="product-card">
+  <!-- =========================
+       MAIN PRODUCT
+  ========================= -->
 
-    <h2
-      class="product-title"
-      id="productName"
-    >
-      Loading product...
-    </h2>
+  <main>
 
-    <p
-      class="description"
-      id="productDescription"
-    >
-      Please wait...
-    </p>
+    <div class="product-card">
 
-    <div
-      class="price"
-      id="productPrice"
-    >
-      ₦0
+      <h1 class="product-title">
+        How to Pass High in Exams
+      </h1>
+
+      <div class="product-description">
+        A practical guide designed to help students prepare better,
+        study effectively, manage examination pressure and improve
+        their academic performance.
+      </div>
+
+      <!-- =========================
+           FEATURES
+      ========================= -->
+
+      <ul class="features">
+
+        <li>✓ Practical examination preparation strategies</li>
+
+        <li>✓ Better study and revision techniques</li>
+
+        <li>✓ Tips for managing examination pressure</li>
+
+        <li>✓ Strategies for improving concentration</li>
+
+        <li>✓ Useful guidance for better academic preparation</li>
+
+        <li>✓ Digital product delivered online</li>
+
+      </ul>
+
+      <!-- =========================
+           PRICE
+      ========================= -->
+
+      <div class="price-box">
+
+        <div class="price-label">
+          Product Price
+        </div>
+
+        <div class="price">
+          ₦25,000
+        </div>
+
+      </div>
+
+      <!-- =========================
+           PURCHASE
+      ========================= -->
+
+      <div class="purchase-box">
+
+        <h2>
+          Get Your Copy
+        </h2>
+
+        <label for="email">
+          Enter your email address
+        </label>
+
+        <input
+          type="email"
+          id="email"
+          placeholder="your@email.com"
+          autocomplete="email"
+          required
+        >
+
+        <button
+          type="button"
+          class="btn buy-btn"
+          id="buyButton"
+        >
+          BUY NOW
+        </button>
+
+        <div id="message"></div>
+
+      </div>
+
+      <!-- =========================
+           TEMPORARY R2 TEST
+      ========================= -->
+
+      <div class="test-section">
+
+        <h3>
+          Test Product Delivery
+        </h3>
+
+        <p>
+          This temporary button is for testing the Cloudflare R2
+          product delivery system. No payment is required.
+        </p>
+
+        <a
+          href="/api/test-download"
+          class="test-btn"
+        >
+          TEST DOWNLOAD
+        </a>
+
+      </div>
+
     </div>
 
-    <div class="buy-box">
+  </main>
 
-      <label for="email">
-        Email Address
-      </label>
+  <!-- =========================
+       FOOTER
+  ========================= -->
 
-      <input
-        type="email"
-        id="email"
-        placeholder="Enter your email address"
-        required
-      >
+  <footer>
+    © 2026 Earn Unlimited Funds. All rights reserved.
+  </footer>
 
-      <button
-        id="buyButton"
-        type="button"
-      >
-        Buy Now
-      </button>
 
-      <div
-        id="infoMessage"
-        class="message info"
-      ></div>
+  <!-- =========================
+       JAVASCRIPT
+  ========================= -->
 
-      <div
-        id="errorMessage"
-        class="message error"
-      ></div>
+  <script>
 
-    </div>
+    const buyButton =
+      document.getElementById("buyButton");
 
-    <a
-      class="back"
-      href="/"
-    >
-      ← Back to all products
-    </a>
+    const emailInput =
+      document.getElementById("email");
 
-  </div>
+    const message =
+      document.getElementById("message");
 
-</div>
 
-<script>
+    function showMessage(text, type) {
 
-  // =====================================================
-  // GET PRODUCT ID
-  // =====================================================
+      message.textContent = text;
 
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
+      message.className = type;
 
-  const productId =
-    params.get("id");
+      message.style.display = "block";
 
-  // =====================================================
-  // PAGE ELEMENTS
-  // =====================================================
-
-  const productName =
-    document.getElementById("productName");
-
-  const productDescription =
-    document.getElementById("productDescription");
-
-  const productPrice =
-    document.getElementById("productPrice");
-
-  const buyButton =
-    document.getElementById("buyButton");
-
-  const emailInput =
-    document.getElementById("email");
-
-  const infoMessage =
-    document.getElementById("infoMessage");
-
-  const errorMessage =
-    document.getElementById("errorMessage");
-
-  // =====================================================
-  // LOAD PRODUCT
-  // =====================================================
-
-  async function loadProduct() {
-
-    if (!productId) {
-
-      productName.textContent =
-        "Product not found";
-
-      productDescription.textContent =
-        "No product was selected.";
-
-      buyButton.disabled = true;
-
-      return;
     }
 
-    try {
 
-      const response =
-        await fetch(
-          "/api/products/" +
-          encodeURIComponent(productId)
-        );
+    buyButton.addEventListener(
+      "click",
+      async function () {
 
-      const data =
-        await response.json();
+        const email =
+          emailInput.value.trim();
 
-      if (
-        !response.ok ||
-        !data.success
-      ) {
-        throw new Error(
-          data.message ||
-          "Product not found."
-        );
-      }
+        if (!email) {
 
-      const product =
-        data.product;
+          showMessage(
+            "Please enter your email address.",
+            "error"
+          );
 
-      productName.textContent =
-        product.name;
+          emailInput.focus();
 
-      productDescription.textContent =
-        product.description;
+          return;
+        }
 
-      productPrice.textContent =
-        "₦" +
-        Number(
-          product.priceNaira
-        ).toLocaleString();
 
-    } catch (error) {
+        if (
+          !email.includes("@") ||
+          !email.includes(".")
+        ) {
 
-      productName.textContent =
-        "Unable to load product";
+          showMessage(
+            "Please enter a valid email address.",
+            "error"
+          );
 
-      productDescription.textContent =
-        error.message;
+          emailInput.focus();
 
-      buyButton.disabled = true;
-    }
-  }
+          return;
+        }
 
-  // =====================================================
-  // BUY NOW
-  // =====================================================
-
-  buyButton.addEventListener(
-    "click",
-    function () {
-
-      errorMessage.style.display =
-        "none";
-
-      infoMessage.style.display =
-        "none";
-
-      const email =
-        emailInput.value.trim();
-
-      if (!email) {
-
-        errorMessage.textContent =
-          "Please enter your email address.";
-
-        errorMessage.style.display =
-          "block";
-
-        return;
-      }
-
-      if (
-        !email.includes("@") ||
-        !email.includes(".")
-      ) {
-
-        errorMessage.textContent =
-          "Please enter a valid email address.";
-
-        errorMessage.style.display =
-          "block";
-
-        return;
-      }
-
-      // =================================================
-      // HOW TO PASS HIGH IN EXAMS
-      // =================================================
-
-      if (
-        productId ===
-        "how-to-pass-high-in-exams"
-      ) {
-
-        infoMessage.textContent =
-          "Opening secure Selar checkout...";
-
-        infoMessage.style.display =
-          "block";
 
         buyButton.disabled = true;
 
         buyButton.textContent =
-          "Opening Selar...";
+          "PLEASE WAIT...";
 
-        window.location.href =
-          "https://selar.com/5m7y791u94";
+        message.style.display = "none";
 
-        return;
+
+        try {
+
+          const response =
+            await fetch("/api/pay", {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+
+                email: email,
+
+                productId:
+                  "how-to-pass-high-in-exams"
+
+              })
+
+            });
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok || !data.success) {
+
+            throw new Error(
+              data.message ||
+              "Unable to start payment."
+            );
+
+          }
+
+
+          /*
+            Save our reference temporarily
+            so the payment-success page can
+            use it later.
+          */
+
+          if (data.reference) {
+
+            localStorage.setItem(
+              "payment_reference",
+              data.reference
+            );
+
+          }
+
+
+          /*
+            Go to Selar checkout.
+          */
+
+          if (data.checkout_url) {
+
+            window.location.href =
+              data.checkout_url;
+
+            return;
+
+          }
+
+
+          throw new Error(
+            "Selar checkout URL was not returned."
+          );
+
+
+        } catch (error) {
+
+          console.error(
+            "Payment error:",
+            error
+          );
+
+          showMessage(
+            error.message ||
+            "Unable to start payment. Please try again.",
+            "error"
+          );
+
+          buyButton.disabled = false;
+
+          buyButton.textContent =
+            "BUY NOW";
+
+        }
+
       }
+    );
 
-      // =================================================
-      // OTHER PRODUCTS
-      // =================================================
-
-      errorMessage.textContent =
-        "Selar checkout has not yet been connected for this product.";
-
-      errorMessage.style.display =
-        "block";
-    }
-  );
-
-  // =====================================================
-  // START
-  // =====================================================
-
-  loadProduct();
-
-</script>
+  </script>
 
 </body>
 </html>
