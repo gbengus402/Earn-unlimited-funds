@@ -109,7 +109,6 @@ const PRODUCTS = {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(express.static(publicFolder));
 
 // ======================================================
@@ -167,6 +166,10 @@ async function initializeDatabase() {
     throw new Error("DATABASE_URL is missing.");
   }
 
+  // ----------------------------------------------------
+  // PAYMENTS TABLE
+  // ----------------------------------------------------
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS payments (
       id SERIAL PRIMARY KEY,
@@ -191,11 +194,22 @@ async function initializeDatabase() {
     ON payments(email)
   `);
 
-  /*
-    IMPORTANT:
-    Your existing downloads table uses BIGINT for expires_at.
-    It also requires reference and created_at.
-  */
+  // ----------------------------------------------------
+  // DOWNLOADS TABLE
+  // ----------------------------------------------------
+  //
+  // IMPORTANT:
+  // The existing database uses BIGINT for:
+  //
+  // expires_at
+  // created_at
+  //
+  // Therefore this application uses Date.now()
+  // for both values.
+  //
+  // CREATE TABLE IF NOT EXISTS will NOT change
+  // the type of an existing column.
+  // ----------------------------------------------------
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS downloads (
@@ -207,26 +221,22 @@ async function initializeDatabase() {
       email TEXT NOT NULL,
       used INTEGER NOT NULL DEFAULT 0,
       expires_at BIGINT NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      created_at BIGINT NOT NULL
     )
   `);
 
-  // Make sure existing table has reference.
+  // ----------------------------------------------------
+  // EXISTING DOWNLOADS TABLE
+  // ----------------------------------------------------
+
   await pool.query(`
     ALTER TABLE downloads
     ADD COLUMN IF NOT EXISTS reference TEXT
   `);
 
-  // Make sure existing table has payment_reference.
   await pool.query(`
     ALTER TABLE downloads
     ADD COLUMN IF NOT EXISTS payment_reference TEXT
-  `);
-
-  // Make sure existing table has created_at.
-  await pool.query(`
-    ALTER TABLE downloads
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ
   `);
 
   await pool.query(`
@@ -320,8 +330,16 @@ app.post("/api/pay", async (req, res) => {
     await pool.query(
       `
       INSERT INTO payments
-      (reference, email, product_id, amount, currency, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      (
+        reference,
+        email,
+        product_id,
+        amount,
+        currency,
+        status
+      )
+      VALUES
+      ($1, $2, $3, $4, $5, $6)
       `,
       [
         reference,
@@ -345,7 +363,10 @@ app.post("/api/pay", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Selar payment initialization error:", error);
+    console.error(
+      "Selar payment initialization error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
@@ -365,7 +386,7 @@ app.get("/payment-success.html", (req, res) => {
 });
 
 // ======================================================
-// MANUAL PURCHASE ACCESS CHECK
+// PURCHASE STATUS
 // ======================================================
 
 app.get("/api/purchase-status", async (req, res) => {
@@ -381,7 +402,13 @@ app.get("/api/purchase-status", async (req, res) => {
 
     const result = await pool.query(
       `
-      SELECT reference, email, product_id, amount, currency, status
+      SELECT
+        reference,
+        email,
+        product_id,
+        amount,
+        currency,
+        status
       FROM payments
       WHERE reference = $1
       LIMIT 1
@@ -402,7 +429,10 @@ app.get("/api/purchase-status", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Purchase status error:", error);
+    console.error(
+      "Purchase status error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
@@ -412,20 +442,21 @@ app.get("/api/purchase-status", async (req, res) => {
 });
 
 // ======================================================
-// TEMPORARY R2 DOWNLOAD TEST
-// REMOVE AFTER TESTING
-// ======================================================
-// ======================================================
-// R2 DOWNLOAD TEST - NEW VERSION
+// R2 DOWNLOAD TEST V2
+// TEMPORARY - REMOVE AFTER TESTING
 // ======================================================
 
 app.get("/api/test-download-v2", async (req, res) => {
   try {
-    const productId = "how-to-pass-high-in-exams";
+    const productId =
+      "how-to-pass-high-in-exams";
+
     const product = PRODUCTS[productId];
 
     if (!product) {
-      return res.status(404).send("Product not found.");
+      return res.status(404).send(
+        "Product not found."
+      );
     }
 
     if (!r2Client) {
@@ -440,30 +471,34 @@ app.get("/api/test-download-v2", async (req, res) => {
       );
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // CREATE TOKEN
-    // ----------------------------------------------
+    // --------------------------------------------------
 
-    const rawToken = crypto.randomBytes(32).toString("hex");
+    const rawToken =
+      crypto.randomBytes(32).toString("hex");
 
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
+    const tokenHash =
+      crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
 
-    // IMPORTANT:
-    // Your existing database uses BIGINT.
-    // Therefore use Date.now() for BOTH fields.
+    // --------------------------------------------------
+    // BIGINT TIMESTAMPS
+    // --------------------------------------------------
 
     const now = Date.now();
 
-    const expiresAt = now + 10 * 60 * 1000;
+    const expiresAt =
+      now + 10 * 60 * 1000;
 
-    const testReference = `TEST-V2-${now}`;
+    const testReference =
+      `TEST-V2-${now}`;
 
-    // ----------------------------------------------
-    // INSERT TEST DOWNLOAD
-    // ----------------------------------------------
+    // --------------------------------------------------
+    // CREATE DOWNLOAD RECORD
+    // --------------------------------------------------
 
     await pool.query(
       `
@@ -507,23 +542,24 @@ app.get("/api/test-download-v2", async (req, res) => {
       testReference
     );
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // CREATE DOWNLOAD COOKIE
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     res.setHeader(
       "Set-Cookie",
       `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
     );
 
-    // ----------------------------------------------
-    // GO TO SECURE DOWNLOAD
-    // ----------------------------------------------
+    // --------------------------------------------------
+    // GO TO DOWNLOAD
+    // --------------------------------------------------
 
-    return res.redirect("/api/download");
+    return res.redirect(
+      "/api/download"
+    );
 
   } catch (error) {
-
     console.error(
       "R2 TEST V2 ERROR:",
       error
@@ -536,110 +572,28 @@ app.get("/api/test-download-v2", async (req, res) => {
   }
 });
 
-    const productId = "how-to-pass-high-in-exams";
-    const product = PRODUCTS[productId];
-
-    if (!product) {
-      return res.status(404).send("Product not found.");
-    }
-
-    if (!r2Client) {
-      return res.status(500).send(
-        "Cloudflare R2 is not configured correctly."
-      );
-    }
-
-    if (!r2BucketName) {
-      return res.status(500).send(
-        "R2_BUCKET_NAME is missing."
-      );
-    }
-
-    // Create temporary download token.
-    const rawToken = crypto.randomBytes(32).toString("hex");
-
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-
-    // BIGINT expiry: 10 minutes from now.
-    const expiresAt =
-      Date.now() + (10 * 60 * 1000);
-
-    // Test reference.
-    const testReference =
-      "TEST-" + Date.now();
-
-    // Save temporary download access.
-    await pool.query(
-      `
-      INSERT INTO downloads
-      (
-        token_hash,
-        reference,
-        payment_reference,
-        product_id,
-        email,
-        used,
-        expires_at,
-        created_at
-      )
-      VALUES
-      (
-        $1,
-        $2,
-        $2,
-        $3,
-        $4,
-        0,
-        $5,
-        NOW()
-      )
-      `,
-      [
-        tokenHash,
-        testReference,
-        productId,
-        "test@example.com",
-        expiresAt
-      ]
-    );
-
-    // Give browser temporary download token.
-    res.setHeader(
-      "Set-Cookie",
-      `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
-    );
-
-    // Send browser to secure download route.
-    return res.redirect("/api/download");
-
-  } catch (error) {
-    console.error("Test download error:", error);
-
-    return res.status(500).send(
-      "Unable to start test download: " +
-      error.message
-    );
-  }
-});
-
 // ======================================================
 // SECURE DOWNLOAD
 // ======================================================
 
 app.get("/api/download", async (req, res) => {
   try {
-    const rawToken = req.headers.cookie
-      ?.split(";")
-      .map((item) => item.trim())
-      .find((item) =>
-        item.startsWith("download_token=")
-      )
-      ?.split("=")
-      .slice(1)
-      .join("=");
+    // --------------------------------------------------
+    // READ COOKIE
+    // --------------------------------------------------
+
+    const rawToken =
+      req.headers.cookie
+        ?.split(";")
+        .map((item) => item.trim())
+        .find((item) =>
+          item.startsWith(
+            "download_token="
+          )
+        )
+        ?.split("=")
+        .slice(1)
+        .join("=");
 
     if (!rawToken) {
       return res.status(403).send(
@@ -647,43 +601,70 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
+    // --------------------------------------------------
+    // HASH TOKEN
+    // --------------------------------------------------
 
-    const downloadResult = await pool.query(
-      `
-      SELECT *
-      FROM downloads
-      WHERE token_hash = $1
-      LIMIT 1
-      `,
-      [tokenHash]
-    );
+    const tokenHash =
+      crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
 
-    if (downloadResult.rows.length === 0) {
+    // --------------------------------------------------
+    // FIND DOWNLOAD
+    // --------------------------------------------------
+
+    const downloadResult =
+      await pool.query(
+        `
+        SELECT *
+        FROM downloads
+        WHERE token_hash = $1
+        LIMIT 1
+        `,
+        [tokenHash]
+      );
+
+    if (
+      downloadResult.rows.length === 0
+    ) {
       return res.status(403).send(
         "Download access denied. Complete your purchase."
       );
     }
 
-    const download = downloadResult.rows[0];
+    const download =
+      downloadResult.rows[0];
 
-    // BIGINT expiry check.
+    // --------------------------------------------------
+    // CHECK EXPIRY
+    // --------------------------------------------------
+
     if (
-      Number(download.expires_at) <= Date.now()
+      Number(download.expires_at) <=
+      Date.now()
     ) {
       return res.status(403).send(
         "This download link has expired."
       );
     }
 
-    if (Number(download.used) === 1) {
+    // --------------------------------------------------
+    // CHECK USED
+    // --------------------------------------------------
+
+    if (
+      Number(download.used) === 1
+    ) {
       return res.status(403).send(
         "This download link has already been used."
       );
     }
+
+    // --------------------------------------------------
+    // FIND PRODUCT
+    // --------------------------------------------------
 
     const product =
       PRODUCTS[download.product_id];
@@ -694,13 +675,20 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
+    // --------------------------------------------------
+    // CHECK R2
+    // --------------------------------------------------
+
     if (!r2Client) {
       return res.status(500).send(
         "Cloudflare R2 is not configured correctly."
       );
     }
 
-    // Get product file from Cloudflare R2.
+    // --------------------------------------------------
+    // GET FILE FROM R2
+    // --------------------------------------------------
+
     const r2Response =
       await r2Client.send(
         new GetObjectCommand({
@@ -715,7 +703,10 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // Mark token as used.
+    // --------------------------------------------------
+    // MARK TOKEN AS USED
+    // --------------------------------------------------
+
     const usedResult =
       await pool.query(
         `
@@ -732,19 +723,27 @@ app.get("/api/download", async (req, res) => {
         ]
       );
 
-    if (usedResult.rows.length === 0) {
+    if (
+      usedResult.rows.length === 0
+    ) {
       return res.status(403).send(
         "This download link has already been used or has expired."
       );
     }
 
-    // Remove download cookie.
+    // --------------------------------------------------
+    // REMOVE COOKIE
+    // --------------------------------------------------
+
     res.setHeader(
       "Set-Cookie",
       "download_token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
     );
 
-    // Download headers.
+    // --------------------------------------------------
+    // DOWNLOAD HEADERS
+    // --------------------------------------------------
+
     res.setHeader(
       "Content-Type",
       product.contentType
@@ -758,15 +757,23 @@ app.get("/api/download", async (req, res) => {
     if (r2Response.ContentLength) {
       res.setHeader(
         "Content-Length",
-        String(r2Response.ContentLength)
+        String(
+          r2Response.ContentLength
+        )
       );
     }
 
-    // Stream file to customer.
+    // --------------------------------------------------
+    // STREAM FILE
+    // --------------------------------------------------
+
     r2Response.Body.pipe(res);
 
   } catch (error) {
-    console.error("Download error:", error);
+    console.error(
+      "Download error:",
+      error
+    );
 
     if (
       error.name === "NoSuchKey" ||
@@ -790,7 +797,10 @@ app.get("/api/download", async (req, res) => {
 
 app.get("/", (req, res) => {
   res.sendFile(
-    path.join(publicFolder, "hex.html")
+    path.join(
+      publicFolder,
+      "hex.html"
+    )
   );
 });
 
@@ -801,7 +811,8 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
-    message: "Earn Unlimited Funds server is running"
+    message:
+      "Earn Unlimited Funds server is running"
   });
 });
 
