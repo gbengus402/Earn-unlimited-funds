@@ -33,8 +33,6 @@ const PRODUCTS = {
     fileKey: "how-to-pass-high-in-exams.pdf",
     downloadName: "How-to-Pass-High-in-Exams.pdf",
     contentType: "application/pdf",
-
-    // YOUR REAL SELAR LINK
     selarUrl: "https://selar.com/5m7y791u94"
   },
 
@@ -48,8 +46,6 @@ const PRODUCTS = {
     fileKey: "AI_Response_Complete_Guide-3.pdf",
     downloadName: "AI-Response-Complete-Guide.pdf",
     contentType: "application/pdf",
-
-    // REPLACE WITH YOUR SELAR LINK
     selarUrl: ""
   },
 
@@ -63,8 +59,6 @@ const PRODUCTS = {
     fileKey: "Facebook_Automation_Ebook_GBENGA-1.pdf",
     downloadName: "Facebook-Automation.pdf",
     contentType: "application/pdf",
-
-    // REPLACE WITH YOUR SELAR LINK
     selarUrl: ""
   },
 
@@ -78,8 +72,6 @@ const PRODUCTS = {
     fileKey: "How_to_Save_a_Billion_from_a_Zero_Account-1.pdf",
     downloadName: "How-to-Save-a-Billion-from-a-Zero-Account.pdf",
     contentType: "application/pdf",
-
-    // REPLACE WITH YOUR SELAR LINK
     selarUrl: ""
   },
 
@@ -94,8 +86,6 @@ const PRODUCTS = {
     downloadName: "Pregnancy-Care-Guide.docx",
     contentType:
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-
-    // REPLACE WITH YOUR SELAR LINK
     selarUrl: ""
   },
 
@@ -109,8 +99,6 @@ const PRODUCTS = {
     fileKey: "Sell_Faster_Professional_Ebook-2.pdf",
     downloadName: "Sell-Faster-Professional-Ebook.pdf",
     contentType: "application/pdf",
-
-    // REPLACE WITH YOUR SELAR LINK
     selarUrl: ""
   }
 };
@@ -161,7 +149,7 @@ if (
     endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
     credentials: {
       accessKeyId: r2AccessKeyId,
-      secretAccessKey: r2SecretAccessKey
+      secretAccessKey: r2Secret_ACCESS_KEY
     }
   });
 } else {
@@ -214,6 +202,12 @@ async function initializeDatabase() {
       expires_at TIMESTAMPTZ NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `);
+
+  // Make sure an existing downloads table also has this column.
+  await pool.query(`
+    ALTER TABLE downloads
+    ADD COLUMN IF NOT EXISTS payment_reference TEXT
   `);
 
   await pool.query(`
@@ -304,7 +298,6 @@ app.post("/api/pay", async (req, res) => {
     const reference =
       `EUF-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
 
-    // Save a pending payment record.
     await pool.query(
       `
       INSERT INTO payments
@@ -320,17 +313,6 @@ app.post("/api/pay", async (req, res) => {
         "pending"
       ]
     );
-
-    /*
-      Selar handles the actual checkout.
-
-      The customer is sent to the Selar product page.
-      After purchase, configure Selar's
-      "Automatically redirect the buyer to an external URL
-      after a purchase" option to:
-
-      https://earn-unlimited-funds.onrender.com/payment-success.html
-    */
 
     return res.json({
       success: true,
@@ -408,6 +390,7 @@ app.get("/api/purchase-status", async (req, res) => {
     });
   }
 });
+
 // ======================================================
 // TEMPORARY R2 DOWNLOAD TEST
 // REMOVE AFTER TESTING
@@ -415,12 +398,6 @@ app.get("/api/purchase-status", async (req, res) => {
 
 app.get("/api/test-download", async (req, res) => {
   try {
-    const testKey = process.env.TEST_DOWNLOAD_KEY;
-
-    if (!testKey || req.query.key !== testKey) {
-      return res.status(403).send("Test access denied.");
-    }
-
     const productId = "how-to-pass-high-in-exams";
     const product = PRODUCTS[productId];
 
@@ -434,7 +411,13 @@ app.get("/api/test-download", async (req, res) => {
       );
     }
 
-    // Create a temporary download token
+    if (!r2BucketName) {
+      return res.status(500).send(
+        "R2_BUCKET_NAME is missing."
+      );
+    }
+
+    // Create a temporary download token.
     const rawToken = crypto.randomBytes(32).toString("hex");
 
     const tokenHash = crypto
@@ -442,7 +425,7 @@ app.get("/api/test-download", async (req, res) => {
       .update(rawToken)
       .digest("hex");
 
-    // Save temporary download access
+    // Save temporary download access.
     await pool.query(
       `
       INSERT INTO downloads
@@ -464,23 +447,24 @@ app.get("/api/test-download", async (req, res) => {
       ]
     );
 
-    // Give browser the temporary download token
+    // Give browser the temporary download token.
     res.setHeader(
       "Set-Cookie",
       `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
     );
 
-    // Send the browser to the real secure download route
+    // Send browser to the real secure download route.
     return res.redirect("/api/download");
 
   } catch (error) {
     console.error("Test download error:", error);
 
     return res.status(500).send(
-      "Unable to start test download."
+      "Unable to start test download: " + error.message
     );
   }
 });
+
 // ======================================================
 // SECURE DOWNLOAD
 // ======================================================
@@ -604,17 +588,22 @@ app.get("/api/download", async (req, res) => {
     }
 
     r2Response.Body.pipe(res);
+
   } catch (error) {
     console.error("Download error:", error);
 
-    if (error.name === "NoSuchKey") {
+    if (
+      error.name === "NoSuchKey" ||
+      error.Code === "NoSuchKey"
+    ) {
       return res.status(404).send(
         "The product file was not found in Cloudflare R2."
       );
     }
 
     return res.status(500).send(
-      "Unable to download the product right now."
+      "Unable to download the product right now: " +
+      error.message
     );
   }
 });
@@ -653,6 +642,7 @@ async function startServer() {
         `Earn Unlimited Funds server running on port ${PORT}`
       );
     });
+
   } catch (error) {
     console.error(
       "Server startup failed:",
