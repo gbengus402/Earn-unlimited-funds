@@ -1,0 +1,4 @@
+await pool.query(`
+  ALTER TABLE downloads
+  ADD COLUMN IF NOT EXISTS payment_reference TEXT
+`);
