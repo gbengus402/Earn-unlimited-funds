@@ -1,1 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Payment Successful | Earn Unlimited Funds</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f7fb;
+      color: #111827;
+    }
+
+    .header {
+      background: #071a3d;
+      color: white;
+      padding: 18px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .container {
+      width: 92%;
+      max-width: 650px;
+      margin: 50px auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 35px 25px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .success-icon {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      background: #16a34a;
+      color: white;
+      font-size: 45px;
+      line-height: 75px;
+      margin: 0 auto 20px;
+    }
+
+    h2 {
+      margin: 10px 0;
+      color: #071a3d;
+      font-size: 28px;
+    }
+
+    .message {
+      color: #4b5563;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    .product-box {
+      margin: 25px 0;
+      padding: 20px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+    }
+
+    .product-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #071a3d;
+    }
+
+    .status {
+      margin: 20px 0;
+      padding: 14px;
+      border-radius: 10px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .download-button {
+      display: none;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #071a3d;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      text-decoration: none;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .download-button:hover {
+      background: #0d2b63;
+    }
+
+    .home-button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      background: #e5e7eb;
+      color: #111827;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .error {
+      display: none;
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #fef2f2;
+      color: #991b1b;
+      line-height: 1.5;
+    }
+
+    .loading {
+      margin-top: 20px;
+      color: #475569;
+    }
+
+    .small {
+      margin-top: 25px;
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        margin: 25px auto;
+      }
+
+      .card {
+        padding: 28px 18px;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>Earn Unlimited Funds</h1>
+  </div>
+
+  <div class="container">
+
+    <div class="card">
+
+      <div class="success-icon">
+        ✓
+      </div>
+
+      <h2>Payment Successful</h2>
+
+      <p class="message">
+        Thank you for your purchase.
+        Your payment has been received through Selar.
+      </p>
+
+      <div class="product-box">
+        <div class="product-name" id="productName">
+          Your Product
+        </div>
+      </div>
+
+      <div class="loading" id="loadingMessage">
+        Checking your purchase information...
+      </div>
+
+      <div class="status" id="pendingMessage">
+        Your payment is being confirmed.
+        Please wait while we prepare your download.
+      </div>
+
+      <a
+        href="/api/download"
+        class="download-button"
+        id="downloadButton"
+      >
+        Download Your Product
+      </a>
+
+      <div class="error" id="errorMessage">
+        We could not confirm your purchase yet.
+        Please check your Selar purchase receipt/email.
+      </div>
+
+      <a
+        href="/"
+        class="home-button"
+      >
+        Return to Homepage
+      </a>
+
+      <div class="small">
+        Keep your purchase receipt and the email address
+        used during checkout.
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const products = {
+      "how-to-pass-high-in-exams":
+        "How to Pass High in Exams",
+
+      "ai-response-complete-guide":
+        "AI Response Complete Guide",
+
+      "facebook-automation":
+        "Facebook Automation",
+
+      "save-a-billion-from-zero-account":
+        "How to Save a Billion from a Zero Account",
+
+      "pregnancy-care":
+        "Pregnancy Care Guide",
+
+      "sell-faster":
+        "Sell Faster Professional Ebook"
+    };
+
+    const urlParams = new URLSearchParams(
+      window.location.search
+    );
+
+    const productId =
+      urlParams.get("product");
+
+    const productName =
+      document.getElementById("productName");
+
+    const loadingMessage =
+      document.getElementById("loadingMessage");
+
+    const pendingMessage =
+      document.getElementById("pendingMessage");
+
+    const downloadButton =
+      document.getElementById("downloadButton");
+
+    const errorMessage =
+      document.getElementById("errorMessage");
+
+    if (productId && products[productId]) {
+      productName.textContent =
+        products[productId];
+    } else {
+      productName.textContent =
+        "Digital Product";
+    }
+
+    /*
+      IMPORTANT:
+
+      Do NOT automatically show the download button
+      simply because the customer reached this page.
+
+      The server must first confirm the purchase.
+    */
+
+    async function checkPurchase() {
+
+      /*
+        We only check if a payment reference exists
+        in the URL.
+
+        The actual secure confirmation will be
+        connected to the Selar-supported confirmation
+        method before downloads are released.
+      */
+
+      const reference =
+        urlParams.get("reference");
+
+      if (!reference) {
+
+        loadingMessage.style.display =
+          "none";
+
+        pendingMessage.style.display =
+          "block";
+
+        errorMessage.style.display =
+          "block";
+
+        errorMessage.textContent =
+          "Your payment page was opened successfully, but no payment reference was supplied. Please check your Selar receipt.";
+
+        return;
+      }
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/purchase-status?reference=" +
+            encodeURIComponent(reference)
+          );
+
+        const data =
+          await response.json();
+
+        loadingMessage.style.display =
+          "none";
+
+        if (
+          data.success &&
+          data.payment &&
+          data.payment.status === "successful"
+        ) {
+
+          pendingMessage.style.display =
+            "none";
+
+          errorMessage.style.display =
+            "none";
+
+          downloadButton.style.display =
+            "block";
+
+        } else {
+
+          pendingMessage.style.display =
+            "block";
+
+          errorMessage.style.display =
+            "block";
+
+          errorMessage.textContent =
+            "Your payment has not been confirmed by the website yet. Please keep your Selar receipt.";
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Purchase check error:",
+          error
+        );
+
+        loadingMessage.style.display =
+          "none";
+
+        errorMessage.style.display =
+          "block";
+
+        errorMessage.textContent =
+          "We could not check your purchase right now. Please try again shortly.";
+      }
+    }
+
+    checkPurchase();
+  </script>
+
+</body>
+  </html>
