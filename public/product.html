@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Product | Earn Unlimited Funds</title>
 
@@ -13,9 +17,9 @@
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       background: #f5f7fb;
-      color: #172033;
+      color: #111827;
     }
 
     header {
@@ -24,118 +28,135 @@
       padding: 18px 20px;
     }
 
-    .nav {
+    header .inner {
       max-width: 1100px;
       margin: auto;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
     }
 
-    .logo {
+    header h1 {
+      margin: 0;
       font-size: 22px;
-      font-weight: bold;
     }
 
-    .back {
+    header a {
       color: white;
       text-decoration: none;
-      font-size: 15px;
+      font-weight: bold;
     }
 
     .container {
+      width: 92%;
       max-width: 900px;
-      margin: 50px auto;
-      padding: 0 20px;
+      margin: 45px auto;
     }
 
-    .product-box {
+    .product-card {
       background: white;
-      border-radius: 16px;
-      padding: 40px;
+      border-radius: 18px;
+      padding: 35px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.08);
     }
 
-    .icon {
-      width: 75px;
-      height: 75px;
-      border-radius: 50%;
-      background: #e9f0ff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 34px;
-      margin-bottom: 20px;
-    }
-
-    h1 {
+    .product-title {
       color: #071a3d;
       font-size: 34px;
-      line-height: 1.3;
-      margin: 0 0 15px;
+      margin-top: 0;
+      margin-bottom: 15px;
     }
 
     .description {
-      color: #596579;
-      line-height: 1.8;
+      color: #4b5563;
       font-size: 17px;
+      line-height: 1.7;
     }
 
     .price {
-      color: #071a3d;
       font-size: 30px;
       font-weight: bold;
+      color: #071a3d;
       margin: 25px 0;
     }
 
-    .buy-button {
+    .buy-box {
+      margin-top: 30px;
+      padding: 25px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+    }
+
+    label {
       display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input {
       width: 100%;
-      padding: 17px;
+      padding: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 9px;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #071a3d;
       color: white;
-      text-decoration: none;
-      text-align: center;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: bold;
       cursor: pointer;
     }
 
-    .buy-button:hover {
-      background: #123d7a;
+    button:hover {
+      background: #0d2b63;
     }
 
-    .secure {
-      text-align: center;
-      color: #6b7485;
-      font-size: 14px;
-      margin-top: 18px;
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      margin-top: 15px;
+      padding: 13px;
+      border-radius: 9px;
+      line-height: 1.5;
     }
 
     .error {
-      text-align: center;
-      color: #b42318;
-      font-size: 18px;
-      padding: 30px;
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
+    .info {
+      background: #eff6ff;
+      color: #1e40af;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 25px;
+      color: #071a3d;
+      font-weight: bold;
+      text-decoration: none;
     }
 
     @media (max-width: 600px) {
-      .container {
-        margin: 25px auto;
+      .product-card {
+        padding: 23px;
       }
 
-      .product-box {
-        padding: 25px 20px;
-      }
-
-      h1 {
+      .product-title {
         font-size: 27px;
-      }
-
-      .description {
-        font-size: 16px;
       }
 
       .price {
@@ -148,139 +169,365 @@
 <body>
 
 <header>
-  <div class="nav">
-    <div class="logo">Earn Unlimited Funds</div>
-    <a href="/" class="back">← Back to Products</a>
+  <div class="inner">
+    <h1>Earn Unlimited Funds</h1>
+
+    <a href="/">
+      Home
+    </a>
   </div>
 </header>
 
-<main class="container">
-  <div class="product-box" id="productBox">
-    Loading product...
-  </div>
-</main>
+<div class="container">
 
-<script>
+  <div class="product-card">
 
-const products = {
+    <h2
+      class="product-title"
+      id="productName"
+    >
+      Loading product...
+    </h2>
 
-  "how-to-pass-high-in-exams": {
-    name: "How to Pass High in Exams",
-    price: "₦25,000",
-    icon: "📚",
-    description:
-      "Learn practical study strategies, examination preparation techniques, time-management methods and useful approaches that can help you prepare more effectively for your exams."
-  },
-
-  "ai-response-complete-guide": {
-    name: "AI Response Complete Guide",
-    price: "₦40,000",
-    icon: "🤖",
-    description:
-      "Learn practical ways to use AI for better responses, generating ideas, improving productivity, communication, learning and online work."
-  },
-
-  "facebook-automation": {
-    name: "Facebook Automation",
-    price: "₦60,000",
-    icon: "📱",
-    description:
-      "Learn practical Facebook automation strategies for managing your online presence, responding to customers and improving your digital marketing workflow."
-  },
-
-  "save-a-billion-from-zero-account": {
-    name: "How to Save a Billion from a Zero Account",
-    price: "₦80,000",
-    icon: "💰",
-    description:
-      "Explore practical saving habits, financial planning principles, money-management strategies and long-term approaches to developing stronger financial discipline."
-  },
-
-  "pregnancy-care": {
-    name: "Pregnancy Care Guide",
-    price: "₦150,000",
-    icon: "🤰",
-    description:
-      "A practical pregnancy-care guide covering general preparation, healthy routines, important considerations and useful information for navigating pregnancy. This guide does not replace professional medical advice."
-  },
-
-  "sell-faster": {
-    name: "Sell Faster Professional Ebook",
-    price: "₦150,200",
-    icon: "🚀",
-    description:
-      "Learn practical selling approaches, customer attraction methods, offer presentation techniques and strategies that can help you improve your sales process."
-  }
-
-};
-
-
-const params = new URLSearchParams(window.location.search);
-
-const productId = params.get("id");
-
-const product = products[productId];
-
-const productBox = document.getElementById("productBox");
-
-
-if (!product) {
-
-  productBox.innerHTML = `
-    <div class="error">
-      <h2>Product Not Found</h2>
-      <p>Please return to the products page and select a product.</p>
-      <a href="/" class="buy-button">
-        Back to Products
-      </a>
-    </div>
-  `;
-
-} else {
-
-  productBox.innerHTML = `
-
-    <div class="icon">
-      ${product.icon}
-    </div>
-
-    <h1>
-      ${product.name}
-    </h1>
-
-    <p class="description">
-      ${product.description}
+    <p
+      class="description"
+      id="productDescription"
+    >
+      Please wait...
     </p>
 
-    <div class="price">
-      ${product.price}
+    <div
+      class="price"
+      id="productPrice"
+    >
+      ₦0
+    </div>
+
+    <div class="buy-box">
+
+      <label for="email">
+        Email Address
+      </label>
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Enter your email address"
+        required
+      >
+
+      <button
+        id="buyButton"
+        type="button"
+      >
+        Buy Now
+      </button>
+
+      <div
+        id="infoMessage"
+        class="message info"
+      ></div>
+
+      <div
+        id="errorMessage"
+        class="message error"
+      ></div>
+
     </div>
 
     <a
-      href="#"
-      class="buy-button"
-      id="buyButton"
+      class="back"
+      href="/"
     >
-      BUY NOW
+      ← Back to all products
     </a>
 
-    <div class="secure">
-      🔒 Secure digital purchase
-    </div>
+  </div>
 
-  `;
+</div>
 
-  document.getElementById("buyButton").addEventListener("click", function(event) {
+<script>
 
-    event.preventDefault();
+  // =====================================================
+  // GET PRODUCT ID FROM URL
+  // =====================================================
 
-    alert(
-      "Payment setup is not connected yet. The product has been added to your store successfully."
+  const params =
+    new URLSearchParams(
+      window.location.search
     );
 
-  });
+  const productId =
+    params.get("id");
 
-}
+  // =====================================================
+  // PAGE ELEMENTS
+  // =====================================================
+
+  const productName =
+    document.getElementById(
+      "productName"
+    );
+
+  const productDescription =
+    document.getElementById(
+      "productDescription"
+    );
+
+  const productPrice =
+    document.getElementById(
+      "productPrice"
+    );
+
+  const buyButton =
+    document.getElementById(
+      "buyButton"
+    );
+
+  const emailInput =
+    document.getElementById(
+      "email"
+    );
+
+  const infoMessage =
+    document.getElementById(
+      "infoMessage"
+    );
+
+  const errorMessage =
+    document.getElementById(
+      "errorMessage"
+    );
+
+  // =====================================================
+  // LOAD PRODUCT
+  // =====================================================
+
+  async function loadProduct() {
+
+    if (!productId) {
+
+      productName.textContent =
+        "Product not found";
+
+      productDescription.textContent =
+        "No product was selected.";
+
+      buyButton.disabled =
+        true;
+
+      return;
+    }
+
+    try {
+
+      const response =
+        await fetch(
+          "/api/products/" +
+          encodeURIComponent(
+            productId
+          )
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+
+        throw new Error(
+          data.message ||
+          "Product not found."
+        );
+      }
+
+      const product =
+        data.product;
+
+      productName.textContent =
+        product.name;
+
+      productDescription.textContent =
+        product.description;
+
+      productPrice.textContent =
+        "₦" +
+        Number(
+          product.priceNaira
+        ).toLocaleString();
+
+    } catch (error) {
+
+      productName.textContent =
+        "Unable to load product";
+
+      productDescription.textContent =
+        error.message;
+
+      buyButton.disabled =
+        true;
+    }
+  }
+
+  // =====================================================
+  // START SELAR PAYMENT
+  // =====================================================
+
+  buyButton.addEventListener(
+    "click",
+    async function () {
+
+      const email =
+        emailInput.value.trim();
+
+      errorMessage.style.display =
+        "none";
+
+      infoMessage.style.display =
+        "none";
+
+      if (!email) {
+
+        errorMessage.textContent =
+          "Please enter your email address.";
+
+        errorMessage.style.display =
+          "block";
+
+        return;
+      }
+
+      if (
+        !email.includes("@") ||
+        !email.includes(".")
+      ) {
+
+        errorMessage.textContent =
+          "Please enter a valid email address.";
+
+        errorMessage.style.display =
+          "block";
+
+        return;
+      }
+
+      buyButton.disabled =
+        true;
+
+      buyButton.textContent =
+        "Connecting to Selar...";
+
+      infoMessage.textContent =
+        "Please wait while we prepare your checkout.";
+
+      infoMessage.style.display =
+        "block";
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/pay",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+                email: email,
+                productId: productId
+              })
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+
+          throw new Error(
+            data.message ||
+            "Unable to start payment."
+          );
+        }
+
+        /*
+          Save the reference temporarily.
+
+          This allows the success page to know
+          which purchase session was started.
+        */
+
+        if (data.reference) {
+
+          sessionStorage.setItem(
+            "payment_reference",
+            data.reference
+          );
+        }
+
+        if (data.productId) {
+
+          sessionStorage.setItem(
+            "payment_product",
+            data.productId
+          );
+        }
+
+        // =================================================
+        // SEND CUSTOMER TO SELAR
+        // =================================================
+
+        if (data.checkout_url) {
+
+          window.location.href =
+            data.checkout_url;
+
+          return;
+        }
+
+        throw new Error(
+          "Selar checkout URL was not returned."
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Payment error:",
+          error
+        );
+
+        errorMessage.textContent =
+          error.message;
+
+        errorMessage.style.display =
+          "block";
+
+        infoMessage.style.display =
+          "none";
+
+        buyButton.disabled =
+          false;
+
+        buyButton.textContent =
+          "Buy Now";
+      }
+    }
+  );
+
+  // =====================================================
+  // INITIALIZE
+  // =====================================================
+
+  loadProduct();
 
 </script>
 
