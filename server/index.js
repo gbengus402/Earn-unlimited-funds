@@ -191,10 +191,17 @@ async function initializeDatabase() {
     ON payments(email)
   `);
 
+  /*
+    IMPORTANT:
+    Your existing downloads table uses BIGINT for expires_at.
+    It also requires reference and created_at.
+  */
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS downloads (
       id SERIAL PRIMARY KEY,
       token_hash TEXT UNIQUE NOT NULL,
+      reference TEXT NOT NULL,
       payment_reference TEXT NOT NULL,
       product_id TEXT NOT NULL,
       email TEXT NOT NULL,
@@ -204,10 +211,22 @@ async function initializeDatabase() {
     )
   `);
 
-  // Make sure an existing downloads table has payment_reference.
+  // Make sure existing table has reference.
+  await pool.query(`
+    ALTER TABLE downloads
+    ADD COLUMN IF NOT EXISTS reference TEXT
+  `);
+
+  // Make sure existing table has payment_reference.
   await pool.query(`
     ALTER TABLE downloads
     ADD COLUMN IF NOT EXISTS payment_reference TEXT
+  `);
+
+  // Make sure existing table has created_at.
+  await pool.query(`
+    ALTER TABLE downloads
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ
   `);
 
   await pool.query(`
@@ -319,10 +338,12 @@ app.post("/api/pay", async (req, res) => {
       reference,
       productId: product.id,
       checkout_url: product.selarUrl,
-      return_url: `${SITE_URL}/payment-success.html?product=${encodeURIComponent(
-        product.id
-      )}`
+      return_url:
+        `${SITE_URL}/payment-success.html?product=${encodeURIComponent(
+          product.id
+        )}`
     });
+
   } catch (error) {
     console.error("Selar payment initialization error:", error);
 
@@ -337,178 +358,12 @@ app.post("/api/pay", async (req, res) => {
 // PAYMENT SUCCESS PAGE
 // ======================================================
 
-// ======================================================
-// TEMPORARY R2 DOWNLOAD TEST
-// REMOVE AFTER TESTING
-// ======================================================
-
-app.get("// ======================================================
-// TEMPORARY R2 DOWNLOAD TEST
-// REMOVE AFTER TESTING
-// ======================================================
-
-app.get("/api/test-download", async (req, res) => {
-  try {
-    const productId = "how-to-pass-high-in-exams";
-    const product = PRODUCTS[productId];
-
-    if (!product) {
-      return res.status(404).send("Product not found.");
-    }
-
-    if (!r2Client) {
-      return res.status(500).send(
-        "Cloudflare R2 is not configured correctly."
-      );
-    }
-
-    if (!r2BucketName) {
-      return res.status(500).send(
-        "R2_BUCKET_NAME is missing."
-      );
-    }
-
-    // Create temporary download token
-    const rawToken = crypto.randomBytes(32).toString("hex");
-
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-
-    // BIGINT expiry: 10 minutes from now
-    const expiresAt = Date.now() + (10 * 60 * 1000);
-
-    // Test payment/reference
-    const testReference = "TEST-" + Date.now();
-
-    // Save temporary download access
-    await pool.query(
-      `
-      INSERT INTO downloads
-      (
-        token_hash,
-        reference,
-        payment_reference,
-        product_id,
-        email,
-        used,
-        expires_at,
-        created_at
-      )
-      VALUES
-      (
-        $1,
-        $2,
-        $2,
-        $3,
-        $4,
-        0,
-        $5,
-        NOW()
-      )
-      `,
-      [
-        tokenHash,
-        testReference,
-        productId,
-        "test@example.com",
-        expiresAt
-      ]
-    );
-
-    // Give browser the temporary download token
-    res.setHeader(
-      "Set-Cookie",
-      `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
-    );
-
-    // Send browser to secure download route
-    return res.redirect("/api/download");
-
-  } catch (error) {
-    console.error("Test download error:", error);
-
-    return res.status(500).send(
-      "Unable to start test download: " + error.message
-    );
-  }
-});", async (req, res) => {
-  try {
-    const productId = "how-to-pass-high-in-exams";
-    const product = PRODUCTS[productId];
-
-    if (!product) {
-      return res.status(404).send("Product not found.");
-    }
-
-    if (!r2Client) {
-      return res.status(500).send(
-        "Cloudflare R2 is not configured correctly."
-      );
-    }
-
-    if (!r2BucketName) {
-      return res.status(500).send(
-        "R2_BUCKET_NAME is missing."
-      );
-    }
-
-    // Create temporary download token
-    const rawToken = crypto.randomBytes(32).toString("hex");
-
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-
-    // BIGINT expiry: 10 minutes from now
-    const expiresAt = Date.now() + (10 * 60 * 1000);
-
-    // Test payment/reference
-    const testReference = "TEST-" + Date.now();
-
-    // Save temporary download access
-    await pool.query(
-      `
-      INSERT INTO downloads
-      (
-        token_hash,
-        reference,
-        payment_reference,
-        product_id,
-        email,
-        used,
-        expires_at
-      )
-      VALUES ($1, $2, $2, $3, $4, 0, $5)
-      `,
-      [
-        tokenHash,
-        testReference,
-        productId,
-        "test@example.com",
-        expiresAt
-      ]
-    );
-
-    // Give browser the temporary download token
-    res.setHeader(
-      "Set-Cookie",
-      `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
-    );
-
-    // Send browser to secure download route
-    return res.redirect("/api/download");
-
-  } catch (error) {
-    console.error("Test download error:", error);
-
-    return res.status(500).send(
-      "Unable to start test download: " + error.message
-    );
-  }
+app.get("/payment-success.html", (req, res) => {
+  res.sendFile(
+    path.join(publicFolder, "payment-success.html")
+  );
 });
+
 // ======================================================
 // MANUAL PURCHASE ACCESS CHECK
 // ======================================================
@@ -541,12 +396,11 @@ app.get("/api/purchase-status", async (req, res) => {
       });
     }
 
-    const payment = result.rows[0];
-
     return res.json({
       success: true,
-      payment
+      payment: result.rows[0]
     });
+
   } catch (error) {
     console.error("Purchase status error:", error);
 
@@ -591,8 +445,13 @@ app.get("/api/test-download", async (req, res) => {
       .update(rawToken)
       .digest("hex");
 
-    // BIGINT expiry time: 10 minutes from now.
-    const expiresAt = Date.now() + (10 * 60 * 1000);
+    // BIGINT expiry: 10 minutes from now.
+    const expiresAt =
+      Date.now() + (10 * 60 * 1000);
+
+    // Test reference.
+    const testReference =
+      "TEST-" + Date.now();
 
     // Save temporary download access.
     await pool.query(
@@ -600,37 +459,50 @@ app.get("/api/test-download", async (req, res) => {
       INSERT INTO downloads
       (
         token_hash,
+        reference,
         payment_reference,
         product_id,
         email,
         used,
-        expires_at
+        expires_at,
+        created_at
       )
-      VALUES ($1, $2, $3, $4, 0, $5)
+      VALUES
+      (
+        $1,
+        $2,
+        $2,
+        $3,
+        $4,
+        0,
+        $5,
+        NOW()
+      )
       `,
       [
         tokenHash,
-        "TEST-" + Date.now(),
+        testReference,
         productId,
         "test@example.com",
         expiresAt
       ]
     );
 
-    // Give browser the temporary download token.
+    // Give browser temporary download token.
     res.setHeader(
       "Set-Cookie",
       `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
     );
 
-    // Send browser to the real secure download route.
+    // Send browser to secure download route.
     return res.redirect("/api/download");
 
   } catch (error) {
     console.error("Test download error:", error);
 
     return res.status(500).send(
-      "Unable to start test download: " + error.message
+      "Unable to start test download: " +
+      error.message
     );
   }
 });
@@ -644,7 +516,9 @@ app.get("/api/download", async (req, res) => {
     const rawToken = req.headers.cookie
       ?.split(";")
       .map((item) => item.trim())
-      .find((item) => item.startsWith("download_token="))
+      .find((item) =>
+        item.startsWith("download_token=")
+      )
       ?.split("=")
       .slice(1)
       .join("=");
@@ -679,19 +553,22 @@ app.get("/api/download", async (req, res) => {
     const download = downloadResult.rows[0];
 
     // BIGINT expiry check.
-    if (Number(download.expires_at) <= Date.now()) {
+    if (
+      Number(download.expires_at) <= Date.now()
+    ) {
       return res.status(403).send(
         "This download link has expired."
       );
     }
 
-    if (download.used === 1) {
+    if (Number(download.used) === 1) {
       return res.status(403).send(
         "This download link has already been used."
       );
     }
 
-    const product = PRODUCTS[download.product_id];
+    const product =
+      PRODUCTS[download.product_id];
 
     if (!product) {
       return res.status(404).send(
@@ -705,13 +582,14 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // Get product from Cloudflare R2.
-    const r2Response = await r2Client.send(
-      new GetObjectCommand({
-        Bucket: r2BucketName,
-        Key: product.fileKey
-      })
-    );
+    // Get product file from Cloudflare R2.
+    const r2Response =
+      await r2Client.send(
+        new GetObjectCommand({
+          Bucket: r2BucketName,
+          Key: product.fileKey
+        })
+      );
 
     if (!r2Response.Body) {
       return res.status(404).send(
@@ -720,17 +598,21 @@ app.get("/api/download", async (req, res) => {
     }
 
     // Mark token as used.
-    const usedResult = await pool.query(
-      `
-      UPDATE downloads
-      SET used = 1
-      WHERE token_hash = $1
-        AND used = 0
-        AND expires_at > $2
-      RETURNING id
-      `,
-      [tokenHash, Date.now()]
-    );
+    const usedResult =
+      await pool.query(
+        `
+        UPDATE downloads
+        SET used = 1
+        WHERE token_hash = $1
+          AND used = 0
+          AND expires_at > $2
+        RETURNING id
+        `,
+        [
+          tokenHash,
+          Date.now()
+        ]
+      );
 
     if (usedResult.rows.length === 0) {
       return res.status(403).send(
@@ -813,11 +695,15 @@ async function startServer() {
   try {
     await initializeDatabase();
 
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(
-        `Earn Unlimited Funds server running on port ${PORT}`
-      );
-    });
+    app.listen(
+      PORT,
+      "0.0.0.0",
+      () => {
+        console.log(
+          `Earn Unlimited Funds server running on port ${PORT}`
+        );
+      }
+    );
 
   } catch (error) {
     console.error(
