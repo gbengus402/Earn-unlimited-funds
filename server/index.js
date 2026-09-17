@@ -23,7 +23,6 @@ const SITE_URL =
 // ======================================================
 
 const PRODUCTS = {
-  "how-to-pass-high-in-exams": {
     id: "how-to-pass-high-in-exams",
     name: "How to Pass High in Exams",
     description:
