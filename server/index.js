@@ -23,6 +23,7 @@ const SITE_URL =
 // ======================================================
 
 const PRODUCTS = {
+  "how-to-pass-high-in-exams": {
     id: "how-to-pass-high-in-exams",
     name: "How to Pass High in Exams",
     description:
@@ -101,85 +102,6 @@ const PRODUCTS = {
     selarUrl: "https://selar.com/4v623f9qhw"
   }
 };
-  "how-to-pass-high-in-exams": {
-    id: "how-to-pass-high-in-exams",
-    name: "How to Pass High in Exams",
-    description:
-      "A practical guide designed to help students prepare better, study effectively, manage examination pressure and improve their academic performance.",
-    priceNaira: 25000,
-    amountKobo: 2500000,
-    fileKey: "how-to-pass-high-in-exams.pdf",
-    downloadName: "How-to-Pass-High-in-Exams.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/5m7y791u94"
-  },
-
-  "ai-response-complete-guide": {
-    id: "ai-response-complete-guide",
-    name: "AI Response Complete Guide",
-    description:
-      "A practical guide to using AI effectively for better responses, ideas, productivity, communication and online work.",
-    priceNaira: 40000,
-    amountKobo: 4000000,
-    fileKey: "AI_Response_Complete_Guide-3.pdf",
-    downloadName: "AI-Response-Complete-Guide.pdf",
-    contentType: "application/pdf",
-    selarUrl: ""
-  },
-
-  "facebook-automation": {
-    id: "facebook-automation",
-    name: "Facebook Automation",
-    description:
-      "Learn practical Facebook automation strategies that can help you manage your online presence, respond to customers and improve your digital marketing workflow.",
-    priceNaira: 60000,
-    amountKobo: 6000000,
-    fileKey: "Facebook_Automation_Ebook_GBENGA-1.pdf",
-    downloadName: "Facebook-Automation.pdf",
-    contentType: "application/pdf",
-    selarUrl: ""
-  },
-
-  "save-a-billion-from-zero-account": {
-    id: "save-a-billion-from-zero-account",
-    name: "How to Save a Billion from a Zero Account",
-    description:
-      "A practical financial guide focused on building better money habits, saving strategies, planning and long-term financial growth.",
-    priceNaira: 80000,
-    amountKobo: 8000000,
-    fileKey: "How_to_Save_a_Billion_from_a_Zero_Account-1.pdf",
-    downloadName: "How-to-Save-a-Billion-from-a-Zero-Account.pdf",
-    contentType: "application/pdf",
-    selarUrl: ""
-  },
-
-  "pregnancy-care": {
-    id: "pregnancy-care",
-    name: "Pregnancy Care Guide",
-    description:
-      "A practical pregnancy care guide covering useful information, preparation, healthy routines and important considerations during pregnancy.",
-    priceNaira: 150000,
-    amountKobo: 15000000,
-    fileKey: "Pregnancy_Care_Guide_Ebook-1.docx",
-    downloadName: "Pregnancy-Care-Guide.docx",
-    contentType:
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    selarUrl: ""
-  },
-
-  "sell-faster": {
-    id: "sell-faster",
-    name: "Sell Faster Professional Ebook",
-    description:
-      "A practical guide for improving your selling approach, attracting potential customers, presenting offers and increasing your chances of making sales.",
-    priceNaira: 150200,
-    amountKobo: 15020000,
-    fileKey: "Sell_Faster_Professional_Ebook-2.pdf",
-    downloadName: "Sell-Faster-Professional-Ebook.pdf",
-    contentType: "application/pdf",
-    selarUrl: ""
-  }
-};
 
 // ======================================================
 // MIDDLEWARE
@@ -245,7 +167,7 @@ async function initializeDatabase() {
   }
 
   // ----------------------------------------------------
-  // PAYMENTS TABLE
+  // PAYMENTS
   // ----------------------------------------------------
 
   await pool.query(`
@@ -273,20 +195,7 @@ async function initializeDatabase() {
   `);
 
   // ----------------------------------------------------
-  // DOWNLOADS TABLE
-  // ----------------------------------------------------
-  //
-  // IMPORTANT:
-  // The existing database uses BIGINT for:
-  //
-  // expires_at
-  // created_at
-  //
-  // Therefore this application uses Date.now()
-  // for both values.
-  //
-  // CREATE TABLE IF NOT EXISTS will NOT change
-  // the type of an existing column.
+  // DOWNLOADS
   // ----------------------------------------------------
 
   await pool.query(`
@@ -302,10 +211,6 @@ async function initializeDatabase() {
       created_at BIGINT NOT NULL
     )
   `);
-
-  // ----------------------------------------------------
-  // EXISTING DOWNLOADS TABLE
-  // ----------------------------------------------------
 
   await pool.query(`
     ALTER TABLE downloads
@@ -437,7 +342,7 @@ app.post("/api/pay", async (req, res) => {
       return_url:
         `${SITE_URL}/payment-success.html?product=${encodeURIComponent(
           product.id
-        )}`
+        )}&reference=${encodeURIComponent(reference)}`
     });
 
   } catch (error) {
@@ -549,10 +454,6 @@ app.get("/api/test-download-v2", async (req, res) => {
       );
     }
 
-    // --------------------------------------------------
-    // CREATE TOKEN
-    // --------------------------------------------------
-
     const rawToken =
       crypto.randomBytes(32).toString("hex");
 
@@ -562,10 +463,6 @@ app.get("/api/test-download-v2", async (req, res) => {
         .update(rawToken)
         .digest("hex");
 
-    // --------------------------------------------------
-    // BIGINT TIMESTAMPS
-    // --------------------------------------------------
-
     const now = Date.now();
 
     const expiresAt =
@@ -573,10 +470,6 @@ app.get("/api/test-download-v2", async (req, res) => {
 
     const testReference =
       `TEST-V2-${now}`;
-
-    // --------------------------------------------------
-    // CREATE DOWNLOAD RECORD
-    // --------------------------------------------------
 
     await pool.query(
       `
@@ -620,18 +513,10 @@ app.get("/api/test-download-v2", async (req, res) => {
       testReference
     );
 
-    // --------------------------------------------------
-    // CREATE DOWNLOAD COOKIE
-    // --------------------------------------------------
-
     res.setHeader(
       "Set-Cookie",
       `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
     );
-
-    // --------------------------------------------------
-    // GO TO DOWNLOAD
-    // --------------------------------------------------
 
     return res.redirect(
       "/api/download"
@@ -656,10 +541,6 @@ app.get("/api/test-download-v2", async (req, res) => {
 
 app.get("/api/download", async (req, res) => {
   try {
-    // --------------------------------------------------
-    // READ COOKIE
-    // --------------------------------------------------
-
     const rawToken =
       req.headers.cookie
         ?.split(";")
@@ -679,19 +560,11 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // --------------------------------------------------
-    // HASH TOKEN
-    // --------------------------------------------------
-
     const tokenHash =
       crypto
         .createHash("sha256")
         .update(rawToken)
         .digest("hex");
-
-    // --------------------------------------------------
-    // FIND DOWNLOAD
-    // --------------------------------------------------
 
     const downloadResult =
       await pool.query(
@@ -715,10 +588,6 @@ app.get("/api/download", async (req, res) => {
     const download =
       downloadResult.rows[0];
 
-    // --------------------------------------------------
-    // CHECK EXPIRY
-    // --------------------------------------------------
-
     if (
       Number(download.expires_at) <=
       Date.now()
@@ -728,10 +597,6 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // --------------------------------------------------
-    // CHECK USED
-    // --------------------------------------------------
-
     if (
       Number(download.used) === 1
     ) {
@@ -739,10 +604,6 @@ app.get("/api/download", async (req, res) => {
         "This download link has already been used."
       );
     }
-
-    // --------------------------------------------------
-    // FIND PRODUCT
-    // --------------------------------------------------
 
     const product =
       PRODUCTS[download.product_id];
@@ -753,19 +614,11 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // --------------------------------------------------
-    // CHECK R2
-    // --------------------------------------------------
-
     if (!r2Client) {
       return res.status(500).send(
         "Cloudflare R2 is not configured correctly."
       );
     }
-
-    // --------------------------------------------------
-    // GET FILE FROM R2
-    // --------------------------------------------------
 
     const r2Response =
       await r2Client.send(
@@ -780,10 +633,6 @@ app.get("/api/download", async (req, res) => {
         "Product file could not be found."
       );
     }
-
-    // --------------------------------------------------
-    // MARK TOKEN AS USED
-    // --------------------------------------------------
 
     const usedResult =
       await pool.query(
@@ -809,18 +658,10 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
-    // --------------------------------------------------
-    // REMOVE COOKIE
-    // --------------------------------------------------
-
     res.setHeader(
       "Set-Cookie",
       "download_token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
     );
-
-    // --------------------------------------------------
-    // DOWNLOAD HEADERS
-    // --------------------------------------------------
 
     res.setHeader(
       "Content-Type",
@@ -840,10 +681,6 @@ app.get("/api/download", async (req, res) => {
         )
       );
     }
-
-    // --------------------------------------------------
-    // STREAM FILE
-    // --------------------------------------------------
 
     r2Response.Body.pipe(res);
 
