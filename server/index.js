@@ -46,6 +46,85 @@ const PRODUCTS = {
     fileKey: "AI_Response_Complete_Guide-3.pdf",
     downloadName: "AI-Response-Complete-Guide.pdf",
     contentType: "application/pdf",
+    selarUrl: "https://selar.com/376717994x"
+  },
+
+  "facebook-automation": {
+    id: "facebook-automation",
+    name: "Facebook Automation",
+    description:
+      "Learn practical Facebook automation strategies that can help you manage your online presence, respond to customers and improve your digital marketing workflow.",
+    priceNaira: 60000,
+    amountKobo: 6000000,
+    fileKey: "Facebook_Automation_Ebook_GBENGA-1.pdf",
+    downloadName: "Facebook-Automation.pdf",
+    contentType: "application/pdf",
+    selarUrl: "https://selar.com/9b2t7798i4"
+  },
+
+  "save-a-billion-from-zero-account": {
+    id: "save-a-billion-from-zero-account",
+    name: "How to Save a Billion from a Zero Account",
+    description:
+      "A practical financial guide focused on building better money habits, saving strategies, planning and long-term financial growth.",
+    priceNaira: 80000,
+    amountKobo: 8000000,
+    fileKey: "How_to_Save_a_Billion_from_a_Zero_Account-1.pdf",
+    downloadName: "How-to-Save-a-Billion-from-a-Zero-Account.pdf",
+    contentType: "application/pdf",
+    selarUrl: "https://selar.com/40v70a9277"
+  },
+
+  "pregnancy-care": {
+    id: "pregnancy-care",
+    name: "Pregnancy Care Guide",
+    description:
+      "A practical pregnancy care guide covering useful information, preparation, healthy routines and important considerations during pregnancy.",
+    priceNaira: 150000,
+    amountKobo: 15000000,
+    fileKey: "Pregnancy_Care_Guide_Ebook-1.docx",
+    downloadName: "Pregnancy-Care-Guide.docx",
+    contentType:
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    selarUrl: "https://selar.com/327021wa25"
+  },
+
+  "sell-faster": {
+    id: "sell-faster",
+    name: "Sell Faster Professional Ebook",
+    description:
+      "A practical guide for improving your selling approach, attracting potential customers, presenting offers and increasing your chances of making sales.",
+    priceNaira: 150200,
+    amountKobo: 15020000,
+    fileKey: "Sell_Faster_Professional_Ebook-2.pdf",
+    downloadName: "Sell-Faster-Professional-Ebook.pdf",
+    contentType: "application/pdf",
+    selarUrl: "https://selar.com/4v623f9qhw"
+  }
+};
+  "how-to-pass-high-in-exams": {
+    id: "how-to-pass-high-in-exams",
+    name: "How to Pass High in Exams",
+    description:
+      "A practical guide designed to help students prepare better, study effectively, manage examination pressure and improve their academic performance.",
+    priceNaira: 25000,
+    amountKobo: 2500000,
+    fileKey: "how-to-pass-high-in-exams.pdf",
+    downloadName: "How-to-Pass-High-in-Exams.pdf",
+    contentType: "application/pdf",
+    selarUrl: "https://selar.com/5m7y791u94"
+  },
+
+  "ai-response-complete-guide": {
+    id: "ai-response-complete-guide",
+    name: "AI Response Complete Guide",
+    description:
+      "A practical guide to using AI effectively for better responses, ideas, productivity, communication and online work.",
+    priceNaira: 40000,
+    amountKobo: 4000000,
+    fileKey: "AI_Response_Complete_Guide-3.pdf",
+    downloadName: "AI-Response-Complete-Guide.pdf",
+    contentType: "application/pdf",
     selarUrl: ""
   },
 
