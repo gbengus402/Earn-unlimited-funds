@@ -227,6 +227,11 @@ async function initializeDatabase() {
     ON downloads(token_hash)
   `);
 
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_downloads_payment_reference
+    ON downloads(payment_reference)
+  `);
+
   console.log("PostgreSQL database initialized.");
 }
 
@@ -359,12 +364,573 @@ app.post("/api/pay", async (req, res) => {
 });
 
 // ======================================================
+// SELAR WEBHOOK
+// ======================================================
+//
+// IMPORTANT:
+// This endpoint receives the sale notification from Selar.
+//
+// Do NOT put your Selar API key in this route.
+//
+// We first receive and record the actual Selar sale.
+// We do not trust the customer's browser redirect as
+// proof of payment.
+//
+// ======================================================
+
+app.post("/api/selar/webhook", async (req, res) => {
+  try {
+    console.log("==========================================");
+    console.log("SELAR WEBHOOK RECEIVED");
+    console.log("==========================================");
+
+    const payload = req.body || {};
+
+    // TEMPORARY TEST LOGGING
+    // Keep this until we confirm the exact Selar payload.
+    console.log(
+      JSON.stringify(payload, null, 2)
+    );
+
+    // --------------------------------------------------
+    // Extract possible data containers
+    // --------------------------------------------------
+
+    const sale =
+      payload.data ||
+      payload.sale ||
+      payload.transaction ||
+      payload.payment ||
+      payload;
+
+    // --------------------------------------------------
+    // Event
+    // --------------------------------------------------
+
+    const event =
+      payload.event ||
+      payload.type ||
+      payload.action ||
+      payload.name ||
+      "";
+
+    // --------------------------------------------------
+    // Customer
+    // --------------------------------------------------
+
+    const customer =
+      sale.customer ||
+      payload.customer ||
+      {};
+
+    const email =
+      sale.email ||
+      sale.customer_email ||
+      sale.customerEmail ||
+      customer.email ||
+      payload.email ||
+      "";
+
+    // --------------------------------------------------
+    // Product
+    // --------------------------------------------------
+
+    const rawProduct =
+      sale.product ||
+      sale.item ||
+      payload.product ||
+      {};
+
+    const selarProductId =
+      typeof rawProduct === "object"
+        ? (
+            rawProduct.id ||
+            rawProduct.slug ||
+            rawProduct.product_id ||
+            rawProduct.productId ||
+            ""
+          )
+        : rawProduct;
+
+    const productName =
+      typeof rawProduct === "object"
+        ? (
+            rawProduct.name ||
+            rawProduct.title ||
+            ""
+          )
+        : "";
+
+    // --------------------------------------------------
+    // Amount
+    // --------------------------------------------------
+
+    const rawAmount =
+      sale.amount ||
+      sale.total ||
+      sale.price ||
+      payload.amount ||
+      0;
+
+    const amount =
+      Number(rawAmount) || 0;
+
+    // --------------------------------------------------
+    // Currency
+    // --------------------------------------------------
+
+    const currency =
+      sale.currency ||
+      payload.currency ||
+      "NGN";
+
+    // --------------------------------------------------
+    // Payment status
+    // --------------------------------------------------
+
+    const status =
+      sale.status ||
+      sale.payment_status ||
+      sale.paymentStatus ||
+      payload.status ||
+      "";
+
+    const normalizedStatus =
+      String(status)
+        .toLowerCase()
+        .trim();
+
+    // --------------------------------------------------
+    // Payment reference
+    // --------------------------------------------------
+
+    const selarReference =
+      sale.payment_reference ||
+      sale.paymentReference ||
+      sale.transaction_reference ||
+      sale.transactionReference ||
+      sale.reference ||
+      sale.transaction_id ||
+      sale.transactionId ||
+      sale.id ||
+      payload.payment_reference ||
+      payload.reference ||
+      payload.transaction_id ||
+      "";
+
+    console.log("SELAR EVENT:", event);
+    console.log("SELAR EMAIL:", email);
+    console.log("SELAR PRODUCT ID:", selarProductId);
+    console.log("SELAR PRODUCT NAME:", productName);
+    console.log("SELAR AMOUNT:", amount);
+    console.log("SELAR CURRENCY:", currency);
+    console.log("SELAR STATUS:", normalizedStatus);
+    console.log(
+      "SELAR REFERENCE:",
+      selarReference
+    );
+
+    // --------------------------------------------------
+    // Basic validation
+    // --------------------------------------------------
+
+    if (!email) {
+      console.log(
+        "Webhook rejected: customer email missing."
+      );
+
+      return res.status(400).json({
+        success: false,
+        message: "Customer email is missing."
+      });
+    }
+
+    if (!selarReference) {
+      console.log(
+        "Webhook rejected: payment reference missing."
+      );
+
+      return res.status(400).json({
+        success: false,
+        message: "Payment reference is missing."
+      });
+    }
+
+    // --------------------------------------------------
+    // IMPORTANT:
+    // Resolve the product.
+    //
+    // First try our own payment reference.
+    // This is important because /api/pay creates:
+    //
+    // EUF-xxxxx-xxxxx
+    //
+    // If Selar returns that reference, we can directly
+    // identify the product.
+    // --------------------------------------------------
+
+    let localPayment = null;
+
+    const localPaymentResult =
+      await pool.query(
+        `
+        SELECT *
+        FROM payments
+        WHERE reference = $1
+        LIMIT 1
+        `,
+        [selarReference]
+      );
+
+    if (localPaymentResult.rows.length > 0) {
+      localPayment =
+        localPaymentResult.rows[0];
+    }
+
+    // --------------------------------------------------
+    // Resolve product ID
+    // --------------------------------------------------
+
+    let productId =
+      localPayment?.product_id ||
+      "";
+
+    if (!productId) {
+      if (
+        selarProductId &&
+        PRODUCTS[selarProductId]
+      ) {
+        productId = selarProductId;
+      }
+    }
+
+    if (!productId && productName) {
+      const matchingProduct =
+        Object.values(PRODUCTS).find(
+          (product) =>
+            product.name.toLowerCase() ===
+            String(productName)
+              .toLowerCase()
+              .trim()
+        );
+
+      if (matchingProduct) {
+        productId =
+          matchingProduct.id;
+      }
+    }
+
+    if (!productId) {
+      console.log(
+        "Could not match Selar product to local product."
+      );
+
+      // Return 200 so Selar does not repeatedly resend
+      // the same event while we investigate the payload.
+      return res.status(200).json({
+        success: true,
+        message:
+          "Sale received but product mapping requires review."
+      });
+    }
+
+    const product =
+      PRODUCTS[productId];
+
+    if (!product) {
+      return res.status(400).json({
+        success: false,
+        message: "Product does not exist locally."
+      });
+    }
+
+    // --------------------------------------------------
+    // Successful payment detection
+    // --------------------------------------------------
+
+    const successfulStatuses = [
+      "paid",
+      "success",
+      "successful",
+      "completed",
+      "complete",
+      "confirmed"
+    ];
+
+    const successful =
+      successfulStatuses.includes(
+        normalizedStatus
+      );
+
+    // If Selar sends an explicit sale event without
+    // a status field, keep the event visible for testing
+    // but DO NOT automatically grant access yet.
+    if (!successful) {
+      console.log(
+        "Payment is not explicitly marked successful."
+      );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Webhook received; payment not marked successful.",
+        status: normalizedStatus
+      });
+    }
+
+    // --------------------------------------------------
+    // Find the local payment record
+    // --------------------------------------------------
+
+    if (!localPayment) {
+      console.log(
+        "No local payment record found for Selar reference:",
+        selarReference
+      );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Successful Selar sale received but no local payment record was found."
+      });
+    }
+
+    // --------------------------------------------------
+    // Validate customer email
+    // --------------------------------------------------
+
+    if (
+      String(localPayment.email)
+        .trim()
+        .toLowerCase() !==
+      String(email)
+        .trim()
+        .toLowerCase()
+    ) {
+      console.log(
+        "Email mismatch between local payment and Selar sale."
+      );
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Payment customer does not match local payment."
+      });
+    }
+
+    // --------------------------------------------------
+    // Validate product
+    // --------------------------------------------------
+
+    if (
+      localPayment.product_id !==
+      product.id
+    ) {
+      console.log(
+        "Product mismatch between local payment and Selar sale."
+      );
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Purchased product does not match local payment."
+      });
+    }
+
+    // --------------------------------------------------
+    // Validate amount where available
+    // --------------------------------------------------
+
+    if (
+      amount > 0 &&
+      amount !== product.priceNaira &&
+      amount !== product.amountKobo
+    ) {
+      console.log(
+        "Amount mismatch:",
+        amount,
+        "expected:",
+        product.priceNaira,
+        "or:",
+        product.amountKobo
+      );
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Payment amount does not match product price."
+      });
+    }
+
+    // --------------------------------------------------
+    // Mark payment as paid
+    // --------------------------------------------------
+
+    await pool.query(
+      `
+      UPDATE payments
+      SET
+        status = 'paid',
+        updated_at = NOW()
+      WHERE reference = $1
+      `,
+      [localPayment.reference]
+    );
+
+    console.log(
+      "PAYMENT MARKED PAID:",
+      localPayment.reference
+    );
+
+    // --------------------------------------------------
+    // Prevent duplicate download tokens
+    // --------------------------------------------------
+
+    const existingDownload =
+      await pool.query(
+        `
+        SELECT
+          id,
+          token_hash,
+          expires_at,
+          used
+        FROM downloads
+        WHERE payment_reference = $1
+        LIMIT 1
+        `,
+        [localPayment.reference]
+      );
+
+    if (
+      existingDownload.rows.length > 0
+    ) {
+      console.log(
+        "Download token already exists for payment:",
+        localPayment.reference
+      );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Payment already processed and download already created."
+      });
+    }
+
+    // --------------------------------------------------
+    // Create secure download token
+    // --------------------------------------------------
+
+    const rawToken =
+      crypto.randomBytes(32).toString("hex");
+
+    const tokenHash =
+      crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
+
+    const now = Date.now();
+
+    // 24-hour download token
+    const expiresAt =
+      now + 24 * 60 * 60 * 1000;
+
+    await pool.query(
+      `
+      INSERT INTO downloads
+      (
+        token_hash,
+        reference,
+        payment_reference,
+        product_id,
+        email,
+        used,
+        expires_at,
+        created_at
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8
+      )
+      `,
+      [
+        tokenHash,
+        localPayment.reference,
+        localPayment.reference,
+        product.id,
+        localPayment.email,
+        0,
+        expiresAt,
+        now
+      ]
+    );
+
+    console.log(
+      "SECURE DOWNLOAD CREATED:",
+      localPayment.reference
+    );
+
+    // --------------------------------------------------
+    // Create customer download URL
+    // --------------------------------------------------
+
+    const downloadUrl =
+      `${SITE_URL}/api/download?token=${encodeURIComponent(
+        rawToken
+      )}`;
+
+    console.log(
+      "DOWNLOAD URL:",
+      downloadUrl
+    );
+
+    // --------------------------------------------------
+    // Return success
+    // --------------------------------------------------
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Selar payment processed successfully.",
+      reference:
+        localPayment.reference,
+      product_id:
+        product.id,
+      download_url:
+        downloadUrl
+    });
+
+  } catch (error) {
+    console.error(
+      "SELAR WEBHOOK ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Selar webhook processing failed."
+    });
+  }
+});
+
+// ======================================================
 // PAYMENT SUCCESS PAGE
 // ======================================================
 
 app.get("/payment-success.html", (req, res) => {
   res.sendFile(
-    path.join(publicFolder, "payment-success.html")
+    path.join(
+      publicFolder,
+      "payment-success.html"
+    )
   );
 });
 
@@ -379,36 +945,42 @@ app.get("/api/purchase-status", async (req, res) => {
     if (!reference) {
       return res.status(400).json({
         success: false,
-        message: "Payment reference is required."
+        message:
+          "Payment reference is required."
       });
     }
 
-    const result = await pool.query(
-      `
-      SELECT
-        reference,
-        email,
-        product_id,
-        amount,
-        currency,
-        status
-      FROM payments
-      WHERE reference = $1
-      LIMIT 1
-      `,
-      [reference]
-    );
+    const result =
+      await pool.query(
+        `
+        SELECT
+          reference,
+          email,
+          product_id,
+          amount,
+          currency,
+          status
+        FROM payments
+        WHERE reference = $1
+        LIMIT 1
+        `,
+        [reference]
+      );
 
-    if (result.rows.length === 0) {
+    if (
+      result.rows.length === 0
+    ) {
       return res.status(404).json({
         success: false,
-        message: "Payment record not found."
+        message:
+          "Payment record not found."
       });
     }
 
     return res.json({
       success: true,
-      payment: result.rows[0]
+      payment:
+        result.rows[0]
     });
 
   } catch (error) {
@@ -419,7 +991,8 @@ app.get("/api/purchase-status", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Unable to check purchase status."
+      message:
+        "Unable to check purchase status."
     });
   }
 });
@@ -434,7 +1007,8 @@ app.get("/api/test-download-v2", async (req, res) => {
     const productId =
       "how-to-pass-high-in-exams";
 
-    const product = PRODUCTS[productId];
+    const product =
+      PRODUCTS[productId];
 
     if (!product) {
       return res.status(404).send(
@@ -463,7 +1037,8 @@ app.get("/api/test-download-v2", async (req, res) => {
         .update(rawToken)
         .digest("hex");
 
-    const now = Date.now();
+    const now =
+      Date.now();
 
     const expiresAt =
       now + 10 * 60 * 1000;
@@ -541,18 +1116,36 @@ app.get("/api/test-download-v2", async (req, res) => {
 
 app.get("/api/download", async (req, res) => {
   try {
-    const rawToken =
-      req.headers.cookie
-        ?.split(";")
-        .map((item) => item.trim())
-        .find((item) =>
-          item.startsWith(
-            "download_token="
+
+    // --------------------------------------------------
+    // Support BOTH:
+    //
+    // 1. HttpOnly cookie
+    // 2. One-time ?token=... URL
+    //
+    // This allows the Selar webhook to generate a
+    // download URL.
+    // --------------------------------------------------
+
+    let rawToken =
+      req.query.token || null;
+
+    if (!rawToken) {
+      rawToken =
+        req.headers.cookie
+          ?.split(";")
+          .map((item) =>
+            item.trim()
           )
-        )
-        ?.split("=")
-        .slice(1)
-        .join("=");
+          .find((item) =>
+            item.startsWith(
+              "download_token="
+            )
+          )
+          ?.split("=")
+          .slice(1)
+          .join("=");
+    }
 
     if (!rawToken) {
       return res.status(403).send(
@@ -623,8 +1216,10 @@ app.get("/api/download", async (req, res) => {
     const r2Response =
       await r2Client.send(
         new GetObjectCommand({
-          Bucket: r2BucketName,
-          Key: product.fileKey
+          Bucket:
+            r2BucketName,
+          Key:
+            product.fileKey
         })
       );
 
@@ -673,7 +1268,9 @@ app.get("/api/download", async (req, res) => {
       `attachment; filename="${product.downloadName}"`
     );
 
-    if (r2Response.ContentLength) {
+    if (
+      r2Response.ContentLength
+    ) {
       res.setHeader(
         "Content-Length",
         String(
@@ -685,6 +1282,7 @@ app.get("/api/download", async (req, res) => {
     r2Response.Body.pipe(res);
 
   } catch (error) {
+
     console.error(
       "Download error:",
       error
@@ -737,6 +1335,7 @@ app.get("/health", (req, res) => {
 
 async function startServer() {
   try {
+
     await initializeDatabase();
 
     app.listen(
@@ -750,6 +1349,7 @@ async function startServer() {
     );
 
   } catch (error) {
+
     console.error(
       "Server startup failed:",
       error
