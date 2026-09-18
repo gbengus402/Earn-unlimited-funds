@@ -284,7 +284,103 @@ app.get("/api/products/:id", (req, res) => {
 // START SELAR PAYMENT
 // ======================================================
 
+app.post("// ======================================================
+// START SELAR PAYMENT
+// ======================================================
+
 app.post("/api/pay", async (req, res) => {
+  try {
+    const { email, productId } = req.body;
+
+    if (!email || !productId) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and product are required."
+      });
+    }
+
+    const product = PRODUCTS[productId];
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found."
+      });
+    }
+
+    if (!product.selarUrl) {
+      return res.status(500).json({
+        success: false,
+        message:
+          "Selar payment link has not been configured for this product yet."
+      });
+    }
+
+    const reference =
+      `EUF-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
+
+    // Explicitly provide created_at and updated_at.
+    // This fixes older PostgreSQL tables that do not
+    // have a default value on these columns.
+
+    const now = new Date();
+
+    await pool.query(
+      `
+      INSERT INTO payments
+      (
+        reference,
+        email,
+        product_id,
+        amount,
+        currency,
+        status,
+        created_at,
+        updated_at
+      )
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8)
+      `,
+      [
+        reference,
+        email.trim(),
+        product.id,
+        product.priceNaira,
+        "NGN",
+        "pending",
+        now,
+        now
+      ]
+    );
+
+    console.log(
+      "Payment record created:",
+      reference
+    );
+
+    return res.json({
+      success: true,
+      reference,
+      productId: product.id,
+      checkout_url: product.selarUrl,
+      return_url:
+        `${SITE_URL}/payment-success.html?product=${encodeURIComponent(
+          product.id
+        )}&reference=${encodeURIComponent(reference)}`
+    });
+
+  } catch (error) {
+    console.error(
+      "Selar payment initialization error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to start payment."
+    });
+  }
+});", async (req, res) => {
   try {
     const { email, productId } = req.body;
 
