@@ -25,18 +25,6 @@ async function initializeDatabase() {
     )
   `);
 
-  // FIX EXISTING PAYMENTS TABLE
-  // Ensures older database tables also have defaults.
-  await pool.query(`
-    ALTER TABLE payments
-    ALTER COLUMN created_at SET DEFAULT NOW()
-  `);
-
-  await pool.query(`
-    ALTER TABLE payments
-    ALTER COLUMN updated_at SET DEFAULT NOW()
-  `);
-
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_payments_reference
     ON payments(reference)
