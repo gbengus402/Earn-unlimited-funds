@@ -184,6 +184,17 @@ async function initializeDatabase() {
     )
   `);
 
+  // Make sure existing payments tables also have defaults.
+  await pool.query(`
+    ALTER TABLE payments
+    ALTER COLUMN created_at SET DEFAULT NOW()
+  `);
+
+  await pool.query(`
+    ALTER TABLE payments
+    ALTER COLUMN updated_at SET DEFAULT NOW()
+  `);
+
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_payments_reference
     ON payments(reference)
@@ -284,10 +295,6 @@ app.get("/api/products/:id", (req, res) => {
 // START SELAR PAYMENT
 // ======================================================
 
-app.post("// ======================================================
-// START SELAR PAYMENT
-// ======================================================
-
 app.post("/api/pay", async (req, res) => {
   try {
     const { email, productId } = req.body;
@@ -296,6 +303,15 @@ app.post("/api/pay", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Email and product are required."
+      });
+    }
+
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid email is required."
       });
     }
 
@@ -319,10 +335,6 @@ app.post("/api/pay", async (req, res) => {
     const reference =
       `EUF-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
 
-    // Explicitly provide created_at and updated_at.
-    // This fixes older PostgreSQL tables that do not
-    // have a default value on these columns.
-
     const now = new Date();
 
     await pool.query(
@@ -343,7 +355,7 @@ app.post("/api/pay", async (req, res) => {
       `,
       [
         reference,
-        email.trim(),
+        cleanEmail,
         product.id,
         product.priceNaira,
         "NGN",
@@ -380,83 +392,6 @@ app.post("/api/pay", async (req, res) => {
       message: "Unable to start payment."
     });
   }
-});", async (req, res) => {
-  try {
-    const { email, productId } = req.body;
-
-    if (!email || !productId) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and product are required."
-      });
-    }
-
-    const product = PRODUCTS[productId];
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found."
-      });
-    }
-
-    if (!product.selarUrl) {
-      return res.status(500).json({
-        success: false,
-        message:
-          "Selar payment link has not been configured for this product yet."
-      });
-    }
-
-    const reference =
-      `EUF-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
-
-    await pool.query(
-      `
-      INSERT INTO payments
-      (
-        reference,
-        email,
-        product_id,
-        amount,
-        currency,
-        status
-      )
-      VALUES
-      ($1, $2, $3, $4, $5, $6)
-      `,
-      [
-        reference,
-        email.trim(),
-        product.id,
-        product.priceNaira,
-        "NGN",
-        "pending"
-      ]
-    );
-
-    return res.json({
-      success: true,
-      reference,
-      productId: product.id,
-      checkout_url: product.selarUrl,
-      return_url:
-        `${SITE_URL}/payment-success.html?product=${encodeURIComponent(
-          product.id
-        )}&reference=${encodeURIComponent(reference)}`
-    });
-
-  } catch (error) {
-    console.error(
-      "Selar payment initialization error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to start payment."
-    });
-  }
 });
 
 // ======================================================
@@ -464,14 +399,14 @@ app.post("/api/pay", async (req, res) => {
 // TEMPORARY CONTENT CAPTURE
 // ======================================================
 //
-// This route is temporarily used to capture the EXACT
-// webhook content sent by Selar.
+// This currently captures the exact webhook payload
+// sent by Selar.
 //
-// It does NOT yet mark payments as paid.
-// It does NOT yet create download tokens.
+// We will use the real payload to build the final
+// automatic payment confirmation and download system.
 //
-// We will use the actual Selar webhook payload to build
-// the final secure payment/download flow.
+// IMPORTANT:
+// Do not guess the Selar webhook fields.
 //
 
 app.post("/api/selar/webhook", async (req, res) => {
@@ -511,16 +446,6 @@ app.post("/api/selar/webhook", async (req, res) => {
 // ======================================================
 // SELAR API CONNECTION TEST
 // ======================================================
-//
-// This tests the Selar Integration API key stored in
-// Render environment variables.
-//
-// Render variable:
-// SELAR_API_KEY
-//
-// IMPORTANT:
-// Never put the real API key directly inside this file.
-//
 
 app.get("/api/selar/test", async (req, res) => {
   try {
@@ -674,7 +599,7 @@ app.get("/api/purchase-status", async (req, res) => {
 
 // ======================================================
 // R2 DOWNLOAD TEST V2
-// TEMPORARY - REMOVE AFTER TESTING
+// TEMPORARY - REMOVE AFTER PAYMENT TESTING
 // ======================================================
 
 app.get("/api/test-download-v2", async (req, res) => {
@@ -791,14 +716,6 @@ app.get("/api/test-download-v2", async (req, res) => {
 
 app.get("/api/download", async (req, res) => {
   try {
-
-    // --------------------------------------------------
-    // Support BOTH:
-    //
-    // 1. HttpOnly cookie
-    // 2. One-time ?token=... URL
-    // --------------------------------------------------
-
     let rawToken =
       req.query.token || null;
 
@@ -954,7 +871,6 @@ app.get("/api/download", async (req, res) => {
     r2Response.Body.pipe(res);
 
   } catch (error) {
-
     console.error(
       "Download error:",
       error
@@ -1007,7 +923,6 @@ app.get("/health", (req, res) => {
 
 async function startServer() {
   try {
-
     await initializeDatabase();
 
     app.listen(
@@ -1021,7 +936,6 @@ async function startServer() {
     );
 
   } catch (error) {
-
     console.error(
       "Server startup failed:",
       error
