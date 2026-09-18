@@ -335,7 +335,7 @@ app.post("/api/pay", async (req, res) => {
     const reference =
       `EUF-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
 
-    const now = new Date();
+    const now = Date.now();
 
     await pool.query(
       `
