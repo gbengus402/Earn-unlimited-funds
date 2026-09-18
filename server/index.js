@@ -184,17 +184,6 @@ async function initializeDatabase() {
     )
   `);
 
-  // Make sure existing payments tables also have defaults.
-  await pool.query(`
-    ALTER TABLE payments
-    ALTER COLUMN created_at SET DEFAULT NOW()
-  `);
-
-  await pool.query(`
-    ALTER TABLE payments
-    ALTER COLUMN updated_at SET DEFAULT NOW()
-  `);
-
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_payments_reference
     ON payments(reference)
@@ -398,16 +387,6 @@ app.post("/api/pay", async (req, res) => {
 // SELAR WEBHOOK
 // TEMPORARY CONTENT CAPTURE
 // ======================================================
-//
-// This currently captures the exact webhook payload
-// sent by Selar.
-//
-// We will use the real payload to build the final
-// automatic payment confirmation and download system.
-//
-// IMPORTANT:
-// Do not guess the Selar webhook fields.
-//
 
 app.post("/api/selar/webhook", async (req, res) => {
   try {
