@@ -161,7 +161,103 @@ if (
 // DATABASE SETUP
 // ======================================================
 
+async function // ======================================================
+// DATABASE SETUP
+// ======================================================
+
 async function initializeDatabase() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is missing.");
+  }
+
+  // ----------------------------------------------------
+  // PAYMENTS
+  // ----------------------------------------------------
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id SERIAL PRIMARY KEY,
+      reference TEXT UNIQUE NOT NULL,
+      email TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'NGN',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    )
+  `);
+
+  // Add missing columns to an existing payments table.
+  await pool.query(`
+    ALTER TABLE payments
+    ADD COLUMN IF NOT EXISTS created_at BIGINT
+  `);
+
+  await pool.query(`
+    ALTER TABLE payments
+    ADD COLUMN IF NOT EXISTS updated_at BIGINT
+  `);
+
+  // ----------------------------------------------------
+  // PAYMENT INDEXES
+  // ----------------------------------------------------
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_payments_reference
+    ON payments(reference)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_payments_email
+    ON payments(email)
+  `);
+
+  // ----------------------------------------------------
+  // DOWNLOADS
+  // ----------------------------------------------------
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS downloads (
+      id SERIAL PRIMARY KEY,
+      token_hash TEXT UNIQUE NOT NULL,
+      reference TEXT NOT NULL,
+      payment_reference TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0,
+      expires_at BIGINT NOT NULL,
+      created_at BIGINT NOT NULL
+    )
+  `);
+
+  // Add missing columns to an existing downloads table.
+  await pool.query(`
+    ALTER TABLE downloads
+    ADD COLUMN IF NOT EXISTS reference TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE downloads
+    ADD COLUMN IF NOT EXISTS payment_reference TEXT
+  `);
+
+  // ----------------------------------------------------
+  // DOWNLOAD INDEXES
+  // ----------------------------------------------------
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_downloads_token_hash
+    ON downloads(token_hash)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_downloads_payment_reference
+    ON downloads(payment_reference)
+  `);
+
+  console.log("PostgreSQL database initialized.");
+} {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is missing.");
   }
