@@ -151,6 +151,8 @@ if (
       secretAccessKey: r2SecretAccessKey
     }
   });
+
+  console.log("Cloudflare R2 client configured.");
 } else {
   console.warn(
     "WARNING: Cloudflare R2 environment variables are incomplete."
@@ -158,10 +160,6 @@ if (
 }
 
 // ======================================================
-// DATABASE SETUP
-// ======================================================
-
-async function // ======================================================
 // DATABASE SETUP
 // ======================================================
 
@@ -188,7 +186,7 @@ async function initializeDatabase() {
     )
   `);
 
-  // Add missing columns to an existing payments table.
+  // Add missing columns if an older payments table exists
   await pool.query(`
     ALTER TABLE payments
     ADD COLUMN IF NOT EXISTS created_at BIGINT
@@ -231,7 +229,7 @@ async function initializeDatabase() {
     )
   `);
 
-  // Add missing columns to an existing downloads table.
+  // Add missing columns if an older downloads table exists
   await pool.query(`
     ALTER TABLE downloads
     ADD COLUMN IF NOT EXISTS reference TEXT
@@ -245,78 +243,6 @@ async function initializeDatabase() {
   // ----------------------------------------------------
   // DOWNLOAD INDEXES
   // ----------------------------------------------------
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_downloads_token_hash
-    ON downloads(token_hash)
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_downloads_payment_reference
-    ON downloads(payment_reference)
-  `);
-
-  console.log("PostgreSQL database initialized.");
-} {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is missing.");
-  }
-
-  // ----------------------------------------------------
-  // PAYMENTS
-  // ----------------------------------------------------
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS payments (
-      id SERIAL PRIMARY KEY,
-      reference TEXT UNIQUE NOT NULL,
-      email TEXT NOT NULL,
-      product_id TEXT NOT NULL,
-      amount INTEGER NOT NULL,
-      currency TEXT NOT NULL DEFAULT 'NGN',
-      status TEXT NOT NULL DEFAULT 'pending',
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_payments_reference
-    ON payments(reference)
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_payments_email
-    ON payments(email)
-  `);
-
-  // ----------------------------------------------------
-  // DOWNLOADS
-  // ----------------------------------------------------
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS downloads (
-      id SERIAL PRIMARY KEY,
-      token_hash TEXT UNIQUE NOT NULL,
-      reference TEXT NOT NULL,
-      payment_reference TEXT NOT NULL,
-      product_id TEXT NOT NULL,
-      email TEXT NOT NULL,
-      used INTEGER NOT NULL DEFAULT 0,
-      expires_at BIGINT NOT NULL,
-      created_at BIGINT NOT NULL
-    )
-  `);
-
-  await pool.query(`
-    ALTER TABLE downloads
-    ADD COLUMN IF NOT EXISTS reference TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE downloads
-    ADD COLUMN IF NOT EXISTS payment_reference TEXT
-  `);
 
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_downloads_token_hash
@@ -391,7 +317,7 @@ app.post("/api/pay", async (req, res) => {
       });
     }
 
-    const cleanEmail = email.trim();
+    const cleanEmail = String(email).trim().toLowerCase();
 
     if (!cleanEmail) {
       return res.status(400).json({
@@ -450,10 +376,7 @@ app.post("/api/pay", async (req, res) => {
       ]
     );
 
-    console.log(
-      "Payment record created:",
-      reference
-    );
+    console.log("Payment record created:", reference);
 
     return res.json({
       success: true,
@@ -620,42 +543,36 @@ app.get("/api/purchase-status", async (req, res) => {
     if (!reference) {
       return res.status(400).json({
         success: false,
-        message:
-          "Payment reference is required."
+        message: "Payment reference is required."
       });
     }
 
-    const result =
-      await pool.query(
-        `
-        SELECT
-          reference,
-          email,
-          product_id,
-          amount,
-          currency,
-          status
-        FROM payments
-        WHERE reference = $1
-        LIMIT 1
-        `,
-        [reference]
-      );
+    const result = await pool.query(
+      `
+      SELECT
+        reference,
+        email,
+        product_id,
+        amount,
+        currency,
+        status
+      FROM payments
+      WHERE reference = $1
+      LIMIT 1
+      `,
+      [reference]
+    );
 
-    if (
-      result.rows.length === 0
-    ) {
+    if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message:
-          "Payment record not found."
+        message: "Payment record not found."
       });
     }
 
     return res.json({
       success: true,
-      payment:
-        result.rows[0]
+      payment: result.rows[0]
     });
 
   } catch (error) {
@@ -666,8 +583,7 @@ app.get("/api/purchase-status", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message:
-        "Unable to check purchase status."
+      message: "Unable to check purchase status."
     });
   }
 });
@@ -893,6 +809,7 @@ app.get("/api/download", async (req, res) => {
       );
     }
 
+    // Mark token as used before sending file
     const usedResult =
       await pool.query(
         `
