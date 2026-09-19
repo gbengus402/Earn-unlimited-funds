@@ -351,6 +351,7 @@
 
     </div>
 
+
     <!-- ==================================================
          ONE TEST MODE
          ================================================== -->
@@ -360,8 +361,8 @@
       <h3>🧪 Test Mode</h3>
 
       <p>
-        Test your product delivery without making a real
-        payment. This uses your existing test download system.
+        Test product delivery without making a real payment.
+        This uses the existing website test-download system.
       </p>
 
       <button
@@ -375,6 +376,11 @@
     </div>
 
   </div>
+
+
+  <!-- ==================================================
+       PRODUCT NOT FOUND
+       ================================================== -->
 
   <div
     id="notFound"
@@ -395,6 +401,7 @@
   </div>
 
 </main>
+
 
 <footer>
   © 2026 Earn Unlimited Funds. All rights reserved.
@@ -745,7 +752,7 @@ buyButton.addEventListener(
 
 /*
 ======================================================
-ONE TEST MODE
+TEST MODE
 ======================================================
 */
 
@@ -765,8 +772,44 @@ testDownloadButton.addEventListener(
 
 
     /*
-    Save the selected product locally
-    for the test.
+    Require an email for the test.
+    */
+
+    const email =
+      emailInput.value.trim();
+
+
+    if (!email) {
+
+      showMessage(
+        "Enter your email address before starting Test Mode.",
+        "error"
+      );
+
+      emailInput.focus();
+
+      return;
+    }
+
+
+    if (
+      !email.includes("@") ||
+      !email.includes(".")
+    ) {
+
+      showMessage(
+        "Please enter a valid email address.",
+        "error"
+      );
+
+      emailInput.focus();
+
+      return;
+    }
+
+
+    /*
+    Save test information.
     */
 
     localStorage.setItem(
@@ -784,31 +827,27 @@ testDownloadButton.addEventListener(
       product.price
     );
 
-
-    /*
-    Save test email if entered.
-    */
-
-    const email =
-      emailInput.value.trim();
-
-    if (email) {
-
-      localStorage.setItem(
-        "test_email",
-        email
-      );
-
-    }
+    localStorage.setItem(
+      "test_email",
+      email
+    );
 
 
     /*
     Use the existing working
-    test download endpoint.
+    product-specific test endpoint.
     */
 
+    testDownloadButton.disabled =
+      true;
+
+    testDownloadButton.textContent =
+      "TESTING...";
+
+
     window.location.href =
-      "/api/test-download";
+      "/api/test-product/" +
+      encodeURIComponent(productId);
 
   }
 );
@@ -816,4 +855,4 @@ testDownloadButton.addEventListener(
 </script>
 
 </body>
-  </html>
+</html>
