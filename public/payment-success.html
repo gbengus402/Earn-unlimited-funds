@@ -1,196 +1,217 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Payment Successful | Earn Unlimited Funds</title>  <style>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Payment Successful | Earn Unlimited Funds</title>
+
+  <style>
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      color: #172033;
+      margin: 0;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: #f4f7fb;
+      font-family: Arial, Helvetica, sans-serif;
       padding: 20px;
     }
 
     .card {
-      background: white;
-      max-width: 600px;
       width: 100%;
-      text-align: center;
-      padding: 45px 25px;
+      max-width: 520px;
+      background: white;
+      padding: 35px 25px;
       border-radius: 18px;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+      text-align: center;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.10);
     }
 
     .icon {
       font-size: 65px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     h1 {
-      color: #071a3d;
-      margin-bottom: 15px;
+      margin: 10px 0;
+      color: #111827;
     }
 
     p {
-      font-size: 17px;
-      line-height: 1.7;
-      margin-bottom: 20px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    #productName {
+      color: #0b63ce;
+      font-weight: bold;
+    }
+
+    #status {
+      margin-top: 25px;
+      font-weight: bold;
     }
 
     .button {
       display: inline-block;
-      background: #071a3d;
+      margin-top: 15px;
+      padding: 14px 24px;
+      background: #0b63ce;
       color: white;
-      padding: 14px 25px;
-      border-radius: 8px;
       text-decoration: none;
+      border-radius: 8px;
       font-weight: bold;
-      margin-top: 10px;
     }
 
     .button:hover {
       opacity: 0.9;
     }
 
-    #downloadButton {
+    .hidden {
       display: none;
     }
 
-    #status {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-
     .error {
-      color: #b00020;
+      color: #c62828;
     }
+  </style>
+</head>
 
-    .success {
-      color: #087f23;
-    }
-  </style></head><body>  <div class="card"><div class="icon">✅</div>
+<body>
 
-<h1>Payment Successful!</h1>
+  <div class="card">
 
-<p id="productMessage">
-  Your payment is being verified.
-</p>
+    <div class="icon">✅</div>
 
-<p id="status">
-  Preparing your secure download...
-</p>
+    <h1>Payment Successful!</h1>
 
-<a
-  id="downloadButton"
-  href="#"
-  class="button"
->
-  Download Your Product
-</a>
+    <p>
+      Thank you for your purchase.
+    </p>
 
-<br>
+    <p>
+      Product:
+      <span id="productName">Checking...</span>
+    </p>
 
-<a href="/" class="button">
-  Return to Store
-</a>
+    <p id="status">
+      Verifying your payment and preparing your secure download...
+    </p>
 
-  </div>  <script>
-    const params = new URLSearchParams(window.location.search);
+    <div id="downloadArea" class="hidden">
 
-    const reference = params.get("reference");
-    const productId = params.get("product");
+      <a
+        id="downloadButton"
+        class="button"
+        href="#"
+      >
+        Download Your Product
+      </a>
 
-    const status = document.getElementById("status");
+    </div>
+
+    <br>
+
+    <a
+      href="/"
+      class="button"
+    >
+      Return to Store
+    </a>
+
+  </div>
+
+  <script>
+
+    const params =
+      new URLSearchParams(window.location.search);
+
+    const reference =
+      params.get("reference");
+
+    const productId =
+      params.get("product");
+
+    const productName =
+      document.getElementById("productName");
+
+    const status =
+      document.getElementById("status");
+
+    const downloadArea =
+      document.getElementById("downloadArea");
+
     const downloadButton =
       document.getElementById("downloadButton");
 
-    const productMessage =
-      document.getElementById("productMessage");
-
-    let attempts = 0;
-    const maxAttempts = 15;
 
     async function checkPayment() {
-      attempts++;
 
       if (!reference) {
-        status.textContent =
-          "Payment reference was not found.";
 
-        status.className = "error";
+        status.textContent =
+          "Payment reference is missing.";
+
+        status.classList.add("error");
+
         return;
       }
 
       try {
-        const response = await fetch(
-          `/api/get-download?reference=${encodeURIComponent(reference)}`
-        );
 
-        const data = await response.json();
+        const response =
+          await fetch(
+            `/api/get-download?reference=${encodeURIComponent(reference)}`
+          );
 
-        if (data.success && data.paid && data.download_url) {
+        const data =
+          await response.json();
 
-          productMessage.innerHTML =
-            `Your purchase of <strong>${data.product_name}</strong> has been verified.`;
+        if (data.paid && data.download_url) {
+
+          productName.textContent =
+            data.product_name || productId || "Your product";
 
           status.textContent =
-            "Your secure download is ready.";
-
-          status.className = "success";
+            "Your payment has been verified. Your secure download is ready.";
 
           downloadButton.href =
             data.download_url;
 
-          downloadButton.style.display =
-            "inline-block";
+          downloadArea.classList.remove("hidden");
 
           return;
         }
 
-        if (attempts < maxAttempts) {
-
-          status.textContent =
-            "Waiting for payment verification...";
-
-          setTimeout(checkPayment, 2000);
-
-        } else {
-
-          status.textContent =
-            "Payment verification is taking longer than expected. Please refresh this page in a moment.";
-
-          status.className = "error";
-        }
+        status.textContent =
+          "Payment is being verified. Please wait...";
 
       } catch (error) {
 
         console.error(error);
 
-        if (attempts < maxAttempts) {
-
-          status.textContent =
-            "Connecting to payment verification...";
-
-          setTimeout(checkPayment, 2000);
-
-        } else {
-
-          status.textContent =
-            "Unable to verify payment right now. Please refresh the page.";
-
-          status.className = "error";
-        }
+        status.textContent =
+          "We are checking your payment. Please wait...";
       }
+
+      setTimeout(
+        checkPayment,
+        2000
+      );
     }
 
     checkPayment();
-  </script></body>
+
+  </script>
+
+</body>
 </html>
