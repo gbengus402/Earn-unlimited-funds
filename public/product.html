@@ -1,971 +1,1677 @@
-<!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Product | Earn Unlimited Funds</title>  <style>
-    * {
-      box-sizing: border-box;
+import "dotenv/config";
+
+import express from "express";
+import path from "path";
+import crypto from "crypto";
+import { fileURLToPath } from "url";
+import pg from "pg";
+
+import {
+  S3Client,
+  GetObjectCommand
+} from "@aws-sdk/client-s3";
+
+const { Pool } = pg;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+
+const PORT = process.env.PORT || 10000;
+
+const SITE_URL =
+  process.env.RENDER_EXTERNAL_URL ||
+  "https://earn-unlimited-funds.onrender.com";
+
+/* ======================================================
+   EXPRESS
+====================================================== */
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  express.static(
+    path.join(__dirname, "..", "public")
+  )
+);
+
+/* ======================================================
+   DATABASE
+====================================================== */
+
+if (!process.env.DATABASE_URL) {
+  console.error(
+    "DATABASE_URL is not configured."
+  );
+}
+
+const pool = new Pool({
+  connectionString:
+    process.env.DATABASE_URL,
+
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+/* ======================================================
+   CLOUDFLARE R2
+====================================================== */
+
+let r2 = null;
+
+if (
+  process.env.R2_ACCOUNT_ID &&
+  process.env.R2_ACCESS_KEY_ID &&
+  process.env.R2_SECRET_ACCESS_KEY &&
+  process.env.R2_BUCKET_NAME
+) {
+  r2 = new S3Client({
+    region: "auto",
+
+    endpoint:
+      `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+
+    credentials: {
+      accessKeyId:
+        process.env.R2_ACCESS_KEY_ID,
+
+      secretAccessKey:
+        process.env.R2_SECRET_ACCESS_KEY
     }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f5f7fb;
-      color: #222;
-    }
-
-    header {
-      background: #071a3d;
-      color: white;
-      padding: 18px 20px;
-      text-align: center;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    header p {
-      margin: 6px 0 0;
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    nav {
-      background: white;
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-
-    nav a {
-      color: #071a3d;
-      text-decoration: none;
-      font-weight: bold;
-      margin: 0 10px;
-      font-size: 14px;
-    }
-
-    main {
-      max-width: 900px;
-      margin: 35px auto;
-      padding: 0 18px;
-    }
-
-    .product-card {
-      background: white;
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
-    }
-
-    .product-title {
-      color: #071a3d;
-      font-size: 32px;
-      margin: 0 0 15px;
-      line-height: 1.2;
-    }
-
-    .product-description {
-      font-size: 17px;
-      line-height: 1.7;
-      color: #555;
-      margin-bottom: 25px;
-    }
-
-    .features {
-      margin: 25px 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .features li {
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
-      font-size: 15px;
-    }
-
-    .features li:last-child {
-      border-bottom: none;
-    }
-
-    .price-box {
-      background: #eef4ff;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      margin: 25px 0;
-    }
-
-    .price-label {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 5px;
-    }
-
-    .price {
-      font-size: 34px;
-      font-weight: bold;
-      color: #071a3d;
-    }
-
-    .purchase-box {
-      margin-top: 30px;
-      padding: 25px;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      background: #fafafa;
-    }
-
-    .purchase-box h2 {
-      margin-top: 0;
-      color: #071a3d;
-      font-size: 22px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    input[type="email"] {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      outline: none;
-      margin-bottom: 15px;
-    }
-
-    input[type="email"]:focus {
-      border-color: #071a3d;
-    }
-
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 15px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .buy-btn {
-      background: #071a3d;
-      color: white;
-    }
-
-    .buy-btn:hover {
-      opacity: 0.9;
-    }
-
-    .buy-btn:disabled {
-      background: #777;
-      cursor: not-allowed;
-    }
-
-    .test-section {
-      margin-top: 30px;
-      padding: 25px 15px;
-      border-top: 2px dashed #ddd;
-      text-align: center;
-    }
-
-    .test-section h3 {
-      color: #071a3d;
-      margin-bottom: 8px;
-      font-size: 21px;
-    }
-
-    .test-section p {
-      font-size: 13px;
-      color: #666;
-      line-height: 1.5;
-      max-width: 600px;
-      margin: 0 auto 10px;
-    }
-
-    .test-btn {
-      display: inline-block;
-      background: #f5b400;
-      color: #071a3d;
-      padding: 14px 25px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 16px;
-      border: 2px solid #071a3d;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-
-    .test-btn:hover {
-      opacity: 0.9;
-    }
-
-    .test-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    #message {
-      display: none;
-      margin-top: 18px;
-      padding: 13px;
-      border-radius: 8px;
-      font-size: 14px;
-      line-height: 1.5;
-      text-align: center;
-    }
-
-    .success {
-      background: #e8f7ed;
-      color: #176b35;
-      border: 1px solid #a9dfb9;
-    }
-
-    .error {
-      background: #fdeaea;
-      color: #a11b1b;
-      border: 1px solid #efb0b0;
-    }
-
-    .download-box {
-      display: none;
-      margin-top: 25px;
-      padding: 25px;
-      background: #e8f7ed;
-      border: 2px solid #a9dfb9;
-      border-radius: 12px;
-      text-align: center;
-    }
-
-    .download-box h3 {
-      margin-top: 0;
-      color: #176b35;
-      font-size: 21px;
-    }
-
-    .download-box p {
-      color: #176b35;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .download-btn {
-      display: inline-block;
-      background: #176b35;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    .download-btn:hover {
-      opacity: 0.9;
-    }
-
-    .not-found {
-      text-align: center;
-      padding: 40px 20px;
-    }
-
-    .not-found h2 {
-      color: #a11b1b;
-    }
-
-    footer {
-      text-align: center;
-      padding: 25px 15px;
-      color: #777;
-      font-size: 13px;
-    }
-
-    @media (max-width: 600px) {
-
-      header h1 {
-        font-size: 20px;
-      }
-
-      nav a {
-        margin: 0 5px;
-        font-size: 13px;
-      }
-
-      main {
-        margin: 20px auto;
-        padding: 0 12px;
-      }
-
-      .product-card {
-        padding: 20px;
-      }
-
-      .product-title {
-        font-size: 26px;
-      }
-
-      .product-description {
-        font-size: 15px;
-      }
-
-      .price {
-        font-size: 30px;
-      }
-
-      .purchase-box {
-        padding: 18px;
-      }
-    }
-  </style></head><body><header>
-  <h1>Earn Unlimited Funds</h1>
-  <p>Digital Products & Resources</p>
-</header><nav>
-  <a href="/">Home</a>
-  <a href="/#about">About</a>
-  <a href="/#products">Products</a>
-</nav><main>  <div id="productContainer" class="product-card"><h1 id="productTitle" class="product-title"></h1>
-
-<div id="productDescription" class="product-description"></div>
-
-<ul class="features">
-  <li>✓ Digital product delivered online</li>
-  <li>✓ Secure payment through Selar</li>
-  <li>✓ Access your purchased product</li>
-  <li>✓ Secure digital delivery</li>
-</ul>
-
-<div class="price-box">
-  <div class="price-label">Product Price</div>
-  <div id="productPrice" class="price"></div>
-</div>
-
-<div class="purchase-box">
-
-  <h2>Get Your Copy</h2>
-
-  <label for="email">
-    Enter your email address
-  </label>
-
-  <input
-    type="email"
-    id="email"
-    placeholder="your@email.com"
-    autocomplete="email"
-    required
-  >
-
-  <button
-    type="button"
-    class="btn buy-btn"
-    id="buyButton"
-  >
-    BUY NOW
-  </button>
-
-  <div id="message"></div>
-
-</div>
-
-<!-- TEST MODE -->
-
-<div class="test-section">
-
-  <h3>🧪 Test Mode</h3>
-
-  <p>
-    Test product delivery without making a real payment.
-    This uses the existing website test-download system.
-  </p>
-
-  <button
-    type="button"
-    class="test-btn"
-    id="testDownloadButton"
-  >
-    TEST PURCHASE & DOWNLOAD
-  </button>
-
-  <!-- TEST DOWNLOAD RESULT -->
-
-  <div
-    id="testDownloadBox"
-    class="download-box"
-  >
-
-    <h3>✅ Test Download Ready</h3>
-
-    <p>
-      Your test purchase was successful.
-      Your secure download is ready.
-    </p>
-
-    <a
-      id="testDownloadLink"
-      class="download-btn"
-      href="#"
-    >
-      DOWNLOAD PRODUCT
-    </a>
-
-  </div>
-
-</div>
-
-  </div>  <!-- PRODUCT NOT FOUND -->  <div
-    id="notFound"
-    class="product-card not-found"
-    style="display:none;"
-  ><h2>Product Not Found</h2>
-
-<p>
-  The product you requested could not be found.
-</p>
-
-<a href="/" class="test-btn">
-  BACK TO PRODUCTS
-</a>
-
-  </div></main><footer>
-  © 2026 Earn Unlimited Funds. All rights reserved.
-</footer><script>
-
-/*
-======================================================
-PRODUCT ID FROM URL
-======================================================
-*/
-
-const urlParams =
-  new URLSearchParams(window.location.search);
-
-const productId =
-  urlParams.get("id");
-
-
-/*
-======================================================
-ALL PRODUCTS
-======================================================
-*/
+  });
+
+  console.log(
+    "Cloudflare R2 configured."
+  );
+} else {
+  console.log(
+    "Cloudflare R2 is not fully configured."
+  );
+}
+
+/* ======================================================
+   PRODUCTS
+====================================================== */
 
 const PRODUCTS = {
-
   "how-to-pass-high-in-exams": {
+    id: "how-to-pass-high-in-exams",
+
     name: "How to Pass High in Exams",
-    price: 25000,
+
     description:
-      "Learn practical study strategies, preparation techniques, examination tips and methods for improving your academic performance."
+      "A practical guide designed to help students prepare better, study effectively, manage examination pressure and improve their academic performance.",
+
+    priceNaira: 25000,
+
+    amountKobo: 2500000,
+
+    r2Key:
+      "how-to-pass-high-in-exams.pdf",
+
+    downloadName:
+      "How-to-Pass-High-in-Exams.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/5m7y791u94"
   },
 
   "ai-response-complete-guide": {
+    id: "ai-response-complete-guide",
+
     name: "AI Response Complete Guide",
-    price: 40000,
+
     description:
-      "Learn practical ways to use AI for better responses, ideas, productivity, communication and online work."
+      "A practical guide to using AI effectively for better responses, ideas, productivity, communication and results.",
+
+    priceNaira: 40000,
+
+    amountKobo: 4000000,
+
+    r2Key:
+      "AI_Response_Complete_Guide-3.pdf",
+
+    downloadName:
+      "AI-Response-Complete-Guide.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/376717994x"
   },
 
   "facebook-automation": {
+    id: "facebook-automation",
+
     name: "Facebook Automation",
-    price: 60000,
+
     description:
-      "Learn practical Facebook automation strategies for managing your online presence, responding to customers and improving your digital marketing workflow."
+      "Learn practical Facebook automation strategies for improving your online marketing and business activities.",
+
+    priceNaira: 60000,
+
+    amountKobo: 6000000,
+
+    r2Key:
+      "Facebook_Automation_Ebook_GBENGA-1.pdf",
+
+    downloadName:
+      "Facebook-Automation-Ebook.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/9b2t7798i4"
   },
 
   "save-a-billion-from-zero-account": {
-    name: "How to Save a Billion from a Zero Account",
-    price: 80000,
+    id: "save-a-billion-from-zero-account",
+
+    name:
+      "How to Save a Billion from a Zero Account",
+
     description:
-      "Explore practical money habits, saving strategies, financial planning and long-term approaches to building better financial discipline."
+      "A practical financial guide about building saving habits and growing money from a small starting point.",
+
+    priceNaira: 80000,
+
+    amountKobo: 8000000,
+
+    r2Key:
+      "How_to_Save_a_Billion_from_a_Zero_Account-1.pdf",
+
+    downloadName:
+      "How-to-Save-a-Billion-from-a-Zero-Account.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/40v70a9277"
   },
 
   "pregnancy-care": {
-    name: "Pregnancy Care Guide",
-    price: 150000,
+    id: "pregnancy-care",
+
+    name:
+      "Pregnancy Care Guide",
+
     description:
-      "A practical guide containing useful pregnancy-care information, preparation tips, healthy routines and important considerations."
+      "A pregnancy care reference guide covering practical information for expectant mothers.",
+
+    priceNaira: 150000,
+
+    amountKobo: 15000000,
+
+    r2Key:
+      "Pregnancy_Care_Guide_Ebook-1.docx",
+
+    downloadName:
+      "Pregnancy-Care-Guide.docx",
+
+    contentType:
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+    selarUrl:
+      "https://selar.com/327021wa25"
   },
 
   "sell-faster": {
-    name: "Sell Faster Professional Ebook",
-    price: 150200,
-    description:
-      "Learn practical selling approaches, customer attraction, offer presentation and strategies that can help improve your chances of making sales."
-  }
+    id: "sell-faster",
 
+    name:
+      "Sell Faster Professional Ebook",
+
+    description:
+      "A practical guide for improving selling skills, attracting customers and increasing sales.",
+
+    priceNaira: 150200,
+
+    amountKobo: 15020000,
+
+    r2Key:
+      "Sell_Faster_Professional_Ebook-2.pdf",
+
+    downloadName:
+      "Sell-Faster-Professional-Ebook.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/4v623f9qhw"
+  }
 };
 
+/* ======================================================
+   DATABASE INITIALIZATION
+====================================================== */
 
-/*
-======================================================
-PAGE ELEMENTS
-======================================================
-*/
+async function initializeDatabase() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS payments (
+        id SERIAL PRIMARY KEY,
+        reference TEXT UNIQUE NOT NULL,
+        email TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        amount NUMERIC DEFAULT 0,
+        currency TEXT DEFAULT 'NGN',
+        status TEXT DEFAULT 'PENDING',
+        created_at BIGINT,
+        updated_at BIGINT
+      )
+    `);
 
-const productContainer =
-  document.getElementById("productContainer");
+    await pool.query(`
+      ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS reference TEXT
+    `);
 
-const notFound =
-  document.getElementById("notFound");
+    await pool.query(`
+      ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS email TEXT
+    `);
 
-const productTitle =
-  document.getElementById("productTitle");
+    await pool.query(`
+      ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS product_id TEXT
+    `);
 
-const productDescription =
-  document.getElementById("productDescription");
+    await pool.query(`
+      ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS amount NUMERIC DEFAULT 0
+    `);
 
-const productPrice =
-  document.getElementById("productPrice");
+    await pool.query(`
+      ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'NGN'
+    `);
 
-const buyButton =
-  document.getElementById("buyButton");
+    await pool.query(`
+      ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PENDING'
+    `);
 
-const emailInput =
-  document.getElementById("email");
+    await pool.query(`
+      ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS created_at BIGINT
+    `);
 
-const message =
-  document.getElementById("message");
+    await pool.query(`
+      ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS updated_at BIGINT
+    `);
 
-const testDownloadButton =
-  document.getElementById("testDownloadButton");
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS downloads (
+        id SERIAL PRIMARY KEY,
+        token_hash TEXT UNIQUE NOT NULL,
+        reference TEXT,
+        payment_reference TEXT,
+        product_id TEXT NOT NULL,
+        email TEXT NOT NULL,
+        used INTEGER DEFAULT 0,
+        expires_at BIGINT,
+        created_at BIGINT
+      )
+    `);
 
-const testDownloadBox =
-  document.getElementById("testDownloadBox");
+    await pool.query(`
+      ALTER TABLE downloads
+      ADD COLUMN IF NOT EXISTS reference TEXT
+    `);
 
-const testDownloadLink =
-  document.getElementById("testDownloadLink");
+    await pool.query(`
+      ALTER TABLE downloads
+      ADD COLUMN IF NOT EXISTS payment_reference TEXT
+    `);
 
+    await pool.query(`
+      ALTER TABLE downloads
+      ADD COLUMN IF NOT EXISTS product_id TEXT
+    `);
 
-/*
-======================================================
-FORMAT PRICE
-======================================================
-*/
+    await pool.query(`
+      ALTER TABLE downloads
+      ADD COLUMN IF NOT EXISTS email TEXT
+    `);
 
-function formatPrice(amount) {
+    await pool.query(`
+      ALTER TABLE downloads
+      ADD COLUMN IF NOT EXISTS used INTEGER DEFAULT 0
+    `);
 
-  return "₦" +
-    Number(amount).toLocaleString("en-NG");
+    await pool.query(`
+      ALTER TABLE downloads
+      ADD COLUMN IF NOT EXISTS expires_at BIGINT
+    `);
 
+    await pool.query(`
+      ALTER TABLE downloads
+      ADD COLUMN IF NOT EXISTS created_at BIGINT
+    `);
+
+    /*
+      Keep the webhook table so every received
+      Selar event can be recorded.
+    */
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS selar_webhook_events (
+        id SERIAL PRIMARY KEY,
+        event_id TEXT,
+        event_type TEXT,
+        payload JSONB,
+        headers JSONB,
+        received_at BIGINT
+      )
+    `);
+
+    console.log(
+      "PostgreSQL database initialized."
+    );
+  } catch (error) {
+    console.error(
+      "Database initialization error:",
+      error
+    );
+
+    throw error;
+  }
 }
 
+/* ======================================================
+   CREATE DOWNLOAD TOKEN
+====================================================== */
 
-/*
-======================================================
-SHOW MESSAGE
-======================================================
-*/
+async function createDownloadToken({
+  paymentReference,
+  productId,
+  email
+}) {
+  const rawToken =
+    crypto.randomBytes(32).toString("hex");
 
-function showMessage(text, type) {
+  const tokenHash =
+    crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
 
-  message.textContent = text;
+  const now = Date.now();
 
-  message.className = type;
+  const expiresAt =
+    now + 24 * 60 * 60 * 1000;
 
-  message.style.display = "block";
+  await pool.query(
+    `
+      INSERT INTO downloads
+      (
+        token_hash,
+        reference,
+        payment_reference,
+        product_id,
+        email,
+        used,
+        expires_at,
+        created_at
+      )
+      VALUES
+      ($1,$2,$3,$4,$5,0,$6,$7)
+    `,
+    [
+      tokenHash,
+      paymentReference,
+      paymentReference,
+      productId,
+      email,
+      expiresAt,
+      now
+    ]
+  );
 
+  return {
+    token: rawToken,
+
+    downloadUrl:
+      `${SITE_URL}/api/download?token=${encodeURIComponent(rawToken)}`,
+
+    expiresAt
+  };
 }
 
+/* ======================================================
+   PRODUCTS API
+====================================================== */
 
-/*
-======================================================
-CHECK PRODUCT
-======================================================
-*/
+app.get(
+  "/api/products",
+  (req, res) => {
+    res.json({
+      success: true,
 
-const product =
-  PRODUCTS[productId];
-
-
-if (!product) {
-
-  productContainer.style.display =
-    "none";
-
-  notFound.style.display =
-    "block";
-
-} else {
-
-  productTitle.textContent =
-    product.name;
-
-  productDescription.textContent =
-    product.description;
-
-  productPrice.textContent =
-    formatPrice(product.price);
-
-  document.title =
-    product.name +
-    " | Earn Unlimited Funds";
-
-}
-
-
-/*
-======================================================
-BUY NOW — REAL SELAR PAYMENT
-======================================================
-*/
-
-buyButton.addEventListener(
-  "click",
-  async function () {
-
-    const email =
-      emailInput.value.trim();
-
-    if (!email) {
-
-      showMessage(
-        "Please enter your email address.",
-        "error"
-      );
-
-      emailInput.focus();
-
-      return;
-    }
-
-    if (
-      !email.includes("@") ||
-      !email.includes(".")
-    ) {
-
-      showMessage(
-        "Please enter a valid email address.",
-        "error"
-      );
-
-      emailInput.focus();
-
-      return;
-    }
-
-    if (!product) {
-
-      showMessage(
-        "Product not found.",
-        "error"
-      );
-
-      return;
-    }
-
-    buyButton.disabled =
-      true;
-
-    buyButton.textContent =
-      "PLEASE WAIT...";
-
-    message.style.display =
-      "none";
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/pay",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-
-            body: JSON.stringify({
-              email: email,
-              productId: productId
-            })
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (
-        !response.ok ||
-        !data.success
-      ) {
-
-        throw new Error(
-          data.message ||
-          "Unable to start payment."
-        );
-
-      }
-
-      if (data.reference) {
-
-        localStorage.setItem(
-          "payment_reference",
-          data.reference
-        );
-
-      }
-
-      localStorage.setItem(
-        "purchase_product_id",
-        productId
-      );
-
-      localStorage.setItem(
-        "purchase_email",
-        email
-      );
-
-      if (data.checkout_url) {
-
-        window.location.href =
-          data.checkout_url;
-
-        return;
-      }
-
-      throw new Error(
-        "Selar checkout URL was not returned."
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Payment error:",
-        error
-      );
-
-      showMessage(
-        error.message ||
-        "Unable to start payment. Please try again.",
-        "error"
-      );
-
-      buyButton.disabled =
-        false;
-
-      buyButton.textContent =
-        "BUY NOW";
-    }
-
+      products:
+        Object.values(PRODUCTS).map(
+          (product) => ({
+            id: product.id,
+            name: product.name,
+            description:
+              product.description,
+            priceNaira:
+              product.priceNaira,
+            amountKobo:
+              product.amountKobo,
+            selarUrl:
+              product.selarUrl
+          })
+        )
+    });
   }
 );
 
+/* ======================================================
+   SINGLE PRODUCT API
+====================================================== */
 
-/*
-======================================================
-TEST MODE — GET DOWNLOAD URL
-======================================================
-*/
-
-testDownloadButton.addEventListener(
-  "click",
-  async function () {
+app.get(
+  "/api/products/:id",
+  (req, res) => {
+    const product =
+      PRODUCTS[req.params.id];
 
     if (!product) {
-
-      showMessage(
-        "Product not found.",
-        "error"
-      );
-
-      return;
+      return res.status(404).json({
+        success: false,
+        message:
+          "Product not found."
+      });
     }
 
-    const email =
-      emailInput.value.trim();
+    res.json({
+      success: true,
+      product
+    });
+  }
+);
 
-    if (!email) {
+/* ======================================================
+   START PAYMENT
+====================================================== */
 
-      showMessage(
-        "Enter your email address before starting Test Mode.",
-        "error"
-      );
-
-      emailInput.focus();
-
-      return;
-    }
-
-    if (
-      !email.includes("@") ||
-      !email.includes(".")
-    ) {
-
-      showMessage(
-        "Please enter a valid email address.",
-        "error"
-      );
-
-      emailInput.focus();
-
-      return;
-    }
-
-
-    /*
-    SAVE TEST INFORMATION
-    */
-
-    localStorage.setItem(
-      "test_product_id",
-      productId
-    );
-
-    localStorage.setItem(
-      "test_product_name",
-      product.name
-    );
-
-    localStorage.setItem(
-      "test_product_price",
-      product.price
-    );
-
-    localStorage.setItem(
-      "test_email",
-      email
-    );
-
-
-    /*
-    DISABLE BUTTON
-    */
-
-    testDownloadButton.disabled =
-      true;
-
-    testDownloadButton.textContent =
-      "TESTING...";
-
-    message.style.display =
-      "none";
-
-
+app.post(
+  "/api/pay",
+  async (req, res) => {
     try {
+      const email =
+        String(
+          req.body.email || ""
+        )
+          .trim()
+          .toLowerCase();
 
-      /*
-      CALL EXISTING TEST ENDPOINT
-      */
+      const productId =
+        req.body.product_id ||
+        req.body.productId;
 
-      const response =
-        await fetch(
-          "/api/test-product/" +
-          encodeURIComponent(productId)
-        );
-
-
-      const data =
-        await response.json();
-
-
-      console.log(
-        "Test download response:",
-        data
-      );
-
-
-      /*
-      CHECK RESPONSE
-      */
-
-      if (
-        !response.ok ||
-        !data.success ||
-        !data.download_url
-      ) {
-
-        throw new Error(
-          data.message ||
-          "Test download could not be created."
-        );
-
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Email is required."
+        });
       }
 
+      if (
+        !productId ||
+        !PRODUCTS[productId]
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Valid product is required."
+        });
+      }
 
-      /*
-      SAVE TEST DOWNLOAD INFORMATION
-      */
+      const product =
+        PRODUCTS[productId];
 
-      localStorage.setItem(
-        "test_download_url",
-        data.download_url
+      const reference =
+        `EUF-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+
+      const now = Date.now();
+
+      await pool.query(
+        `
+          INSERT INTO payments
+          (
+            reference,
+            email,
+            product_id,
+            amount,
+            currency,
+            status,
+            created_at,
+            updated_at
+          )
+          VALUES
+          ($1,$2,$3,$4,$5,$6,$7,$8)
+        `,
+        [
+          reference,
+          email,
+          productId,
+          product.priceNaira,
+          "NGN",
+          "PENDING",
+          now,
+          now
+        ]
       );
 
+      const returnUrl =
+        `${SITE_URL}/payment-success.html?product=${encodeURIComponent(productId)}&reference=${encodeURIComponent(reference)}`;
 
-      /*
-      SHOW DOWNLOAD AREA
-      */
-
-      testDownloadLink.href =
-        data.download_url;
-
-      testDownloadBox.style.display =
-        "block";
-
-
-      /*
-      SHOW SUCCESS MESSAGE
-      */
-
-      showMessage(
-        "Test purchase successful. Your download is ready.",
-        "success"
-      );
-
-
-      /*
-      SCROLL TO DOWNLOAD BUTTON
-      */
-
-      testDownloadBox.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
+      res.json({
+        success: true,
+        reference,
+        product_id:
+          productId,
+        checkout_url:
+          product.selarUrl,
+        return_url:
+          returnUrl
       });
 
-
-      /*
-      CHANGE TEST BUTTON
-      */
-
-      testDownloadButton.textContent =
-        "TEST DOWNLOAD READY";
-
-
     } catch (error) {
-
       console.error(
-        "Test download error:",
+        "Payment start error:",
         error
       );
 
-
-      showMessage(
-        error.message ||
-        "Test download failed. Please try again.",
-        "error"
-      );
-
-
-      testDownloadButton.disabled =
-        false;
-
-      testDownloadButton.textContent =
-        "TEST PURCHASE & DOWNLOAD";
-
+      res.status(500).json({
+        success: false,
+        message:
+          "Unable to start payment."
+      });
     }
-
   }
 );
 
-</script></body>
-</html>
+/* ======================================================
+   SELAR WEBHOOK - PRODUCTION
+====================================================== */
+
+app.post(
+  "/api/selar/webhook",
+  async (req, res) => {
+    try {
+      console.log("");
+      console.log(
+        "=================================================="
+      );
+
+      console.log(
+        "          SELAR WEBHOOK RECEIVED"
+      );
+
+      console.log(
+        "=================================================="
+      );
+
+      const body =
+        req.body || {};
+
+      console.log(
+        "Time:",
+        new Date().toISOString()
+      );
+
+      console.log(
+        "BODY:",
+        JSON.stringify(
+          body,
+          null,
+          2
+        )
+      );
+
+      /* ================================================
+         GET SELAR FIELDS
+      ================================================ */
+
+      const buyerEmail =
+        String(
+          body.buyer_email || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const buyerName =
+        String(
+          body.buyer_full_name || ""
+        ).trim();
+
+      const productName =
+        String(
+          body.product_names || ""
+        ).trim();
+
+      const productCode =
+        String(
+          body.product_codes || ""
+        ).trim();
+
+      const amount =
+        Number(
+          body.amount || 0
+        );
+
+      const currency =
+        String(
+          body.currency || "NGN"
+        )
+          .trim()
+          .toUpperCase();
+
+      const receiptUrl =
+        String(
+          body.receipt_url || ""
+        ).trim();
+
+      console.log(
+        "Buyer:",
+        buyerEmail
+      );
+
+      console.log(
+        "Product:",
+        productName
+      );
+
+      console.log(
+        "Product code:",
+        productCode
+      );
+
+      console.log(
+        "Amount:",
+        amount
+      );
+
+      console.log(
+        "Currency:",
+        currency
+      );
+
+      console.log(
+        "Receipt:",
+        receiptUrl
+      );
+
+      /* ================================================
+         SAVE WEBHOOK EVENT
+      ================================================ */
+
+      const eventId =
+        body.id ||
+        body.event_id ||
+        body.order_id ||
+        null;
+
+      const eventType =
+        body.event ||
+        body.type ||
+        body.event_type ||
+        null;
+
+      await pool.query(
+        `
+          INSERT INTO selar_webhook_events
+          (
+            event_id,
+            event_type,
+            payload,
+            headers,
+            received_at
+          )
+          VALUES
+          ($1,$2,$3,$4,$5)
+        `,
+        [
+          eventId
+            ? String(eventId)
+            : null,
+
+          eventType
+            ? String(eventType)
+            : null,
+
+          JSON.stringify(body),
+
+          JSON.stringify(
+            req.headers
+          ),
+
+          Date.now()
+        ]
+      );
+
+      /* ================================================
+         CHECK EMAIL
+      ================================================ */
+
+      if (!buyerEmail) {
+        console.log(
+          "Buyer email missing."
+        );
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          message:
+            "Buyer email missing."
+        });
+      }
+
+      /* ================================================
+         IGNORE ZERO-AMOUNT TEST EVENTS
+      ================================================ */
+
+      if (amount <= 0) {
+        console.log(
+          "Zero amount webhook received."
+        );
+
+        console.log(
+          "This is treated as a test/non-paid event."
+        );
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          test: true,
+          message:
+            "Zero-amount/test webhook received."
+        });
+      }
+
+      /* ================================================
+         MATCH PRODUCT
+      ================================================ */
+
+      let product =
+        Object.values(
+          PRODUCTS
+        ).find(
+          (item) =>
+            item.name.toLowerCase() ===
+            productName.toLowerCase()
+        );
+
+      /*
+        Support the Selar Tst product only when
+        a non-zero amount is received.
+      */
+
+      if (
+        !product &&
+        productName.toLowerCase() ===
+          "tst"
+      ) {
+        product =
+          PRODUCTS[
+            "how-to-pass-high-in-exams"
+          ];
+      }
+
+      if (!product) {
+        console.log(
+          "Product could not be matched:",
+          productName
+        );
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          message:
+            "Product could not be matched.",
+          product_name:
+            productName,
+          product_code:
+            productCode
+        });
+      }
+
+      console.log(
+        "Matched product:",
+        product.id
+      );
+
+      /* ================================================
+         CHECK AMOUNT
+      ================================================ */
+
+      if (
+        amount <
+        product.priceNaira
+      ) {
+        console.log(
+          "Payment amount is below product price."
+        );
+
+        console.log(
+          "Expected:",
+          product.priceNaira
+        );
+
+        console.log(
+          "Received:",
+          amount
+        );
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          message:
+            "Payment amount is below product price."
+        });
+      }
+
+      /* ================================================
+         FIND PENDING WEBSITE PAYMENT
+      ================================================ */
+
+      const paymentResult =
+        await pool.query(
+          `
+            SELECT *
+            FROM payments
+            WHERE LOWER(email) = $1
+              AND product_id = $2
+              AND status = 'PENDING'
+            ORDER BY id DESC
+            LIMIT 1
+          `,
+          [
+            buyerEmail,
+            product.id
+          ]
+        );
+
+      if (
+        paymentResult.rows.length ===
+        0
+      ) {
+        console.log(
+          "No matching pending website payment found."
+        );
+
+        /*
+          IMPORTANT:
+          Do not create a fallback payment.
+        */
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          message:
+            "No matching pending website payment found."
+        });
+      }
+
+      const payment =
+        paymentResult.rows[0];
+
+      console.log(
+        "Website payment found:",
+        payment.reference
+      );
+
+      /* ================================================
+         MARK PAYMENT AS PAID
+      ================================================ */
+
+      await pool.query(
+        `
+          UPDATE payments
+          SET
+            status = 'PAID',
+            amount = $1,
+            currency = $2,
+            updated_at = $3
+          WHERE reference = $4
+        `,
+        [
+          amount,
+          currency,
+          Date.now(),
+          payment.reference
+        ]
+      );
+
+      console.log(
+        "PAYMENT MARKED PAID"
+      );
+
+      console.log(
+        "Reference:",
+        payment.reference
+      );
+
+      console.log(
+        "Product:",
+        product.name
+      );
+
+      console.log(
+        "Buyer:",
+        buyerEmail
+      );
+
+      /* ================================================
+         CREATE DOWNLOAD TOKEN
+      ================================================ */
+
+      const download =
+        await createDownloadToken({
+          paymentReference:
+            payment.reference,
+
+          productId:
+            product.id,
+
+          email:
+            buyerEmail
+        });
+
+      console.log(
+        "DOWNLOAD TOKEN CREATED"
+      );
+
+      console.log(
+        "Download URL:",
+        download.downloadUrl
+      );
+
+      console.log(
+        "=================================================="
+      );
+
+      /* ================================================
+         SUCCESS
+      ================================================ */
+
+      return res.status(200).json({
+        success: true,
+        received: true,
+        paid: true,
+
+        buyer_email:
+          buyerEmail,
+
+        buyer_name:
+          buyerName,
+
+        product_id:
+          product.id,
+
+        product_name:
+          product.name,
+
+        product_code:
+          productCode,
+
+        amount:
+          amount,
+
+        currency:
+          currency,
+
+        reference:
+          payment.reference,
+
+        receipt_url:
+          receiptUrl,
+
+        download_url:
+          download.downloadUrl,
+
+        expires_at:
+          download.expiresAt
+      });
+
+    } catch (error) {
+      console.error(
+        "SELAR WEBHOOK ERROR:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Webhook processing failed."
+      });
+    }
+  }
+);
+
+/* ======================================================
+   PURCHASE STATUS
+====================================================== */
+
+app.get(
+  "/api/purchase-status",
+  async (req, res) => {
+    try {
+      const reference =
+        String(
+          req.query.reference || ""
+        ).trim();
+
+      if (!reference) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Reference is required."
+        });
+      }
+
+      const result =
+        await pool.query(
+          `
+            SELECT *
+            FROM payments
+            WHERE reference = $1
+            LIMIT 1
+          `,
+          [reference]
+        );
+
+      if (
+        result.rows.length === 0
+      ) {
+        return res.json({
+          success: true,
+          found: false,
+          paid: false
+        });
+      }
+
+      const payment =
+        result.rows[0];
+
+      res.json({
+        success: true,
+        found: true,
+
+        paid:
+          payment.status ===
+          "PAID",
+
+        status:
+          payment.status,
+
+        reference:
+          payment.reference,
+
+        product_id:
+          payment.product_id,
+
+        email:
+          payment.email
+      });
+
+    } catch (error) {
+      console.error(
+        "Purchase status error:",
+        error
+      );
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Unable to check purchase status."
+      });
+    }
+  }
+);
+
+/* ======================================================
+   GET DOWNLOAD AFTER PAYMENT
+====================================================== */
+
+app.get(
+  "/api/get-download",
+  async (req, res) => {
+    try {
+      const reference =
+        String(
+          req.query.reference || ""
+        ).trim();
+
+      if (!reference) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Reference is required."
+        });
+      }
+
+      const result =
+        await pool.query(
+          `
+            SELECT *
+            FROM payments
+            WHERE reference = $1
+            LIMIT 1
+          `,
+          [reference]
+        );
+
+      if (
+        result.rows.length === 0
+      ) {
+        return res.json({
+          success: true,
+          paid: false,
+          message:
+            "Payment not found yet."
+        });
+      }
+
+      const payment =
+        result.rows[0];
+
+      if (
+        payment.status !== "PAID"
+      ) {
+        return res.json({
+          success: true,
+          paid: false,
+          status:
+            payment.status,
+          message:
+            "Payment has not been verified yet."
+        });
+      }
+
+      const product =
+        PRODUCTS[
+          payment.product_id
+        ];
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Product not found."
+        });
+      }
+
+      /*
+        Generate a new secure download token
+        only after the payment has been confirmed.
+      */
+
+      const download =
+        await createDownloadToken({
+          paymentReference:
+            payment.reference,
+
+          productId:
+            product.id,
+
+          email:
+            payment.email
+        });
+
+      res.json({
+        success: true,
+        paid: true,
+
+        reference:
+          payment.reference,
+
+        product_id:
+          product.id,
+
+        product_name:
+          product.name,
+
+        email:
+          payment.email,
+
+        download_url:
+          download.downloadUrl,
+
+        expires_at:
+          download.expiresAt
+      });
+
+    } catch (error) {
+      console.error(
+        "Get download error:",
+        error
+      );
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Unable to prepare download."
+      });
+    }
+  }
+);
+
+/* ======================================================
+   SECURE R2 DOWNLOAD
+====================================================== */
+
+app.get(
+  "/api/download",
+  async (req, res) => {
+    try {
+      const token =
+        String(
+          req.query.token || ""
+        ).trim();
+
+      if (!token) {
+        return res.status(400).send(
+          "Download token is required."
+        );
+      }
+
+      const tokenHash =
+        crypto
+          .createHash("sha256")
+          .update(token)
+          .digest("hex");
+
+      const result =
+        await pool.query(
+          `
+            SELECT *
+            FROM downloads
+            WHERE token_hash = $1
+            LIMIT 1
+          `,
+          [tokenHash]
+        );
+
+      if (
+        result.rows.length === 0
+      ) {
+        return res.status(403).send(
+          "Invalid or expired download link."
+        );
+      }
+
+      const download =
+        result.rows[0];
+
+      if (
+        Number(download.used) === 1
+      ) {
+        return res.status(403).send(
+          "This download link has already been used."
+        );
+      }
+
+      if (
+        download.expires_at &&
+        Date.now() >
+          Number(
+            download.expires_at
+          )
+      ) {
+        return res.status(403).send(
+          "This download link has expired."
+        );
+      }
+
+      const product =
+        PRODUCTS[
+          download.product_id
+        ];
+
+      if (!product) {
+        return res.status(404).send(
+          "Product not found."
+        );
+      }
+
+      if (!r2) {
+        return res.status(500).send(
+          "R2 storage is not configured."
+        );
+      }
+
+      const command =
+        new GetObjectCommand({
+          Bucket:
+            process.env.R2_BUCKET_NAME,
+
+          Key:
+            product.r2Key
+        });
+
+      const object =
+        await r2.send(command);
+
+      /*
+        Mark token as used.
+      */
+
+      await pool.query(
+        `
+          UPDATE downloads
+          SET used = 1
+          WHERE token_hash = $1
+        `,
+        [tokenHash]
+      );
+
+      res.setHeader(
+        "Content-Type",
+        product.contentType
+      );
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${product.downloadName}"`
+      );
+
+      if (
+        object.ContentLength
+      ) {
+        res.setHeader(
+          "Content-Length",
+          object.ContentLength
+        );
+      }
+
+      object.Body.pipe(res);
+
+    } catch (error) {
+      console.error(
+        "Download error:",
+        error
+      );
+
+      if (
+        error.name === "NoSuchKey" ||
+        error.Code === "NoSuchKey"
+      ) {
+        return res.status(404).send(
+          "The product file was not found in R2."
+        );
+      }
+
+      res.status(500).send(
+        "Unable to download product."
+      );
+    }
+  }
+);
+
+/* ======================================================
+   TEST PRODUCT DOWNLOAD
+====================================================== */
+
+app.get(
+  "/api/test-product/:productId",
+  async (req, res) => {
+    try {
+      const productId =
+        req.params.productId;
+
+      const product =
+        PRODUCTS[productId];
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Product not found."
+        });
+      }
+
+      const email =
+        "test@example.com";
+
+      const reference =
+        `TEST-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+
+      const now =
+        Date.now();
+
+      await pool.query(
+        `
+          INSERT INTO payments
+          (
+            reference,
+            email,
+            product_id,
+            amount,
+            currency,
+            status,
+            created_at,
+            updated_at
+          )
+          VALUES
+          ($1,$2,$3,$4,$5,'PAID',$6,$7)
+        `,
+        [
+          reference,
+          email,
+          productId,
+          product.priceNaira,
+          "NGN",
+          now,
+          now
+        ]
+      );
+
+      const download =
+        await createDownloadToken({
+          paymentReference:
+            reference,
+
+          productId,
+
+          email
+        });
+
+      res.json({
+        success: true,
+        test: true,
+
+        product_id:
+          product.id,
+
+        product_name:
+          product.name,
+
+        r2_key:
+          product.r2Key,
+
+        download_name:
+          product.downloadName,
+
+        download_url:
+          download.downloadUrl,
+
+        expires_at:
+          download.expiresAt
+      });
+
+    } catch (error) {
+      console.error(
+        "Test product error:",
+        error
+      );
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Test failed."
+      });
+    }
+  }
+);
+
+/* ======================================================
+   TEST DOWNLOAD INFO
+====================================================== */
+
+app.get(
+  "/api/test-download-v2",
+  (req, res) => {
+    res.json({
+      success: true,
+
+      message:
+        "Use /api/test-product/:productId to test a product download.",
+
+      example:
+        "/api/test-product/how-to-pass-high-in-exams"
+    });
+  }
+);
+
+/* ======================================================
+   PAYMENT SUCCESS PAGE
+====================================================== */
+
+app.get(
+  "/payment-success.html",
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        __dirname,
+        "..",
+        "public",
+        "payment-success.html"
+      )
+    );
+  }
+);
+
+/* ======================================================
+   HOME PAGE
+====================================================== */
+
+app.get(
+  "/",
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        __dirname,
+        "..",
+        "public",
+        "hex.html"
+      )
+    );
+  }
+);
+
+/* ======================================================
+   HEALTH CHECK
+====================================================== */
+
+app.get(
+  "/health",
+  async (req, res) => {
+    try {
+      await pool.query(
+        "SELECT 1"
+      );
+
+      res.json({
+        success: true,
+
+        database:
+          "connected",
+
+        r2_configured:
+          !!r2,
+
+        service:
+          "Earn Unlimited Funds"
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+
+        database:
+          "error",
+
+        message:
+          error.message
+      });
+    }
+  }
+);
+
+/* ======================================================
+   404
+====================================================== */
+
+app.use(
+  (req, res) => {
+    res.status(404).json({
+      success: false,
+      message:
+        "Route not found."
+    });
+  }
+);
+
+/* ======================================================
+   START SERVER
+====================================================== */
+
+async function startServer() {
+  try {
+    await initializeDatabase();
+
+    app.listen(
+      PORT,
+      () => {
+        console.log(
+          `Earn Unlimited Funds server running on port ${PORT}`
+        );
+
+        console.log(
+          `Webhook URL: ${SITE_URL}/api/selar/webhook`
+        );
+      }
+    );
+
+  } catch (error) {
+    console.error(
+      "Server startup failed:",
+      error
+    );
+
+    process.exit(1);
+  }
+}
+
+startServer();
