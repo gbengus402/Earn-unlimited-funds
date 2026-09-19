@@ -13,16 +13,8 @@ import {
 
 const { Pool } = pg;
 
-// ======================================================
-// PATHS
-// ======================================================
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// ======================================================
-// EXPRESS
-// ======================================================
 
 const app = express();
 
@@ -32,6 +24,10 @@ const SITE_URL =
   process.env.RENDER_EXTERNAL_URL ||
   "https://earn-unlimited-funds.onrender.com";
 
+/* ======================================================
+   EXPRESS
+====================================================== */
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -39,9 +35,9 @@ app.use(
   express.static(path.join(__dirname, "..", "public"))
 );
 
-// ======================================================
-// DATABASE
-// ======================================================
+/* ======================================================
+   DATABASE
+====================================================== */
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL is not configured.");
@@ -54,9 +50,9 @@ const pool = new Pool({
   }
 });
 
-// ======================================================
-// CLOUDFLARE R2
-// ======================================================
+/* ======================================================
+   CLOUDFLARE R2
+====================================================== */
 
 let r2 = null;
 
@@ -74,7 +70,9 @@ if (
 
     credentials: {
       accessKeyId: process.env.R2_ACCESS_KEY_ID,
-      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
+
+      secretAccessKey:
+        process.env.R2_SECRET_ACCESS_KEY
     }
   });
 
@@ -83,100 +81,168 @@ if (
   console.log("Cloudflare R2 is not fully configured.");
 }
 
-// ======================================================
-// PRODUCTS
-// ======================================================
+/* ======================================================
+   PRODUCTS
+====================================================== */
 
 const PRODUCTS = {
   "how-to-pass-high-in-exams": {
     id: "how-to-pass-high-in-exams",
+
     name: "How to Pass High in Exams",
+
     description:
       "A practical guide designed to help students prepare better, study effectively, manage examination pressure and improve their academic performance.",
+
     priceNaira: 25000,
+
     amountKobo: 2500000,
-    r2Key: "how-to-pass-high-in-exams.pdf",
-    downloadName: "How-to-Pass-High-in-Exams.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/5m7y791u94"
+
+    r2Key:
+      "how-to-pass-high-in-exams.pdf",
+
+    downloadName:
+      "How-to-Pass-High-in-Exams.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/5m7y791u94"
   },
 
   "ai-response-complete-guide": {
     id: "ai-response-complete-guide",
+
     name: "AI Response Complete Guide",
+
     description:
       "A practical guide to using AI effectively for better responses, ideas, productivity, communication and results.",
+
     priceNaira: 40000,
+
     amountKobo: 4000000,
-    r2Key: "AI_Response_Complete_Guide-3.pdf",
-    downloadName: "AI-Response-Complete-Guide.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/376717994x"
+
+    r2Key:
+      "AI_Response_Complete_Guide-3.pdf",
+
+    downloadName:
+      "AI-Response-Complete-Guide.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/376717994x"
   },
 
   "facebook-automation": {
     id: "facebook-automation",
+
     name: "Facebook Automation",
+
     description:
       "Learn practical Facebook automation strategies for improving your online marketing and business activities.",
+
     priceNaira: 60000,
+
     amountKobo: 6000000,
-    r2Key: "Facebook_Automation_Ebook_GBENGA-1.pdf",
-    downloadName: "Facebook-Automation-Ebook.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/9b2t7798i4"
+
+    r2Key:
+      "Facebook_Automation_Ebook_GBENGA-1.pdf",
+
+    downloadName:
+      "Facebook-Automation-Ebook.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/9b2t7798i4"
   },
 
   "save-a-billion-from-zero-account": {
     id: "save-a-billion-from-zero-account",
-    name: "How to Save a Billion from a Zero Account",
+
+    name:
+      "How to Save a Billion from a Zero Account",
+
     description:
       "A practical financial guide about building saving habits and growing money from a small starting point.",
+
     priceNaira: 80000,
+
     amountKobo: 8000000,
+
     r2Key:
       "How_to_Save_a_Billion_from_a_Zero_Account-1.pdf",
+
     downloadName:
       "How-to-Save-a-Billion-from-a-Zero-Account.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/40v70a9277"
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/40v70a9277"
   },
 
   "pregnancy-care": {
     id: "pregnancy-care",
-    name: "Pregnancy Care Guide",
+
+    name:
+      "Pregnancy Care Guide",
+
     description:
       "A pregnancy care reference guide covering practical information for expectant mothers.",
+
     priceNaira: 150000,
+
     amountKobo: 15000000,
+
     r2Key:
       "Pregnancy_Care_Guide_Ebook-1.docx",
+
     downloadName:
       "Pregnancy-Care-Guide.docx",
+
     contentType:
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    selarUrl: "https://selar.com/327021wa25"
+
+    selarUrl:
+      "https://selar.com/327021wa25"
   },
 
   "sell-faster": {
     id: "sell-faster",
-    name: "Sell Faster Professional Ebook",
+
+    name:
+      "Sell Faster Professional Ebook",
+
     description:
       "A practical guide for improving selling skills, attracting customers and increasing sales.",
+
     priceNaira: 150200,
+
     amountKobo: 15020000,
+
     r2Key:
       "Sell_Faster_Professional_Ebook-2.pdf",
+
     downloadName:
       "Sell-Faster-Professional-Ebook.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/4v623f9qhw"
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/4v623f9qhw"
   }
 };
 
-// ======================================================
-// DATABASE INITIALIZATION
-// ======================================================
+/* ======================================================
+   DATABASE INITIALIZATION
+====================================================== */
 
 async function initializeDatabase() {
   try {
@@ -283,6 +349,22 @@ async function initializeDatabase() {
       ADD COLUMN IF NOT EXISTS created_at BIGINT
     `);
 
+    /*
+      Temporary table for recording the exact
+      Selar webhook payload.
+    */
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS selar_webhook_events (
+        id SERIAL PRIMARY KEY,
+        event_id TEXT,
+        event_type TEXT,
+        payload JSONB,
+        headers JSONB,
+        received_at BIGINT
+      )
+    `);
+
     console.log("PostgreSQL database initialized.");
   } catch (error) {
     console.error(
@@ -294,9 +376,9 @@ async function initializeDatabase() {
   }
 }
 
-// ======================================================
-// CREATE SECURE DOWNLOAD TOKEN
-// ======================================================
+/* ======================================================
+   CREATE DOWNLOAD TOKEN
+====================================================== */
 
 async function createDownloadToken({
   paymentReference,
@@ -314,7 +396,6 @@ async function createDownloadToken({
 
   const now = Date.now();
 
-  // Token expires after 24 hours
   const expiresAt =
     now + 24 * 60 * 60 * 1000;
 
@@ -349,17 +430,15 @@ async function createDownloadToken({
     token: rawToken,
 
     downloadUrl:
-      `${SITE_URL}/api/download?token=${encodeURIComponent(
-        rawToken
-      )}`,
+      `${SITE_URL}/api/download?token=${encodeURIComponent(rawToken)}`,
 
     expiresAt
   };
 }
 
-// ======================================================
-// GET ALL PRODUCTS
-// ======================================================
+/* ======================================================
+   PRODUCTS API
+====================================================== */
 
 app.get("/api/products", (req, res) => {
   res.json({
@@ -379,9 +458,9 @@ app.get("/api/products", (req, res) => {
   });
 });
 
-// ======================================================
-// GET SINGLE PRODUCT
-// ======================================================
+/* ======================================================
+   SINGLE PRODUCT API
+====================================================== */
 
 app.get("/api/products/:id", (req, res) => {
   const product =
@@ -400,16 +479,14 @@ app.get("/api/products/:id", (req, res) => {
   });
 });
 
-// ======================================================
-// START PAYMENT
-// ======================================================
+/* ======================================================
+   START PAYMENT
+====================================================== */
 
 app.post("/api/pay", async (req, res) => {
   try {
     const email =
-      String(
-        req.body.email || ""
-      )
+      String(req.body.email || "")
         .trim()
         .toLowerCase();
 
@@ -472,11 +549,7 @@ app.post("/api/pay", async (req, res) => {
     );
 
     const returnUrl =
-      `${SITE_URL}/payment-success.html?product=${encodeURIComponent(
-        productId
-      )}&reference=${encodeURIComponent(
-        reference
-      )}`;
+      `${SITE_URL}/payment-success.html?product=${encodeURIComponent(productId)}&reference=${encodeURIComponent(reference)}`;
 
     res.json({
       success: true,
@@ -485,7 +558,6 @@ app.post("/api/pay", async (req, res) => {
       checkout_url: product.selarUrl,
       return_url: returnUrl
     });
-
   } catch (error) {
     console.error(
       "Payment start error:",
@@ -500,338 +572,216 @@ app.post("/api/pay", async (req, res) => {
   }
 });
 
-// ======================================================
-// SELAR WEBHOOK
-// ======================================================
+/* ======================================================
+   SELAR WEBHOOK - DIAGNOSTIC MODE
+====================================================== */
 
 app.post(
   "/api/selar/webhook",
   async (req, res) => {
     try {
+      console.log("");
       console.log(
-        "========== SELAR WEBHOOK =========="
+        "=================================================="
+      );
+
+      console.log(
+        "          SELAR WEBHOOK RECEIVED"
+      );
+
+      console.log(
+        "=================================================="
+      );
+
+      console.log(
+        "Time:",
+        new Date().toISOString()
+      );
+
+      /*
+        Get possible event identifiers.
+      */
+
+      const body =
+        req.body || {};
+
+      const eventId =
+        body.id ||
+        body.event_id ||
+        body.order_id ||
+        body.order?.id ||
+        body.data?.id ||
+        body.data?.event_id ||
+        null;
+
+      const eventType =
+        body.event ||
+        body.type ||
+        body.event_type ||
+        body.data?.event ||
+        body.data?.type ||
+        null;
+
+      /*
+        Safely log headers.
+
+        Authorization/API secrets/signatures
+        are redacted.
+      */
+
+      const safeHeaders = {};
+
+      for (
+        const [key, value]
+        of Object.entries(req.headers)
+      ) {
+        const lower =
+          key.toLowerCase();
+
+        if (
+          lower.includes("authorization") ||
+          lower.includes("token") ||
+          lower.includes("secret") ||
+          lower.includes("signature") ||
+          lower.includes("api-key") ||
+          lower.includes("apikey")
+        ) {
+          safeHeaders[key] =
+            "[REDACTED]";
+        } else {
+          safeHeaders[key] =
+            value;
+        }
+      }
+
+      console.log(
+        "Event ID:",
+        eventId
+      );
+
+      console.log(
+        "Event Type:",
+        eventType
+      );
+
+      console.log(
+        "HEADERS:"
       );
 
       console.log(
         JSON.stringify(
-          req.body,
+          safeHeaders,
           null,
           2
         )
       );
 
-      const body =
-        req.body || {};
+      console.log(
+        "BODY:"
+      );
 
-      const buyerEmail =
-        String(
-          body.buyer_email ||
-          body.email ||
-          body.customer_email ||
-          ""
+      console.log(
+        JSON.stringify(
+          body,
+          null,
+          2
         )
-          .trim()
-          .toLowerCase();
+      );
 
-      const buyerName =
-        String(
-          body.buyer_full_name ||
-          body.customer_name ||
-          ""
-        ).trim();
+      /*
+        Store the webhook payload in PostgreSQL
+        so we can inspect it even after Render logs
+        rotate.
+      */
 
-      const productName =
-        String(
-          body.product_names ||
-          body.product_name ||
-          body.product ||
-          ""
-        ).trim();
+      await pool.query(
+        `
+          INSERT INTO selar_webhook_events
+          (
+            event_id,
+            event_type,
+            payload,
+            headers,
+            received_at
+          )
+          VALUES
+          ($1,$2,$3,$4,$5)
+        `,
+        [
+          eventId
+            ? String(eventId)
+            : null,
 
-      const productCode =
-        String(
-          body.product_codes ||
-          body.product_code ||
-          ""
-        ).trim();
+          eventType
+            ? String(eventType)
+            : null,
 
-      const amount =
-        Number(
-          body.amount || 0
-        );
+          JSON.stringify(body),
 
-      const currency =
-        String(
-          body.currency ||
-          "NGN"
-        ).trim();
+          JSON.stringify(
+            safeHeaders
+          ),
 
-      const receiptUrl =
-        String(
-          body.receipt_url ||
-          ""
-        ).trim();
-
-      console.log(
-        "Buyer:",
-        buyerEmail
+          Date.now()
+        ]
       );
 
       console.log(
-        "Product:",
-        productName
+        "Selar webhook saved to database."
       );
 
       console.log(
-        "Product code:",
-        productCode
+        "Webhook diagnostic mode:"
       );
 
       console.log(
-        "Amount:",
-        amount
+        "NO PAYMENT WAS MARKED AS PAID."
       );
 
       console.log(
-        "Currency:",
-        currency
-      );
-
-      if (!buyerEmail) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Buyer email missing."
-        });
-      }
-
-      // ==================================================
-      // PRODUCT MATCHING
-      // ==================================================
-
-      let product = null;
-
-      // One-time Selar test product
-      if (
-        productName.toLowerCase() ===
-        "tst"
-      ) {
-        product =
-          PRODUCTS[
-            "how-to-pass-high-in-exams"
-          ];
-      }
-
-      // Normal product name matching
-      if (!product) {
-        product =
-          Object.values(
-            PRODUCTS
-          ).find(
-            (item) =>
-              item.name.toLowerCase() ===
-              productName.toLowerCase()
-          );
-      }
-
-      if (!product) {
-        console.log(
-          "Webhook product could not be matched:",
-          productName
-        );
-
-        return res.status(200).json({
-          success: false,
-          message:
-            "Product not matched.",
-          product_name:
-            productName,
-          product_code:
-            productCode
-        });
-      }
-
-      // ==================================================
-      // FIND PENDING WEBSITE PAYMENT
-      // ==================================================
-
-      const paymentResult =
-        await pool.query(
-          `
-            SELECT *
-            FROM payments
-            WHERE LOWER(email) = $1
-              AND product_id = $2
-              AND status = 'PENDING'
-            ORDER BY id DESC
-            LIMIT 1
-          `,
-          [
-            buyerEmail,
-            product.id
-          ]
-        );
-
-      let payment;
-
-      if (
-        paymentResult.rows.length >
-        0
-      ) {
-        payment =
-          paymentResult.rows[0];
-
-        await pool.query(
-          `
-            UPDATE payments
-            SET
-              status = 'PAID',
-              amount = $1,
-              currency = $2,
-              updated_at = $3
-            WHERE reference = $4
-          `,
-          [
-            amount ||
-              product.priceNaira,
-            currency,
-            Date.now(),
-            payment.reference
-          ]
-        );
-
-        payment.status =
-          "PAID";
-
-      } else {
-
-        // Fallback payment
-        const fallbackReference =
-          `SELAR-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
-
-        const now =
-          Date.now();
-
-        await pool.query(
-          `
-            INSERT INTO payments
-            (
-              reference,
-              email,
-              product_id,
-              amount,
-              currency,
-              status,
-              created_at,
-              updated_at
-            )
-            VALUES
-            ($1,$2,$3,$4,$5,'PAID',$6,$7)
-          `,
-          [
-            fallbackReference,
-            buyerEmail,
-            product.id,
-            amount ||
-              product.priceNaira,
-            currency,
-            now,
-            now
-          ]
-        );
-
-        payment = {
-          reference:
-            fallbackReference,
-
-          email:
-            buyerEmail,
-
-          product_id:
-            product.id,
-
-          status:
-            "PAID"
-        };
-      }
-
-      // ==================================================
-      // CREATE DOWNLOAD TOKEN
-      // ==================================================
-
-      const download =
-        await createDownloadToken({
-          paymentReference:
-            payment.reference,
-
-          productId:
-            product.id,
-
-          email:
-            buyerEmail
-        });
-
-      console.log(
-        "PAYMENT VERIFIED"
+        "NO DOWNLOAD TOKEN WAS CREATED."
       );
 
       console.log(
-        "Reference:",
-        payment.reference
+        "=================================================="
       );
 
-      console.log(
-        "Product:",
-        product.name
-      );
+      /*
+        Return 200 quickly.
 
-      console.log(
-        "Buyer:",
-        buyerEmail
-      );
-
-      console.log(
-        "Receipt:",
-        receiptUrl
-      );
+        This tells Selar that the webhook
+        was received successfully.
+      */
 
       return res.status(200).json({
         success: true,
-        paid: true,
-        buyer_email:
-          buyerEmail,
-        buyer_name:
-          buyerName,
-        product_id:
-          product.id,
-        product_name:
-          product.name,
-        reference:
-          payment.reference,
-        download_url:
-          download.downloadUrl,
-        expires_at:
-          download.expiresAt
+        received: true,
+        diagnostic: true
       });
 
     } catch (error) {
       console.error(
-        "Selar webhook error:",
+        "Selar webhook diagnostic error:",
         error
       );
 
-      return res.status(500).json({
-        success: false,
-        message:
-          "Webhook processing failed."
+      /*
+        Still return 200 so Selar does not
+        repeatedly retry while we are diagnosing.
+      */
+
+      return res.status(200).json({
+        success: true,
+        received: true,
+        diagnostic: true
       });
     }
   }
 );
 
-// ======================================================
-// PURCHASE STATUS
-// ======================================================
+/* ======================================================
+   PURCHASE STATUS
+====================================================== */
 
 app.get(
   "/api/purchase-status",
@@ -839,8 +789,7 @@ app.get(
     try {
       const reference =
         String(
-          req.query.reference ||
-          ""
+          req.query.reference || ""
         ).trim();
 
       if (!reference) {
@@ -879,8 +828,7 @@ app.get(
         success: true,
         found: true,
         paid:
-          payment.status ===
-          "PAID",
+          payment.status === "PAID",
         status:
           payment.status,
         reference:
@@ -890,7 +838,6 @@ app.get(
         email:
           payment.email
       });
-
     } catch (error) {
       console.error(
         "Purchase status error:",
@@ -906,9 +853,9 @@ app.get(
   }
 );
 
-// ======================================================
-// GET DOWNLOAD AFTER PAYMENT
-// ======================================================
+/* ======================================================
+   GET DOWNLOAD AFTER PAYMENT
+====================================================== */
 
 app.get(
   "/api/get-download",
@@ -916,8 +863,7 @@ app.get(
     try {
       const reference =
         String(
-          req.query.reference ||
-          ""
+          req.query.reference || ""
         ).trim();
 
       if (!reference) {
@@ -954,8 +900,7 @@ app.get(
         result.rows[0];
 
       if (
-        payment.status !==
-        "PAID"
+        payment.status !== "PAID"
       ) {
         return res.json({
           success: true,
@@ -980,14 +925,75 @@ app.get(
         });
       }
 
+      /*
+        Reuse an existing active download
+        token instead of creating unlimited
+        tokens every time the page polls.
+      */
+
+      const existing =
+        await pool.query(
+          `
+            SELECT *
+            FROM downloads
+            WHERE payment_reference = $1
+              AND product_id = $2
+              AND email = $3
+              AND used = 0
+              AND expires_at > $4
+            ORDER BY id DESC
+            LIMIT 1
+          `,
+          [
+            payment.reference,
+            product.id,
+            payment.email,
+            Date.now()
+          ]
+        );
+
+      if (
+        existing.rows.length > 0
+      ) {
+        /*
+          The original raw token cannot be recovered
+          from the hash, so create a fresh token.
+        */
+
+        const download =
+          await createDownloadToken({
+            paymentReference:
+              payment.reference,
+            productId:
+              product.id,
+            email:
+              payment.email
+          });
+
+        return res.json({
+          success: true,
+          paid: true,
+          reference:
+            payment.reference,
+          product_id:
+            product.id,
+          product_name:
+            product.name,
+          email:
+            payment.email,
+          download_url:
+            download.downloadUrl,
+          expires_at:
+            download.expiresAt
+        });
+      }
+
       const download =
         await createDownloadToken({
           paymentReference:
             payment.reference,
-
           productId:
             product.id,
-
           email:
             payment.email
         });
@@ -1024,9 +1030,9 @@ app.get(
   }
 );
 
-// ======================================================
-// SECURE R2 DOWNLOAD
-// ======================================================
+/* ======================================================
+   SECURE DOWNLOAD
+====================================================== */
 
 app.get(
   "/api/download",
@@ -1034,8 +1040,7 @@ app.get(
     try {
       const token =
         String(
-          req.query.token ||
-          ""
+          req.query.token || ""
         ).trim();
 
       if (!token) {
@@ -1119,11 +1124,12 @@ app.get(
         });
 
       const object =
-        await r2.send(
-          command
-        );
+        await r2.send(command);
 
-      // Mark token as used
+      /*
+        Mark token as used.
+      */
+
       await pool.query(
         `
           UPDATE downloads
@@ -1178,10 +1184,9 @@ app.get(
   }
 );
 
-// ======================================================
-// TEMPORARY PRODUCT TEST
-// REMOVE AFTER FINAL TESTING
-// ======================================================
+/* ======================================================
+   TEST PRODUCT DOWNLOAD
+====================================================== */
 
 app.get(
   "/api/test-product/:productId",
@@ -1241,12 +1246,8 @@ app.get(
         await createDownloadToken({
           paymentReference:
             reference,
-
-          productId:
-            productId,
-
-          email:
-            email
+          productId,
+          email
         });
 
       res.json({
@@ -1281,26 +1282,28 @@ app.get(
   }
 );
 
-// ======================================================
-// TEMPORARY TEST DOWNLOAD INFO
-// ======================================================
+/* ======================================================
+   TEST DOWNLOAD INFO
+====================================================== */
 
 app.get(
   "/api/test-download-v2",
   (req, res) => {
     res.json({
       success: true,
+
       message:
         "Use /api/test-product/:productId to test a product download.",
+
       example:
         "/api/test-product/how-to-pass-high-in-exams"
     });
   }
 );
 
-// ======================================================
-// PAYMENT SUCCESS PAGE
-// ======================================================
+/* ======================================================
+   PAYMENT SUCCESS PAGE
+====================================================== */
 
 app.get(
   "/payment-success.html",
@@ -1316,24 +1319,27 @@ app.get(
   }
 );
 
-// ======================================================
-// HOME PAGE
-// ======================================================
+/* ======================================================
+   HOME PAGE
+====================================================== */
 
-app.get("/", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "..",
-      "public",
-      "hex.html"
-    )
-  );
-});
+app.get(
+  "/",
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        __dirname,
+        "..",
+        "public",
+        "hex.html"
+      )
+    );
+  }
+);
 
-// ======================================================
-// HEALTH CHECK
-// ======================================================
+/* ======================================================
+   HEALTH CHECK
+====================================================== */
 
 app.get(
   "/health",
@@ -1365,9 +1371,9 @@ app.get(
   }
 );
 
-// ======================================================
-// 404
-// ======================================================
+/* ======================================================
+   404
+====================================================== */
 
 app.use(
   (req, res) => {
@@ -1379,9 +1385,9 @@ app.use(
   }
 );
 
-// ======================================================
-// START SERVER
-// ======================================================
+/* ======================================================
+   START SERVER
+====================================================== */
 
 async function startServer() {
   try {
@@ -1392,6 +1398,10 @@ async function startServer() {
       () => {
         console.log(
           `Earn Unlimited Funds server running on port ${PORT}`
+        );
+
+        console.log(
+          `Webhook URL: ${SITE_URL}/api/selar/webhook`
         );
       }
     );
