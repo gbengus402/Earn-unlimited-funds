@@ -1,22 +1,116 @@
+// ======================================================
+// EARN UNLIMITED FUNDS
+// SERVER / INDEX.JS
+// ======================================================
+
 import express from "express";
 import path from "path";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
-import { Pool } from "pg";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import dotenv from "dotenv";
+import pg from "pg";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {
+  S3Client,
+  GetObjectCommand
+} from "@aws-sdk/client-s3";
+
+dotenv.config();
+
+const { Pool } = pg;
+
+// ======================================================
+// BASIC CONFIGURATION
+// ======================================================
 
 const app = express();
 
-const PORT = process.env.PORT || 10000;
+const PORT =
+  process.env.PORT || 10000;
 
-const publicFolder = path.join(__dirname, "..", "public");
+const __filename =
+  fileURLToPath(import.meta.url);
+
+const __dirname =
+  path.dirname(__filename);
+
+const publicFolder =
+  path.join(__dirname, "..", "public");
 
 const SITE_URL =
   process.env.RENDER_EXTERNAL_URL ||
   "https://earn-unlimited-funds.onrender.com";
+
+// ======================================================
+// MIDDLEWARE
+// ======================================================
+
+app.use(express.json());
+
+app.use(
+  express.urlencoded({
+    extended: true
+  })
+);
+
+app.use(
+  express.static(publicFolder)
+);
+
+// ======================================================
+// POSTGRESQL
+// ======================================================
+
+const pool = new Pool({
+  connectionString:
+    process.env.DATABASE_URL,
+
+  ssl:
+    process.env.DATABASE_URL
+      ? {
+          rejectUnauthorized: false
+        }
+      : false
+});
+
+// ======================================================
+// CLOUDFLARE R2
+// ======================================================
+
+let r2Client = null;
+
+if (
+  process.env.R2_ACCOUNT_ID &&
+  process.env.R2_ACCESS_KEY_ID &&
+  process.env.R2_SECRET_ACCESS_KEY &&
+  process.env.R2_BUCKET_NAME
+) {
+  r2Client = new S3Client({
+    region: "auto",
+
+    endpoint:
+      `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+
+    credentials: {
+      accessKeyId:
+        process.env.R2_ACCESS_KEY_ID,
+
+      secretAccessKey:
+        process.env.R2_SECRET_ACCESS_KEY
+    }
+  });
+
+  console.log(
+    "Cloudflare R2 client configured."
+  );
+} else {
+  console.log(
+    "WARNING: Cloudflare R2 environment variables are missing."
+  );
+}
+
+const R2_BUCKET =
+  process.env.R2_BUCKET_NAME;
 
 // ======================================================
 // PRODUCTS
@@ -25,161 +119,245 @@ const SITE_URL =
 const PRODUCTS = {
   "how-to-pass-high-in-exams": {
     id: "how-to-pass-high-in-exams",
-    name: "How to Pass High in Exams",
+
+    name:
+      "How to Pass High in Exams",
+
     description:
       "A practical guide designed to help students prepare better, study effectively, manage examination pressure and improve their academic performance.",
+
     priceNaira: 25000,
+
     amountKobo: 2500000,
-    fileKey: "how-to-pass-high-in-exams.pdf",
-    downloadName: "How-to-Pass-High-in-Exams.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/5m7y791u94"
+
+    r2Key:
+      "how-to-pass-high-in-exams.pdf",
+
+    downloadName:
+      "How-to-Pass-High-in-Exams.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/5m7y791u94"
   },
 
   "ai-response-complete-guide": {
-    id: "ai-response-complete-guide",
-    name: "AI Response Complete Guide",
+    id:
+      "ai-response-complete-guide",
+
+    name:
+      "AI Response Complete Guide",
+
     description:
-      "A practical guide to using AI effectively for better responses, ideas, productivity, communication and online work.",
+      "A practical guide to using AI effectively for better responses, ideas, productivity, communication and everyday tasks.",
+
     priceNaira: 40000,
+
     amountKobo: 4000000,
-    fileKey: "AI_Response_Complete_Guide-3.pdf",
-    downloadName: "AI-Response-Complete-Guide.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/376717994x"
+
+    r2Key:
+      "AI_Response_Complete_Guide-3.pdf",
+
+    downloadName:
+      "AI-Response-Complete-Guide.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/376717994x"
   },
 
   "facebook-automation": {
-    id: "facebook-automation",
-    name: "Facebook Automation",
+    id:
+      "facebook-automation",
+
+    name:
+      "Facebook Automation",
+
     description:
-      "Learn practical Facebook automation strategies that can help you manage your online presence, respond to customers and improve your digital marketing workflow.",
+      "A practical guide to Facebook automation, customer responses, content workflows and business growth.",
+
     priceNaira: 60000,
+
     amountKobo: 6000000,
-    fileKey: "Facebook_Automation_Ebook_GBENGA-1.pdf",
-    downloadName: "Facebook-Automation.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/9b2t7798i4"
+
+    r2Key:
+      "Facebook_Automation_Ebook_GBENGA-1.pdf",
+
+    downloadName:
+      "Facebook-Automation-Ebook.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/9b2t7798i4"
   },
 
   "save-a-billion-from-zero-account": {
-    id: "save-a-billion-from-zero-account",
-    name: "How to Save a Billion from a Zero Account",
+    id:
+      "save-a-billion-from-zero-account",
+
+    name:
+      "Save a Billion from Zero Account",
+
     description:
-      "A practical financial guide focused on building better money habits, saving strategies, planning and long-term financial growth.",
+      "A practical financial guide focused on building saving habits and improving money management from a small starting point.",
+
     priceNaira: 80000,
+
     amountKobo: 8000000,
-    fileKey: "How_to_Save_a_Billion_from_a_Zero_Account-1.pdf",
-    downloadName: "How-to-Save-a-Billion-from-a-Zero-Account.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/40v70a9277"
+
+    r2Key:
+      "How_to_Save_a_Billion_from_a_Zero_Account-1.pdf",
+
+    downloadName:
+      "How-to-Save-a-Billion-from-a-Zero-Account.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/40v70a9277"
   },
 
   "pregnancy-care": {
-    id: "pregnancy-care",
-    name: "Pregnancy Care Guide",
+    id:
+      "pregnancy-care",
+
+    name:
+      "Pregnancy Care",
+
     description:
-      "A practical pregnancy care guide covering useful information, preparation, healthy routines and important considerations during pregnancy.",
+      "A practical pregnancy care guide covering useful information for pregnancy preparation, care and everyday planning.",
+
     priceNaira: 150000,
+
     amountKobo: 15000000,
-    fileKey: "Pregnancy_Care_Guide_Ebook-1.docx",
-    downloadName: "Pregnancy-Care-Guide.docx",
+
+    r2Key:
+      "Pregnancy_Care_Guide_Ebook-1.docx",
+
+    downloadName:
+      "Pregnancy-Care-Guide.docx",
+
     contentType:
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    selarUrl: "https://selar.com/327021wa25"
+
+    selarUrl:
+      "https://selar.com/327021wa25"
   },
 
   "sell-faster": {
-    id: "sell-faster",
-    name: "Sell Faster Professional Ebook",
+    id:
+      "sell-faster",
+
+    name:
+      "Sell Faster",
+
     description:
-      "A practical guide for improving your selling approach, attracting potential customers, presenting offers and increasing your chances of making sales.",
+      "A practical professional guide designed to help sellers improve their offers, attract customers and make sales more effectively.",
+
     priceNaira: 150200,
+
     amountKobo: 15020000,
-    fileKey: "Sell_Faster_Professional_Ebook-2.pdf",
-    downloadName: "Sell-Faster-Professional-Ebook.pdf",
-    contentType: "application/pdf",
-    selarUrl: "https://selar.com/4v623f9qhw"
+
+    r2Key:
+      "Sell_Faster_Professional_Ebook-2.pdf",
+
+    downloadName:
+      "Sell-Faster-Professional-Ebook.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/4v623f9qhw"
   }
 };
 
 // ======================================================
-// MIDDLEWARE
-// ======================================================
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(publicFolder));
-
-// ======================================================
-// POSTGRESQL
-// ======================================================
-
-if (!process.env.DATABASE_URL) {
-  console.warn("WARNING: DATABASE_URL is not set.");
-}
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL
-    ? { rejectUnauthorized: false }
-    : false
-});
-
-// ======================================================
-// CLOUDFLARE R2
-// ======================================================
-
-const r2AccountId = process.env.R2_ACCOUNT_ID;
-const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID;
-const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-const r2BucketName = process.env.R2_BUCKET_NAME;
-
-let r2Client = null;
-
-if (
-  r2AccountId &&
-  r2AccessKeyId &&
-  r2SecretAccessKey &&
-  r2BucketName
-) {
-  r2Client = new S3Client({
-    region: "auto",
-    endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: r2AccessKeyId,
-      secretAccessKey: r2SecretAccessKey
-    }
-  });
-
-  console.log("Cloudflare R2 client configured.");
-} else {
-  console.warn(
-    "WARNING: Cloudflare R2 environment variables are incomplete."
-  );
-}
-
-// ======================================================
-// DATABASE SETUP
+// DATABASE INITIALIZATION
 // ======================================================
 
 async function initializeDatabase() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is missing.");
-  }
-
   await pool.query(`
     CREATE TABLE IF NOT EXISTS payments (
       id SERIAL PRIMARY KEY,
+
       reference TEXT UNIQUE NOT NULL,
+
       email TEXT NOT NULL,
+
       product_id TEXT NOT NULL,
-      amount INTEGER NOT NULL,
+
+      amount NUMERIC NOT NULL DEFAULT 0,
+
       currency TEXT NOT NULL DEFAULT 'NGN',
+
       status TEXT NOT NULL DEFAULT 'pending',
+
       created_at BIGINT NOT NULL,
+
       updated_at BIGINT NOT NULL
     )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS downloads (
+      id SERIAL PRIMARY KEY,
+
+      token_hash TEXT UNIQUE NOT NULL,
+
+      reference TEXT,
+
+      payment_reference TEXT,
+
+      product_id TEXT NOT NULL,
+
+      email TEXT NOT NULL,
+
+      used INTEGER NOT NULL DEFAULT 0,
+
+      expires_at BIGINT NOT NULL,
+
+      created_at BIGINT NOT NULL
+    )
+  `);
+
+  // Make sure payment_reference exists
+  await pool.query(`
+    ALTER TABLE downloads
+    ADD COLUMN IF NOT EXISTS payment_reference TEXT
+  `);
+
+  // Make sure useful columns exist
+  await pool.query(`
+    ALTER TABLE payments
+    ADD COLUMN IF NOT EXISTS email TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE payments
+    ADD COLUMN IF NOT EXISTS product_id TEXT
+  `);
+
+  await pool.query(`
+    ALTER TABLE payments
+    ADD COLUMN IF NOT EXISTS amount NUMERIC DEFAULT 0
+  `);
+
+  await pool.query(`
+    ALTER TABLE payments
+    ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'NGN'
+  `);
+
+  await pool.query(`
+    ALTER TABLE payments
+    ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending'
   `);
 
   await pool.query(`
@@ -192,378 +370,232 @@ async function initializeDatabase() {
     ADD COLUMN IF NOT EXISTS updated_at BIGINT
   `);
 
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_payments_reference
-    ON payments(reference)
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_payments_email
-    ON payments(email)
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS downloads (
-      id SERIAL PRIMARY KEY,
-      token_hash TEXT UNIQUE NOT NULL,
-      reference TEXT NOT NULL,
-      payment_reference TEXT NOT NULL,
-      product_id TEXT NOT NULL,
-      email TEXT NOT NULL,
-      used INTEGER NOT NULL DEFAULT 0,
-      expires_at BIGINT NOT NULL,
-      created_at BIGINT NOT NULL
-    )
-  `);
-
-  await pool.query(`
-    ALTER TABLE downloads
-    ADD COLUMN IF NOT EXISTS reference TEXT
-  `);
-
-  await pool.query(`
-    ALTER TABLE downloads
-    ADD COLUMN IF NOT EXISTS payment_reference TEXT
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_downloads_token_hash
-    ON downloads(token_hash)
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_downloads_payment_reference
-    ON downloads(payment_reference)
-  `);
-
-  console.log("PostgreSQL database initialized.");
+  console.log(
+    "PostgreSQL database initialized."
+  );
 }
 
 // ======================================================
-// GET ALL PRODUCTS
+// HELPER: CREATE DOWNLOAD TOKEN
 // ======================================================
 
-app.get("/api/products", (req, res) => {
-  const products = Object.values(PRODUCTS).map((product) => ({
-    id: product.id,
-    name: product.name,
-    description: product.description,
-    priceNaira: product.priceNaira,
-    amountKobo: product.amountKobo
-  }));
-
-  res.json({
-    success: true,
-    products
-  });
-});
-
-// ======================================================
-// GET ONE PRODUCT
-// ======================================================
-
-app.get("/api/products/:id", (req, res) => {
-  const product = PRODUCTS[req.params.id];
-
-  if (!product) {
-    return res.status(404).json({
-      success: false,
-      message: "Product not found."
-    });
+async function createDownloadToken({
+  paymentReference,
+  productId,
+  email
+}) {
+  if (!r2Client) {
+    throw new Error(
+      "Cloudflare R2 is not configured."
+    );
   }
 
-  res.json({
-    success: true,
-    product: {
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      priceNaira: product.priceNaira,
-      amountKobo: product.amountKobo
-    }
-  });
-});
+  const product =
+    PRODUCTS[productId];
+
+  if (!product) {
+    throw new Error(
+      "Product not found."
+    );
+  }
+
+  const rawToken =
+    crypto.randomBytes(32).toString("hex");
+
+  const tokenHash =
+    crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+  const now = Date.now();
+
+  const expiresAt =
+    now + 24 * 60 * 60 * 1000;
+
+  await pool.query(
+    `
+    INSERT INTO downloads
+    (
+      token_hash,
+      reference,
+      payment_reference,
+      product_id,
+      email,
+      used,
+      expires_at,
+      created_at
+    )
+    VALUES
+    ($1, $2, $3, $4, $5, $6, $7, $8)
+    `,
+    [
+      tokenHash,
+
+      paymentReference,
+
+      paymentReference,
+
+      productId,
+
+      email,
+
+      0,
+
+      expiresAt,
+
+      now
+    ]
+  );
+
+  return {
+    rawToken,
+
+    downloadUrl:
+      `${SITE_URL}/api/download?token=${encodeURIComponent(
+        rawToken
+      )}`,
+
+    expiresAt
+  };
+}
 
 // ======================================================
-// START SELAR PAYMENT
+// GET PRODUCTS
 // ======================================================
 
-app.post("/api/pay", async (req, res) => {
-  try {
-    const { email, productId } = req.body;
+app.get(
+  "/api/products",
+  (req, res) => {
+    res.json({
+      success: true,
 
-    if (!email || !productId) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and product are required."
-      });
-    }
+      products:
+        Object.values(PRODUCTS).map(
+          (product) => ({
+            id:
+              product.id,
 
-    const cleanEmail = String(email).trim().toLowerCase();
+            name:
+              product.name,
 
-    const product = PRODUCTS[productId];
+            description:
+              product.description,
+
+            priceNaira:
+              product.priceNaira,
+
+            amountKobo:
+              product.amountKobo,
+
+            selarUrl:
+              product.selarUrl
+          })
+        )
+    });
+  }
+);
+
+// ======================================================
+// GET SINGLE PRODUCT
+// ======================================================
+
+app.get(
+  "/api/products/:id",
+  (req, res) => {
+    const product =
+      PRODUCTS[req.params.id];
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found."
-      });
-    }
 
-    if (!product.selarUrl) {
-      return res.status(500).json({
-        success: false,
         message:
-          "Selar payment link has not been configured for this product yet."
+          "Product not found."
       });
     }
 
-    const reference =
-      `EUF-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
-
-    const now = Date.now();
-
-    await pool.query(
-      `
-      INSERT INTO payments
-      (
-        reference,
-        email,
-        product_id,
-        amount,
-        currency,
-        status,
-        created_at,
-        updated_at
-      )
-      VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8)
-      `,
-      [
-        reference,
-        cleanEmail,
-        product.id,
-        product.priceNaira,
-        "NGN",
-        "pending",
-        now,
-        now
-      ]
-    );
-
-    console.log("Payment record created:", reference);
-
-    return res.json({
+    res.json({
       success: true,
-      reference,
-      productId: product.id,
-      checkout_url: product.selarUrl,
-      return_url:
-        `${SITE_URL}/payment-success.html?product=${encodeURIComponent(
-          product.id
-        )}&reference=${encodeURIComponent(reference)}`
-    });
 
-  } catch (error) {
-    console.error(
-      "Selar payment initialization error:",
-      error
-    );
+      product: {
+        id:
+          product.id,
 
-    return res.status(500).json({
-      success: false,
-      message: "Unable to start payment."
+        name:
+          product.name,
+
+        description:
+          product.description,
+
+        priceNaira:
+          product.priceNaira,
+
+        amountKobo:
+          product.amountKobo,
+
+        selarUrl:
+          product.selarUrl
+      }
     });
   }
-});
+);
 
 // ======================================================
-// SELAR / ZAPIER WEBHOOK
-//
-// TEST MODE:
-// Selar sends:
-// product_names = "Tst"
-// product_codes = "4j11q9844e"
-// amount = "0"
-//
-// We map "Tst" to:
-// how-to-pass-high-in-exams
-//
-// IMPORTANT:
-// This is currently for testing the complete delivery flow.
+// CREATE PAYMENT
 // ======================================================
 
-app.post("/api/selar/webhook", async (req, res) => {
-  try {
-    console.log("==========================================");
-    console.log("SELAR WEBHOOK PROCESSING");
-    console.log("==========================================");
-
-    console.log(
-      "Body:",
-      JSON.stringify(req.body, null, 2)
-    );
-
-    const data = req.body || {};
-
-    const buyerEmail = String(
-      data.buyer_email || ""
-    ).trim().toLowerCase();
-
-    const productName = String(
-      data.product_names || ""
-    ).trim();
-
-    const amountReceived = Number(
-      data.amount || 0
-    );
-
-    const currency = String(
-      data.currency || "NGN"
-    ).trim().toUpperCase();
-
-    const receiptUrl = String(
-      data.receipt_url || ""
-    ).trim();
-
-    if (!buyerEmail) {
-      console.log("Webhook rejected: buyer email missing.");
-
-      return res.status(400).json({
-        success: false,
-        message: "buyer_email is required."
-      });
-    }
-
-    if (!productName) {
-      console.log("Webhook rejected: product name missing.");
-
-      return res.status(400).json({
-        success: false,
-        message: "product_names is required."
-      });
-    }
-
-    // --------------------------------------------------
-    // PRODUCT MATCHING
-    // --------------------------------------------------
-
-    let productId = null;
-
-    // TEST MODE
-    if (productName.toLowerCase() === "tst") {
-      productId = "how-to-pass-high-in-exams";
-
-      console.log(
-        "TEST MODE: Tst mapped to How to Pass High in Exams."
-      );
-    } else {
-      // NORMAL PRODUCT NAME MATCH
-      const productEntry = Object.values(PRODUCTS).find(
-        (product) =>
-          product.name.toLowerCase() ===
-          productName.toLowerCase()
-      );
-
-      if (productEntry) {
-        productId = productEntry.id;
-      }
-    }
-
-    if (!productId) {
-      console.log(
-        "Unknown Selar product:",
-        productName
-      );
-
-      return res.status(400).json({
-        success: false,
-        message: "Unknown product.",
-        product_name: productName
-      });
-    }
-
-    const product = PRODUCTS[productId];
-
-    if (!product) {
-      return res.status(400).json({
-        success: false,
-        message: "Website product configuration not found.",
-        product_id: productId
-      });
-    }
-
-    // --------------------------------------------------
-    // FIND EXISTING PENDING PAYMENT
-    //
-    // This is important because /api/pay already created
-    // the EUF payment reference before checkout.
-    // --------------------------------------------------
-
-    const pendingPayment = await pool.query(
-      `
-      SELECT
-        id,
-        reference,
+app.post(
+  "/api/pay",
+  async (req, res) => {
+    try {
+      const {
         email,
-        product_id,
-        amount,
-        currency,
-        status
-      FROM payments
-      WHERE LOWER(email) = $1
-        AND product_id = $2
-        AND status = 'pending'
-      ORDER BY id DESC
-      LIMIT 1
-      `,
-      [
-        buyerEmail,
         productId
-      ]
-    );
+      } = req.body;
 
-    let paymentReference;
+      if (!email) {
+        return res.status(400).json({
+          success: false,
 
-    if (pendingPayment.rows.length > 0) {
-      // Use the payment reference already created
-      // when the buyer started checkout.
+          message:
+            "Email is required."
+        });
+      }
 
-      paymentReference =
-        pendingPayment.rows[0].reference;
+      if (!productId) {
+        return res.status(400).json({
+          success: false,
 
-      await pool.query(
-        `
-        UPDATE payments
-        SET
-          status = 'paid',
-          updated_at = $1,
-          amount = $2,
-          currency = $3
-        WHERE reference = $4
-        `,
-        [
-          Date.now(),
-          amountReceived || product.priceNaira,
-          currency,
-          paymentReference
-        ]
-      );
+          message:
+            "Product ID is required."
+        });
+      }
 
-      console.log(
-        "Existing payment marked PAID:",
-        paymentReference
-      );
+      const product =
+        PRODUCTS[productId];
 
-    } else {
-      // ------------------------------------------------
-      // FALLBACK FOR SELAR TEST WEBHOOK
-      // ------------------------------------------------
+      if (!product) {
+        return res.status(404).json({
+          success: false,
 
-      paymentReference =
-        `SELAR-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
+          message:
+            "Product not found."
+        });
+      }
 
-      const now = Date.now();
+      const normalizedEmail =
+        String(email)
+          .trim()
+          .toLowerCase();
+
+      const reference =
+        `EUF-${Date.now()}-${crypto
+          .randomBytes(5)
+          .toString("hex")}`;
+
+      const now =
+        Date.now();
 
       await pool.query(
         `
@@ -582,801 +614,907 @@ app.post("/api/selar/webhook", async (req, res) => {
         ($1, $2, $3, $4, $5, $6, $7, $8)
         `,
         [
-          paymentReference,
-          buyerEmail,
+          reference,
+
+          normalizedEmail,
+
           productId,
-          amountReceived || product.priceNaira,
-          currency,
-          "paid",
+
+          product.priceNaira,
+
+          "NGN",
+
+          "pending",
+
           now,
+
           now
         ]
       );
 
       console.log(
-        "New Selar payment created and marked PAID:",
+        "Payment record created:",
+        reference
+      );
+
+      res.json({
+        success: true,
+
+        reference,
+
+        product_id:
+          productId,
+
+        product_name:
+          product.name,
+
+        amount:
+          product.priceNaira,
+
+        currency:
+          "NGN",
+
+        selar_url:
+          product.selarUrl
+      });
+
+    } catch (error) {
+      console.error(
+        "PAYMENT ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        success: false,
+
+        message:
+          "Unable to create payment."
+      });
+    }
+  }
+);
+
+// ======================================================
+// SELAR WEBHOOK
+// SELAR → ZAPIER → THIS ROUTE
+// ======================================================
+
+app.post(
+  "/api/selar/webhook",
+  async (req, res) => {
+    try {
+      console.log(
+        "=========================================="
+      );
+
+      console.log(
+        "SELAR WEBHOOK PROCESSING"
+      );
+
+      console.log(
+        "=========================================="
+      );
+
+      console.log(
+        "Body:",
+        JSON.stringify(
+          req.body,
+          null,
+          2
+        )
+      );
+
+      const data =
+        req.body || {};
+
+      const buyerEmail =
+        String(
+          data.buyer_email || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const productName =
+        String(
+          data.product_names || ""
+        ).trim();
+
+      const productCode =
+        String(
+          data.product_codes || ""
+        ).trim();
+
+      const amountReceived =
+        Number(
+          data.amount || 0
+        );
+
+      const currency =
+        String(
+          data.currency || "NGN"
+        )
+          .trim()
+          .toUpperCase();
+
+      const receiptUrl =
+        String(
+          data.receipt_url || ""
+        ).trim();
+
+      if (!buyerEmail) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "buyer_email is required."
+        });
+      }
+
+      if (!productName) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "product_names is required."
+        });
+      }
+
+      // ==================================================
+      // TEST MODE
+      // Selar sends "Tst" for the one test purchase.
+      // This is ONLY for the existing test.
+      // ==================================================
+
+      let productId = null;
+
+      if (
+        productName.toLowerCase() ===
+        "tst"
+      ) {
+        productId =
+          "how-to-pass-high-in-exams";
+
+        console.log(
+          "TEST MODE: Tst mapped to How to Pass High in Exams."
+        );
+      } else {
+
+        // ==================================================
+        // REAL SELAR PRODUCT NAME MATCHING
+        // ==================================================
+
+        const productEntry =
+          Object.values(PRODUCTS)
+            .find(
+              (product) =>
+                product.name
+                  .trim()
+                  .toLowerCase() ===
+                productName
+                  .trim()
+                  .toLowerCase()
+            );
+
+        if (productEntry) {
+          productId =
+            productEntry.id;
+        }
+      }
+
+      if (!productId) {
+        console.log(
+          "UNKNOWN SELAR PRODUCT:"
+        );
+
+        console.log(
+          "Product name:",
+          productName
+        );
+
+        console.log(
+          "Product code:",
+          productCode
+        );
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Unknown Selar product.",
+
+          product_name:
+            productName,
+
+          product_code:
+            productCode
+        });
+      }
+
+      const product =
+        PRODUCTS[productId];
+
+      // ==================================================
+      // FIND EXISTING PENDING PAYMENT
+      // ==================================================
+
+      const pendingPayment =
+        await pool.query(
+          `
+          SELECT
+            id,
+            reference,
+            email,
+            product_id,
+            amount,
+            currency,
+            status
+          FROM payments
+          WHERE LOWER(email) = $1
+            AND product_id = $2
+            AND status = 'pending'
+          ORDER BY id DESC
+          LIMIT 1
+          `,
+          [
+            buyerEmail,
+            productId
+          ]
+        );
+
+      let paymentReference;
+
+      if (
+        pendingPayment.rows.length > 0
+      ) {
+        paymentReference =
+          pendingPayment
+            .rows[0]
+            .reference;
+
+        await pool.query(
+          `
+          UPDATE payments
+          SET
+            status = 'paid',
+            updated_at = $1,
+            amount = $2,
+            currency = $3
+          WHERE reference = $4
+          `,
+          [
+            Date.now(),
+
+            amountReceived ||
+              product.priceNaira,
+
+            currency,
+
+            paymentReference
+          ]
+        );
+
+        console.log(
+          "Existing payment marked PAID:",
+          paymentReference
+        );
+
+      } else {
+
+        // ==================================================
+        // FALLBACK PAYMENT
+        // ==================================================
+
+        paymentReference =
+          `SELAR-${Date.now()}-${crypto
+            .randomBytes(5)
+            .toString("hex")}`;
+
+        const now =
+          Date.now();
+
+        await pool.query(
+          `
+          INSERT INTO payments
+          (
+            reference,
+            email,
+            product_id,
+            amount,
+            currency,
+            status,
+            created_at,
+            updated_at
+          )
+          VALUES
+          ($1, $2, $3, $4, $5, $6, $7, $8)
+          `,
+          [
+            paymentReference,
+
+            buyerEmail,
+
+            productId,
+
+            amountReceived ||
+              product.priceNaira,
+
+            currency,
+
+            "paid",
+
+            now,
+
+            now
+          ]
+        );
+
+        console.log(
+          "New Selar payment created and marked PAID:",
+          paymentReference
+        );
+      }
+
+      // ==================================================
+      // CHECK FOR EXISTING DOWNLOAD
+      // ==================================================
+
+      const existingDownload =
+        await pool.query(
+          `
+          SELECT
+            id,
+            expires_at
+          FROM downloads
+          WHERE payment_reference = $1
+            AND product_id = $2
+            AND used = 0
+            AND expires_at > $3
+          ORDER BY id DESC
+          LIMIT 1
+          `,
+          [
+            paymentReference,
+
+            productId,
+
+            Date.now()
+          ]
+        );
+
+      if (
+        existingDownload.rows.length > 0
+      ) {
+        console.log(
+          "Existing active download found for:",
+          paymentReference
+        );
+
+        return res.status(200).json({
+          success: true,
+
+          message:
+            "Payment already processed.",
+
+          reference:
+            paymentReference,
+
+          product_id:
+            productId,
+
+          product_name:
+            product.name,
+
+          receipt_url:
+            receiptUrl
+        });
+      }
+
+      // ==================================================
+      // CREATE SECURE DOWNLOAD
+      // ==================================================
+
+      const download =
+        await createDownloadToken({
+          paymentReference,
+
+          productId,
+
+          email:
+            buyerEmail
+        });
+
+      console.log(
+        "=========================================="
+      );
+
+      console.log(
+        "PAYMENT PROCESSED SUCCESSFULLY"
+      );
+
+      console.log(
+        "=========================================="
+      );
+
+      console.log(
+        "Reference:",
         paymentReference
       );
-    }
 
-    // --------------------------------------------------
-    // PREVENT DUPLICATE DOWNLOAD TOKENS
-    // --------------------------------------------------
-
-    const existingDownload = await pool.query(
-      `
-      SELECT
-        id,
-        expires_at
-      FROM downloads
-      WHERE payment_reference = $1
-        AND product_id = $2
-        AND used = 0
-        AND expires_at > $3
-      ORDER BY id DESC
-      LIMIT 1
-      `,
-      [
-        paymentReference,
-        productId,
-        Date.now()
-      ]
-    );
-
-    if (existingDownload.rows.length > 0) {
       console.log(
-        "Existing active download found for:",
-        paymentReference
+        "Product:",
+        product.name
+      );
+
+      console.log(
+        "Buyer:",
+        buyerEmail
+      );
+
+      console.log(
+        "R2 file:",
+        product.r2Key
+      );
+
+      console.log(
+        "Download created: YES"
+      );
+
+      console.log(
+        "Download expires:",
+        new Date(
+          download.expiresAt
+        ).toISOString()
       );
 
       return res.status(200).json({
         success: true,
-        message: "Payment already processed.",
-        reference: paymentReference,
-        product_id: productId,
-        product_name: product.name,
-        receipt_url: receiptUrl
+
+        message:
+          "Selar payment processed successfully.",
+
+        reference:
+          paymentReference,
+
+        product_id:
+          productId,
+
+        product_name:
+          product.name,
+
+        buyer_email:
+          buyerEmail,
+
+        download_url:
+          download.downloadUrl,
+
+        expires_at:
+          download.expiresAt,
+
+        receipt_url:
+          receiptUrl
       });
-    }
 
-    // --------------------------------------------------
-    // CREATE SECURE DOWNLOAD TOKEN
-    // --------------------------------------------------
+    } catch (error) {
 
-    if (!r2Client) {
       console.error(
-        "R2 is not configured."
+        "SELAR WEBHOOK ERROR:",
+        error
       );
 
       return res.status(500).json({
         success: false,
-        message: "Cloudflare R2 is not configured."
-      });
-    }
 
-    const rawToken =
-      crypto.randomBytes(32).toString("hex");
-
-    const tokenHash =
-      crypto
-        .createHash("sha256")
-        .update(rawToken)
-        .digest("hex");
-
-    const now = Date.now();
-
-    // Test download valid for 24 hours
-    const expiresAt =
-      now + 24 * 60 * 60 * 1000;
-
-    await pool.query(
-      `
-      INSERT INTO downloads
-      (
-        token_hash,
-        reference,
-        payment_reference,
-        product_id,
-        email,
-        used,
-        expires_at,
-        created_at
-      )
-      VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8)
-      `,
-      [
-        tokenHash,
-        paymentReference,
-        paymentReference,
-        productId,
-        buyerEmail,
-        0,
-        expiresAt,
-        now
-      ]
-    );
-
-    const downloadUrl =
-      `${SITE_URL}/api/download?token=${encodeURIComponent(
-        rawToken
-      )}`;
-
-    console.log("==========================================");
-    console.log("PAYMENT PROCESSED SUCCESSFULLY");
-    console.log("==========================================");
-    console.log("Reference:", paymentReference);
-    console.log("Product:", product.name);
-    console.log("Buyer:", buyerEmail);
-    console.log(
-      "Download created: YES"
-    );
-    console.log(
-      "Download expires:",
-      new Date(expiresAt).toISOString()
-    );
-
-    // Do NOT print the complete token in production logs.
-
-    return res.status(200).json({
-      success: true,
-      message:
-        "Selar payment processed successfully.",
-      reference: paymentReference,
-      product_id: productId,
-      product_name: product.name,
-      buyer_email: buyerEmail,
-      download_url: downloadUrl,
-      expires_at: expiresAt,
-      receipt_url: receiptUrl
-    });
-
-  } catch (error) {
-    console.error(
-      "SELAR WEBHOOK ERROR:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Webhook processing failed."
-    });
-  }
-});
-
-// ======================================================
-// SELAR API TEST
-// KEPT FOR REFERENCE ONLY
-// ======================================================
-
-app.get("/api/selar/test", async (req, res) => {
-  try {
-    const apiKey =
-      process.env.SELAR_API_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({
-        success: false,
         message:
-          "SELAR_API_KEY is not configured on Render."
+          "Webhook processing failed."
       });
     }
+  }
+);
 
-    const response = await fetch(
-      "https://api.sellar.io/orders?limit=1&offset=0",
-      {
-        method: "GET",
-        headers: {
-          Authorization:
-            `Bearer ${apiKey}`,
-          Accept:
-            "application/json"
+// ======================================================
+// PAYMENT STATUS
+// ======================================================
+
+app.get(
+  "/api/purchase-status",
+  async (req, res) => {
+    try {
+      const reference =
+        String(
+          req.query.reference || ""
+        ).trim();
+
+      if (!reference) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Payment reference is required."
+        });
+      }
+
+      const result =
+        await pool.query(
+          `
+          SELECT
+            reference,
+            email,
+            product_id,
+            amount,
+            currency,
+            status,
+            created_at,
+            updated_at
+          FROM payments
+          WHERE reference = $1
+          LIMIT 1
+          `,
+          [reference]
+        );
+
+      if (
+        result.rows.length === 0
+      ) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Payment not found."
+        });
+      }
+
+      const payment =
+        result.rows[0];
+
+      const product =
+        PRODUCTS[
+          payment.product_id
+        ];
+
+      // ==================================================
+      // IF PAID, FIND ACTIVE DOWNLOAD
+      // ==================================================
+
+      let downloadUrl = null;
+      let expiresAt = null;
+
+      if (
+        payment.status === "paid"
+      ) {
+        const downloadResult =
+          await pool.query(
+            `
+            SELECT
+              id,
+              token_hash,
+              expires_at
+            FROM downloads
+            WHERE payment_reference = $1
+              AND product_id = $2
+              AND used = 0
+              AND expires_at > $3
+            ORDER BY id DESC
+            LIMIT 1
+            `,
+            [
+              payment.reference,
+
+              payment.product_id,
+
+              Date.now()
+            ]
+          );
+
+        if (
+          downloadResult.rows.length > 0
+        ) {
+          // We cannot recreate the original
+          // raw token from its hash.
+          // The webhook response already contains
+          // the original secure URL.
+          expiresAt =
+            downloadResult.rows[0]
+              .expires_at;
         }
       }
-    );
 
-    const text =
-      await response.text();
+      return res.json({
+        success: true,
 
-    let data;
+        payment: {
+          reference:
+            payment.reference,
 
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = {
-        raw: text
-      };
-    }
+          email:
+            payment.email,
 
-    console.log(
-      "Selar API status:",
-      response.status
-    );
+          product_id:
+            payment.product_id,
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        success: false,
-        message:
-          "Selar API request failed.",
-        selar_status:
-          response.status,
-        response: data
+          product_name:
+            product
+              ? product.name
+              : null,
+
+          amount:
+            payment.amount,
+
+          currency:
+            payment.currency,
+
+          status:
+            payment.status,
+
+          download_url:
+            downloadUrl,
+
+          expires_at:
+            expiresAt
+        }
       });
-    }
 
-    return res.json({
-      success: true,
-      message:
-        "Selar API connection successful.",
-      response: data
-    });
+    } catch (error) {
 
-  } catch (error) {
-    console.error(
-      "Selar API test error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Unable to connect to Selar API.",
-      error:
-        error.message
-    });
-  }
-});
-
-// ======================================================
-// PAYMENT SUCCESS PAGE
-// ======================================================
-
-app.get("/payment-success.html", (req, res) => {
-  res.sendFile(
-    path.join(
-      publicFolder,
-      "payment-success.html"
-    )
-  );
-});
-
-// ======================================================
-// PURCHASE STATUS
-// ======================================================
-
-app.get("/api/purchase-status", async (req, res) => {
-  try {
-    const { reference } =
-      req.query;
-
-    if (!reference) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Payment reference is required."
-      });
-    }
-
-    const result =
-      await pool.query(
-        `
-        SELECT
-          reference,
-          email,
-          product_id,
-          amount,
-          currency,
-          status
-        FROM payments
-        WHERE reference = $1
-        LIMIT 1
-        `,
-        [reference]
+      console.error(
+        "PURCHASE STATUS ERROR:",
+        error
       );
 
-    if (
-      result.rows.length === 0
-    ) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Payment record not found."
-      });
-    }
-
-    const payment =
-      result.rows[0];
-
-    return res.json({
-      success: true,
-      payment
-    });
-
-  } catch (error) {
-    console.error(
-      "Purchase status error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Unable to check purchase status."
-    });
-  }
-});
-
-// ======================================================
-// R2 DOWNLOAD TEST V2
-// ======================================================
-
-app.get("// ======================================================
-// TEMPORARY: TEST EACH PRODUCT DOWNLOAD
-// REMOVE THIS ROUTE AFTER TESTING
-// ======================================================
-
-app.get("/api/test-product/:productId", async (req, res) => {
-  try {
-    const productId = String(req.params.productId || "").trim();
-
-    const product = PRODUCTS[productId];
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found.",
-        available_products: Object.keys(PRODUCTS)
-      });
-    }
-
-    if (!r2Client) {
       return res.status(500).json({
         success: false,
-        message: "Cloudflare R2 is not configured."
+
+        message:
+          "Unable to check purchase status."
       });
     }
-
-    // Create a temporary test payment reference
-    const paymentReference =
-      `TEST-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
-
-    const now = Date.now();
-
-    // Create paid test payment
-    await pool.query(
-      `
-      INSERT INTO payments
-      (
-        reference,
-        email,
-        product_id,
-        amount,
-        currency,
-        status,
-        created_at,
-        updated_at
-      )
-      VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8)
-      `,
-      [
-        paymentReference,
-        "test@example.com",
-        productId,
-        product.priceNaira,
-        "NGN",
-        "paid",
-        now,
-        now
-      ]
-    );
-
-    // Create secure download token
-    const rawToken =
-      crypto.randomBytes(32).toString("hex");
-
-    const tokenHash =
-      crypto
-        .createHash("sha256")
-        .update(rawToken)
-        .digest("hex");
-
-    const expiresAt =
-      now + 24 * 60 * 60 * 1000;
-
-    await pool.query(
-      `
-      INSERT INTO downloads
-      (
-        token_hash,
-        reference,
-        payment_reference,
-        product_id,
-        email,
-        used,
-        expires_at,
-        created_at
-      )
-      VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8)
-      `,
-      [
-        tokenHash,
-        paymentReference,
-        paymentReference,
-        productId,
-        "test@example.com",
-        0,
-        expiresAt,
-        now
-      ]
-    );
-
-    const downloadUrl =
-      `${SITE_URL}/api/download?token=${encodeURIComponent(
-        rawToken
-      )}`;
-
-    console.log("==========================================");
-    console.log("PRODUCT DOWNLOAD TEST");
-    console.log("==========================================");
-    console.log("Product ID:", productId);
-    console.log("Product:", product.name);
-    console.log("R2 Key:", product.r2Key);
-    console.log("Payment:", paymentReference);
-    console.log("Download:", downloadUrl);
-    console.log("==========================================");
-
-    return res.status(200).json({
-      success: true,
-      test: true,
-      product_id: productId,
-      product_name: product.name,
-      r2_key: product.r2Key,
-      payment_reference: paymentReference,
-      download_url: downloadUrl,
-      expires_at: expiresAt
-    });
-
-  } catch (error) {
-    console.error(
-      "PRODUCT DOWNLOAD TEST ERROR:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message: "Product download test failed.",
-      error: error.message
-    });
   }
-});", async (req, res) => {
-  try {
-    const productId =
-      "how-to-pass-high-in-exams";
-
-    const product =
-      PRODUCTS[productId];
-
-    if (!product) {
-      return res.status(404).send(
-        "Product not found."
-      );
-    }
-
-    if (!r2Client) {
-      return res.status(500).send(
-        "Cloudflare R2 is not configured correctly."
-      );
-    }
-
-    const rawToken =
-      crypto.randomBytes(32).toString("hex");
-
-    const tokenHash =
-      crypto
-        .createHash("sha256")
-        .update(rawToken)
-        .digest("hex");
-
-    const now =
-      Date.now();
-
-    const expiresAt =
-      now + 10 * 60 * 1000;
-
-    const testReference =
-      `TEST-V2-${now}`;
-
-    await pool.query(
-      `
-      INSERT INTO downloads
-      (
-        token_hash,
-        reference,
-        payment_reference,
-        product_id,
-        email,
-        used,
-        expires_at,
-        created_at
-      )
-      VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8)
-      `,
-      [
-        tokenHash,
-        testReference,
-        testReference,
-        productId,
-        "test@example.com",
-        0,
-        expiresAt,
-        now
-      ]
-    );
-
-    console.log(
-      "R2 TEST V2 CREATED:",
-      testReference
-    );
-
-    res.setHeader(
-      "Set-Cookie",
-      `download_token=${rawToken}; Max-Age=600; Path=/; HttpOnly; SameSite=Lax`
-    );
-
-    return res.redirect(
-      "/api/download"
-    );
-
-  } catch (error) {
-    console.error(
-      "R2 TEST V2 ERROR:",
-      error
-    );
-
-    return res.status(500).send(
-      "R2 TEST V2 failed: " +
-      error.message
-    );
-  }
-});
+);
 
 // ======================================================
 // SECURE DOWNLOAD
 // ======================================================
 
-app.get("/api/download", async (req, res) => {
-  try {
-    let rawToken =
-      req.query.token || null;
+app.get(
+  "/api/download",
+  async (req, res) => {
+    try {
+      const rawToken =
+        String(
+          req.query.token || ""
+        ).trim();
 
-    if (!rawToken) {
-      rawToken =
-        req.headers.cookie
-          ?.split(";")
-          .map((item) =>
-            item.trim()
-          )
-          .find((item) =>
-            item.startsWith(
-              "download_token="
-            )
-          )
-          ?.split("=")
-          .slice(1)
-          .join("=");
-    }
+      if (!rawToken) {
+        return res.status(400).json({
+          success: false,
 
-    if (!rawToken) {
-      return res.status(403).send(
-        "Download access denied. Complete your purchase."
+          message:
+            "Download token is required."
+        });
+      }
+
+      const tokenHash =
+        crypto
+          .createHash("sha256")
+          .update(rawToken)
+          .digest("hex");
+
+      const result =
+        await pool.query(
+          `
+          SELECT
+            id,
+            payment_reference,
+            product_id,
+            email,
+            used,
+            expires_at
+          FROM downloads
+          WHERE token_hash = $1
+          LIMIT 1
+          `,
+          [tokenHash]
+        );
+
+      if (
+        result.rows.length === 0
+      ) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Invalid download link."
+        });
+      }
+
+      const download =
+        result.rows[0];
+
+      if (
+        Number(download.used) === 1
+      ) {
+        return res.status(403).json({
+          success: false,
+
+          message:
+            "This download link has already been used."
+        });
+      }
+
+      if (
+        Date.now() >
+        Number(download.expires_at)
+      ) {
+        return res.status(403).json({
+          success: false,
+
+          message:
+            "This download link has expired."
+        });
+      }
+
+      const product =
+        PRODUCTS[
+          download.product_id
+        ];
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Product associated with this download was not found."
+        });
+      }
+
+      if (!r2Client) {
+        return res.status(500).json({
+          success: false,
+
+          message:
+            "Cloudflare R2 is not configured."
+        });
+      }
+
+      console.log(
+        "Starting R2 download:",
+        product.r2Key
       );
-    }
 
-    const tokenHash =
-      crypto
-        .createHash("sha256")
-        .update(rawToken)
-        .digest("hex");
-
-    const downloadResult =
-      await pool.query(
-        `
-        SELECT *
-        FROM downloads
-        WHERE token_hash = $1
-        LIMIT 1
-        `,
-        [tokenHash]
-      );
-
-    if (
-      downloadResult.rows.length === 0
-    ) {
-      return res.status(403).send(
-        "Download access denied. Complete your purchase."
-      );
-    }
-
-    const download =
-      downloadResult.rows[0];
-
-    if (
-      Number(download.expires_at) <=
-      Date.now()
-    ) {
-      return res.status(403).send(
-        "This download link has expired."
-      );
-    }
-
-    if (
-      Number(download.used) === 1
-    ) {
-      return res.status(403).send(
-        "This download link has already been used."
-      );
-    }
-
-    const product =
-      PRODUCTS[download.product_id];
-
-    if (!product) {
-      return res.status(404).send(
-        "Product not found."
-      );
-    }
-
-    if (!r2Client) {
-      return res.status(500).send(
-        "Cloudflare R2 is not configured correctly."
-      );
-    }
-
-    const r2Response =
-      await r2Client.send(
+      const command =
         new GetObjectCommand({
           Bucket:
-            r2BucketName,
+            R2_BUCKET,
+
           Key:
-            product.fileKey
-        })
+            product.r2Key
+        });
+
+      const r2Response =
+        await r2Client.send(
+          command
+        );
+
+      res.setHeader(
+        "Content-Type",
+        product.contentType
       );
 
-    if (!r2Response.Body) {
-      return res.status(404).send(
-        "Product file could not be found."
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${product.downloadName}"`
       );
-    }
 
-    const usedResult =
+      if (
+        r2Response.ContentLength
+      ) {
+        res.setHeader(
+          "Content-Length",
+          r2Response.ContentLength
+        );
+      }
+
+      if (
+        !r2Response.Body
+      ) {
+        return res.status(500).json({
+          success: false,
+
+          message:
+            "File could not be retrieved from R2."
+        });
+      }
+
+      // Mark the token as used
+      // only after the R2 file is successfully obtained.
       await pool.query(
         `
         UPDATE downloads
         SET used = 1
-        WHERE token_hash = $1
-          AND used = 0
-          AND expires_at > $2
-        RETURNING id
+        WHERE id = $1
         `,
-        [
-          tokenHash,
-          Date.now()
-        ]
+        [download.id]
       );
 
-    if (
-      usedResult.rows.length === 0
-    ) {
-      return res.status(403).send(
-        "This download link has already been used or has expired."
+      r2Response.Body.pipe(res);
+
+    } catch (error) {
+
+      console.error(
+        "DOWNLOAD ERROR:",
+        error
       );
-    }
 
-    res.setHeader(
-      "Set-Cookie",
-      "download_token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
-    );
+      if (
+        error.name ===
+        "NoSuchKey"
+      ) {
+        return res.status(404).json({
+          success: false,
 
-    res.setHeader(
-      "Content-Type",
-      product.contentType
-    );
-
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${product.downloadName}"`
-    );
-
-    if (
-      r2Response.ContentLength
-    ) {
-      res.setHeader(
-        "Content-Length",
-        String(
-          r2Response.ContentLength
-        )
-      );
-    }
-
-    r2Response.Body.pipe(res);
-
-  } catch (error) {
-    console.error(
-      "Download error:",
-      error
-    );
-
-    if (
-      error.name === "NoSuchKey" ||
-      error.Code === "NoSuchKey"
-    ) {
-      return res.status(404).send(
-        "The product file was not found in Cloudflare R2."
-      );
-    }
-
-    return res.status(500).send(
-      "Unable to download the product right now: " +
-      error.message
-    );
-  }
-});
-
-// ======================================================
-// HOME PAGE
-// ======================================================
-
-app.get("/", (req, res) => {
-  res.sendFile(
-    path.join(
-      publicFolder,
-      "hex.html"
-    )
-  );
-});
-
-// ======================================================
-// HEALTH CHECK
-// ======================================================
-
-app.get("/health", (req, res) => {
-  res.json({
-    status: "OK",
-    message:
-      "Earn Unlimited Funds server is running"
-  });
-});
-
-// ======================================================
-// START SERVER
-// ======================================================
-
-async function startServer() {
-  try {
-    await initializeDatabase();
-
-    app.listen(
-      PORT,
-      "0.0.0.0",
-      () => {
-        console.log(
-          `Earn Unlimited Funds server running on port ${PORT}`
-        );
+          message:
+            "The product file was not found in Cloudflare R2."
+        });
       }
-    );
 
-  } catch (error) {
-    console.error(
-      "Server startup failed:",
-      error
-    );
+      return res.status(500).json({
+        success: false,
 
-    process.exit(1);
+        message:
+          "Download failed."
+      });
+    }
   }
-}
+);
 
-startServer();
+// ======================================================
+// TEMPORARY PRODUCT TESTING
+//
+// USE THIS TO TEST EACH PRODUCT WITHOUT ANOTHER
+// SELAR TEST PURCHASE.
+//
+// REMOVE THIS ROUTE AFTER ALL PRODUCTS ARE VERIFIED.
+// ======================================================
+
+app.get(
+  "/api/test-product/:productId",
+  async (req, res) => {
+    try {
+      const productId =
+        String(
+          req.params.productId || ""
+        ).trim();
+
+      const product =
+        PRODUCTS[productId];
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Product not found.",
+
+          available_products:
+            Object.keys(PRODUCTS)
+        });
+      }
+
+      if (!r2Client) {
+        return res.status(500).json({
+          success: false,
+
+          message:
+            "Cloudflare R2 is not configured."
+        });
+      }
+
+      const paymentReference =
+        `TEST-${Date.now()}-${crypto
+          .randomBytes(5)
+          .toString("hex")}`;
+
+      const now =
+        Date.now();
+
+      // ==================================================
+      // CREATE TEST PA
