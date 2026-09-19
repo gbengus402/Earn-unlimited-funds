@@ -8,7 +8,7 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>How to Pass High in Exams | Earn Unlimited Funds</title>
+  <title>Product | Earn Unlimited Funds</title>
 
   <style>
     * {
@@ -21,10 +21,6 @@
       background: #f5f7fb;
       color: #222;
     }
-
-    /* =========================
-       HEADER
-    ========================= */
 
     header {
       background: #071a3d;
@@ -44,10 +40,6 @@
       opacity: 0.9;
     }
 
-    /* =========================
-       NAVIGATION
-    ========================= */
-
     nav {
       background: white;
       padding: 12px;
@@ -63,19 +55,11 @@
       font-size: 14px;
     }
 
-    /* =========================
-       MAIN
-    ========================= */
-
     main {
       max-width: 900px;
       margin: 35px auto;
       padding: 0 18px;
     }
-
-    /* =========================
-       PRODUCT CARD
-    ========================= */
 
     .product-card {
       background: white;
@@ -96,11 +80,8 @@
       line-height: 1.7;
       color: #555;
       margin-bottom: 25px;
+      white-space: pre-line;
     }
-
-    /* =========================
-       PRODUCT FEATURES
-    ========================= */
 
     .features {
       margin: 25px 0;
@@ -117,10 +98,6 @@
     .features li:last-child {
       border-bottom: none;
     }
-
-    /* =========================
-       PRICE
-    ========================= */
 
     .price-box {
       background: #eef4ff;
@@ -141,10 +118,6 @@
       font-weight: bold;
       color: #071a3d;
     }
-
-    /* =========================
-       PURCHASE SECTION
-    ========================= */
 
     .purchase-box {
       margin-top: 30px;
@@ -181,10 +154,6 @@
       border-color: #071a3d;
     }
 
-    /* =========================
-       BUTTONS
-    ========================= */
-
     .btn {
       display: block;
       width: 100%;
@@ -211,10 +180,6 @@
       background: #777;
       cursor: not-allowed;
     }
-
-    /* =========================
-       TEST DOWNLOAD
-    ========================= */
 
     .test-section {
       margin-top: 30px;
@@ -251,10 +216,6 @@
       opacity: 0.9;
     }
 
-    /* =========================
-       STATUS MESSAGE
-    ========================= */
-
     #message {
       display: none;
       margin-top: 18px;
@@ -277,9 +238,21 @@
       border: 1px solid #efb0b0;
     }
 
-    /* =========================
-       FOOTER
-    ========================= */
+    .loading {
+      text-align: center;
+      padding: 50px 20px;
+      color: #555;
+      font-size: 17px;
+    }
+
+    .not-found {
+      text-align: center;
+      padding: 50px 20px;
+    }
+
+    .not-found h2 {
+      color: #a11b1b;
+    }
 
     footer {
       text-align: center;
@@ -287,10 +260,6 @@
       color: #777;
       font-size: 13px;
     }
-
-    /* =========================
-       MOBILE
-    ========================= */
 
     @media (max-width: 600px) {
 
@@ -333,18 +302,10 @@
 
 <body>
 
-  <!-- =========================
-       HEADER
-  ========================= -->
-
   <header>
     <h1>Earn Unlimited Funds</h1>
     <p>Digital Products & Resources</p>
   </header>
-
-  <!-- =========================
-       NAVIGATION
-  ========================= -->
 
   <nav>
     <a href="/">Home</a>
@@ -352,47 +313,39 @@
     <a href="/#products">Products</a>
   </nav>
 
-  <!-- =========================
-       MAIN PRODUCT
-  ========================= -->
-
   <main>
 
-    <div class="product-card">
+    <div id="loading" class="loading">
+      Loading product...
+    </div>
 
-      <h1 class="product-title">
-        How to Pass High in Exams
-      </h1>
+    <div
+      id="productContainer"
+      class="product-card"
+      style="display:none;"
+    >
 
-      <div class="product-description">
-        A practical guide designed to help students prepare better,
-        study effectively, manage examination pressure and improve
-        their academic performance.
-      </div>
+      <h1
+        id="productTitle"
+        class="product-title"
+      ></h1>
 
-      <!-- =========================
-           FEATURES
-      ========================= -->
+      <div
+        id="productDescription"
+        class="product-description"
+      ></div>
 
       <ul class="features">
 
-        <li>✓ Practical examination preparation strategies</li>
-
-        <li>✓ Better study and revision techniques</li>
-
-        <li>✓ Tips for managing examination pressure</li>
-
-        <li>✓ Strategies for improving concentration</li>
-
-        <li>✓ Useful guidance for better academic preparation</li>
-
         <li>✓ Digital product delivered online</li>
 
-      </ul>
+        <li>✓ Instant access after successful payment</li>
 
-      <!-- =========================
-           PRICE
-      ========================= -->
+        <li>✓ Secure product delivery</li>
+
+        <li>✓ Access your purchased product online</li>
+
+      </ul>
 
       <div class="price-box">
 
@@ -400,15 +353,14 @@
           Product Price
         </div>
 
-        <div class="price">
-          ₦25,000
+        <div
+          id="productPrice"
+          class="price"
+        >
+          ₦0
         </div>
 
       </div>
-
-      <!-- =========================
-           PURCHASE
-      ========================= -->
 
       <div class="purchase-box">
 
@@ -440,10 +392,6 @@
 
       </div>
 
-      <!-- =========================
-           TEMPORARY R2 TEST
-      ========================= -->
-
       <div class="test-section">
 
         <h3>
@@ -466,22 +414,74 @@
 
     </div>
 
-  </main>
+    <div
+      id="notFound"
+      class="product-card not-found"
+      style="display:none;"
+    >
 
-  <!-- =========================
-       FOOTER
-  ========================= -->
+      <h2>
+        Product Not Found
+      </h2>
+
+      <p>
+        The product you requested could not be found.
+      </p>
+
+      <a
+        href="/"
+        class="test-btn"
+      >
+        BACK TO PRODUCTS
+      </a>
+
+    </div>
+
+  </main>
 
   <footer>
     © 2026 Earn Unlimited Funds. All rights reserved.
   </footer>
 
 
-  <!-- =========================
-       JAVASCRIPT
-  ========================= -->
-
   <script>
+
+    /*
+    ======================================================
+    GET PRODUCT ID FROM URL
+    ======================================================
+    */
+
+    const urlParams =
+      new URLSearchParams(window.location.search);
+
+    const productId =
+      urlParams.get("id");
+
+
+    /*
+    ======================================================
+    PAGE ELEMENTS
+    ======================================================
+    */
+
+    const loading =
+      document.getElementById("loading");
+
+    const productContainer =
+      document.getElementById("productContainer");
+
+    const notFound =
+      document.getElementById("notFound");
+
+    const productTitle =
+      document.getElementById("productTitle");
+
+    const productDescription =
+      document.getElementById("productDescription");
+
+    const productPrice =
+      document.getElementById("productPrice");
 
     const buyButton =
       document.getElementById("buyButton");
@@ -492,6 +492,33 @@
     const message =
       document.getElementById("message");
 
+
+    /*
+    ======================================================
+    FORMAT PRICE
+    ======================================================
+    */
+
+    function formatPrice(amount) {
+
+      const number =
+        Number(amount);
+
+      if (Number.isNaN(number)) {
+        return "₦0";
+      }
+
+      return "₦" +
+        number.toLocaleString("en-NG");
+
+    }
+
+
+    /*
+    ======================================================
+    SHOW MESSAGE
+    ======================================================
+    */
 
     function showMessage(text, type) {
 
@@ -504,12 +531,172 @@
     }
 
 
+    /*
+    ======================================================
+    LOAD PRODUCT
+    ======================================================
+    */
+
+    async function loadProduct() {
+
+      try {
+
+        if (!productId) {
+
+          loading.style.display = "none";
+
+          notFound.style.display = "block";
+
+          return;
+        }
+
+
+        const response =
+          await fetch(
+            "/api/products/" +
+            encodeURIComponent(productId)
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (
+          !response.ok ||
+          !data.success ||
+          !data.product
+        ) {
+
+          throw new Error(
+            "Product not found."
+          );
+
+        }
+
+
+        const product =
+          data.product;
+
+
+        /*
+        ==================================================
+        DISPLAY PRODUCT INFORMATION
+        ==================================================
+        */
+
+        productTitle.textContent =
+          product.name ||
+          product.title ||
+          "Digital Product";
+
+
+        productDescription.textContent =
+          product.description ||
+          "Premium digital product from Earn Unlimited Funds.";
+
+
+        /*
+        ==================================================
+        DISPLAY CORRECT PRICE
+        ==================================================
+        */
+
+        let price =
+          product.price;
+
+
+        /*
+        Support different backend price fields.
+        */
+
+        if (
+          price === undefined ||
+          price === null
+        ) {
+
+          price =
+            product.amount;
+
+        }
+
+
+        if (
+          price === undefined ||
+          price === null
+        ) {
+
+          price =
+            product.amountNaira;
+
+        }
+
+
+        productPrice.textContent =
+          formatPrice(price);
+
+
+        /*
+        ==================================================
+        SAVE PRODUCT FOR PURCHASE
+        ==================================================
+        */
+
+        window.currentProduct =
+          product;
+
+
+        loading.style.display =
+          "none";
+
+        productContainer.style.display =
+          "block";
+
+
+        /*
+        ==================================================
+        UPDATE BROWSER TITLE
+        ==================================================
+        */
+
+        document.title =
+          (product.name ||
+           product.title ||
+           "Product") +
+          " | Earn Unlimited Funds";
+
+
+      } catch (error) {
+
+        console.error(
+          "Product loading error:",
+          error
+        );
+
+        loading.style.display =
+          "none";
+
+        notFound.style.display =
+          "block";
+
+      }
+
+    }
+
+
+    /*
+    ======================================================
+    BUY PRODUCT
+    ======================================================
+    */
+
     buyButton.addEventListener(
       "click",
       async function () {
 
         const email =
           emailInput.value.trim();
+
 
         if (!email) {
 
@@ -521,6 +708,7 @@
           emailInput.focus();
 
           return;
+
         }
 
 
@@ -537,46 +725,72 @@
           emailInput.focus();
 
           return;
+
         }
 
 
-        buyButton.disabled = true;
+        if (!productId) {
+
+          showMessage(
+            "Product ID is missing.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        buyButton.disabled =
+          true;
 
         buyButton.textContent =
           "PLEASE WAIT...";
 
-        message.style.display = "none";
+        message.style.display =
+          "none";
 
 
         try {
 
+          /*
+          ================================================
+          SEND THE ACTUAL PRODUCT ID
+          ================================================
+          */
+
           const response =
-            await fetch("/api/pay", {
+            await fetch(
+              "/api/pay",
+              {
 
-              method: "POST",
+                method: "POST",
 
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
 
-              body: JSON.stringify({
+                body: JSON.stringify({
 
-                email: email,
+                  email: email,
 
-                productId:
-                  "how-to-pass-high-in-exams"
+                  productId: productId
 
-              })
+                })
 
-            });
+              }
+            );
 
 
           const data =
             await response.json();
 
 
-          if (!response.ok || !data.success) {
+          if (
+            !response.ok ||
+            !data.success
+          ) {
 
             throw new Error(
               data.message ||
@@ -587,9 +801,9 @@
 
 
           /*
-            Save our reference temporarily
-            so the payment-success page can
-            use it later.
+          ================================================
+          SAVE PAYMENT REFERENCE
+          ================================================
           */
 
           if (data.reference) {
@@ -603,7 +817,21 @@
 
 
           /*
-            Go to Selar checkout.
+          ================================================
+          SAVE PRODUCT ID
+          ================================================
+          */
+
+          localStorage.setItem(
+            "purchase_product_id",
+            productId
+          );
+
+
+          /*
+          ================================================
+          GO TO SELAR CHECKOUT
+          ================================================
           */
 
           if (data.checkout_url) {
@@ -628,13 +856,16 @@
             error
           );
 
+
           showMessage(
             error.message ||
             "Unable to start payment. Please try again.",
             "error"
           );
 
-          buyButton.disabled = false;
+
+          buyButton.disabled =
+            false;
 
           buyButton.textContent =
             "BUY NOW";
@@ -643,6 +874,15 @@
 
       }
     );
+
+
+    /*
+    ======================================================
+    START
+    ======================================================
+    */
+
+    loadProduct();
 
   </script>
 
