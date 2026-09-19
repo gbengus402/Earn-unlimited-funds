@@ -911,7 +911,147 @@ app.get("/api/purchase-status", async (req, res) => {
 // R2 DOWNLOAD TEST V2
 // ======================================================
 
-app.get("/api/test-download-v2", async (req, res) => {
+app.get("// ======================================================
+// TEMPORARY: TEST EACH PRODUCT DOWNLOAD
+// REMOVE THIS ROUTE AFTER TESTING
+// ======================================================
+
+app.get("/api/test-product/:productId", async (req, res) => {
+  try {
+    const productId = String(req.params.productId || "").trim();
+
+    const product = PRODUCTS[productId];
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found.",
+        available_products: Object.keys(PRODUCTS)
+      });
+    }
+
+    if (!r2Client) {
+      return res.status(500).json({
+        success: false,
+        message: "Cloudflare R2 is not configured."
+      });
+    }
+
+    // Create a temporary test payment reference
+    const paymentReference =
+      `TEST-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
+
+    const now = Date.now();
+
+    // Create paid test payment
+    await pool.query(
+      `
+      INSERT INTO payments
+      (
+        reference,
+        email,
+        product_id,
+        amount,
+        currency,
+        status,
+        created_at,
+        updated_at
+      )
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8)
+      `,
+      [
+        paymentReference,
+        "test@example.com",
+        productId,
+        product.priceNaira,
+        "NGN",
+        "paid",
+        now,
+        now
+      ]
+    );
+
+    // Create secure download token
+    const rawToken =
+      crypto.randomBytes(32).toString("hex");
+
+    const tokenHash =
+      crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
+
+    const expiresAt =
+      now + 24 * 60 * 60 * 1000;
+
+    await pool.query(
+      `
+      INSERT INTO downloads
+      (
+        token_hash,
+        reference,
+        payment_reference,
+        product_id,
+        email,
+        used,
+        expires_at,
+        created_at
+      )
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8)
+      `,
+      [
+        tokenHash,
+        paymentReference,
+        paymentReference,
+        productId,
+        "test@example.com",
+        0,
+        expiresAt,
+        now
+      ]
+    );
+
+    const downloadUrl =
+      `${SITE_URL}/api/download?token=${encodeURIComponent(
+        rawToken
+      )}`;
+
+    console.log("==========================================");
+    console.log("PRODUCT DOWNLOAD TEST");
+    console.log("==========================================");
+    console.log("Product ID:", productId);
+    console.log("Product:", product.name);
+    console.log("R2 Key:", product.r2Key);
+    console.log("Payment:", paymentReference);
+    console.log("Download:", downloadUrl);
+    console.log("==========================================");
+
+    return res.status(200).json({
+      success: true,
+      test: true,
+      product_id: productId,
+      product_name: product.name,
+      r2_key: product.r2Key,
+      payment_reference: paymentReference,
+      download_url: downloadUrl,
+      expires_at: expiresAt
+    });
+
+  } catch (error) {
+    console.error(
+      "PRODUCT DOWNLOAD TEST ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Product download test failed.",
+      error: error.message
+    });
+  }
+});", async (req, res) => {
   try {
     const productId =
       "how-to-pass-high-in-exams";
