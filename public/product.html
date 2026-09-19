@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Product | Earn Unlimited Funds</title>
-
-  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Product | Earn Unlimited Funds</title>  <style>
     * {
       box-sizing: border-box;
     }
@@ -214,6 +209,11 @@
       opacity: 0.9;
     }
 
+    .test-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
     #message {
       display: none;
       margin-top: 18px;
@@ -236,6 +236,43 @@
       border: 1px solid #efb0b0;
     }
 
+    .download-box {
+      display: none;
+      margin-top: 25px;
+      padding: 25px;
+      background: #e8f7ed;
+      border: 2px solid #a9dfb9;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .download-box h3 {
+      margin-top: 0;
+      color: #176b35;
+      font-size: 21px;
+    }
+
+    .download-box p {
+      color: #176b35;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .download-btn {
+      display: inline-block;
+      background: #176b35;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .download-btn:hover {
+      opacity: 0.9;
+    }
+
     .not-found {
       text-align: center;
       padding: 40px 20px;
@@ -253,6 +290,7 @@
     }
 
     @media (max-width: 600px) {
+
       header h1 {
         font-size: 20px;
       }
@@ -287,128 +325,119 @@
         padding: 18px;
       }
     }
-  </style>
-</head>
-
-<body>
-
-<header>
+  </style></head><body><header>
   <h1>Earn Unlimited Funds</h1>
   <p>Digital Products & Resources</p>
-</header>
-
-<nav>
+</header><nav>
   <a href="/">Home</a>
   <a href="/#about">About</a>
   <a href="/#products">Products</a>
-</nav>
+</nav><main>  <div id="productContainer" class="product-card"><h1 id="productTitle" class="product-title"></h1>
 
-<main>
+<div id="productDescription" class="product-description"></div>
 
-  <div id="productContainer" class="product-card">
+<ul class="features">
+  <li>✓ Digital product delivered online</li>
+  <li>✓ Secure payment through Selar</li>
+  <li>✓ Access your purchased product</li>
+  <li>✓ Secure digital delivery</li>
+</ul>
 
-    <h1 id="productTitle" class="product-title"></h1>
+<div class="price-box">
+  <div class="price-label">Product Price</div>
+  <div id="productPrice" class="price"></div>
+</div>
 
-    <div id="productDescription" class="product-description"></div>
+<div class="purchase-box">
 
-    <ul class="features">
-      <li>✓ Digital product delivered online</li>
-      <li>✓ Secure payment through Selar</li>
-      <li>✓ Access your purchased product</li>
-      <li>✓ Secure digital delivery</li>
-    </ul>
+  <h2>Get Your Copy</h2>
 
-    <div class="price-box">
-      <div class="price-label">Product Price</div>
-      <div id="productPrice" class="price"></div>
-    </div>
+  <label for="email">
+    Enter your email address
+  </label>
 
-    <div class="purchase-box">
-
-      <h2>Get Your Copy</h2>
-
-      <label for="email">
-        Enter your email address
-      </label>
-
-      <input
-        type="email"
-        id="email"
-        placeholder="your@email.com"
-        autocomplete="email"
-        required
-      >
-
-      <button
-        type="button"
-        class="btn buy-btn"
-        id="buyButton"
-      >
-        BUY NOW
-      </button>
-
-      <div id="message"></div>
-
-    </div>
-
-
-    <!-- ==================================================
-         ONE TEST MODE
-         ================================================== -->
-
-    <div class="test-section">
-
-      <h3>🧪 Test Mode</h3>
-
-      <p>
-        Test product delivery without making a real payment.
-        This uses the existing website test-download system.
-      </p>
-
-      <button
-        type="button"
-        class="test-btn"
-        id="testDownloadButton"
-      >
-        TEST PURCHASE & DOWNLOAD
-      </button>
-
-    </div>
-
-  </div>
-
-
-  <!-- ==================================================
-       PRODUCT NOT FOUND
-       ================================================== -->
-
-  <div
-    id="notFound"
-    class="product-card not-found"
-    style="display:none;"
+  <input
+    type="email"
+    id="email"
+    placeholder="your@email.com"
+    autocomplete="email"
+    required
   >
 
-    <h2>Product Not Found</h2>
+  <button
+    type="button"
+    class="btn buy-btn"
+    id="buyButton"
+  >
+    BUY NOW
+  </button>
+
+  <div id="message"></div>
+
+</div>
+
+<!-- TEST MODE -->
+
+<div class="test-section">
+
+  <h3>🧪 Test Mode</h3>
+
+  <p>
+    Test product delivery without making a real payment.
+    This uses the existing website test-download system.
+  </p>
+
+  <button
+    type="button"
+    class="test-btn"
+    id="testDownloadButton"
+  >
+    TEST PURCHASE & DOWNLOAD
+  </button>
+
+  <!-- TEST DOWNLOAD RESULT -->
+
+  <div
+    id="testDownloadBox"
+    class="download-box"
+  >
+
+    <h3>✅ Test Download Ready</h3>
 
     <p>
-      The product you requested could not be found.
+      Your test purchase was successful.
+      Your secure download is ready.
     </p>
 
-    <a href="/" class="test-btn">
-      BACK TO PRODUCTS
+    <a
+      id="testDownloadLink"
+      class="download-btn"
+      href="#"
+    >
+      DOWNLOAD PRODUCT
     </a>
 
   </div>
 
-</main>
+</div>
 
+  </div>  <!-- PRODUCT NOT FOUND -->  <div
+    id="notFound"
+    class="product-card not-found"
+    style="display:none;"
+  ><h2>Product Not Found</h2>
 
-<footer>
+<p>
+  The product you requested could not be found.
+</p>
+
+<a href="/" class="test-btn">
+  BACK TO PRODUCTS
+</a>
+
+  </div></main><footer>
   © 2026 Earn Unlimited Funds. All rights reserved.
-</footer>
-
-
-<script>
+</footer><script>
 
 /*
 ======================================================
@@ -509,6 +538,12 @@ const message =
 const testDownloadButton =
   document.getElementById("testDownloadButton");
 
+const testDownloadBox =
+  document.getElementById("testDownloadBox");
+
+const testDownloadLink =
+  document.getElementById("testDownloadLink");
+
 
 /*
 ======================================================
@@ -590,7 +625,6 @@ buyButton.addEventListener(
     const email =
       emailInput.value.trim();
 
-
     if (!email) {
 
       showMessage(
@@ -602,7 +636,6 @@ buyButton.addEventListener(
 
       return;
     }
-
 
     if (
       !email.includes("@") ||
@@ -619,7 +652,6 @@ buyButton.addEventListener(
       return;
     }
 
-
     if (!product) {
 
       showMessage(
@@ -630,7 +662,6 @@ buyButton.addEventListener(
       return;
     }
 
-
     buyButton.disabled =
       true;
 
@@ -640,14 +671,12 @@ buyButton.addEventListener(
     message.style.display =
       "none";
 
-
     try {
 
       const response =
         await fetch(
           "/api/pay",
           {
-
             method: "POST",
 
             headers: {
@@ -656,20 +685,14 @@ buyButton.addEventListener(
             },
 
             body: JSON.stringify({
-
               email: email,
-
               productId: productId
-
             })
-
           }
         );
 
-
       const data =
         await response.json();
-
 
       if (
         !response.ok ||
@@ -683,11 +706,6 @@ buyButton.addEventListener(
 
       }
 
-
-      /*
-      SAVE PAYMENT REFERENCE
-      */
-
       if (data.reference) {
 
         localStorage.setItem(
@@ -697,16 +715,15 @@ buyButton.addEventListener(
 
       }
 
-
       localStorage.setItem(
         "purchase_product_id",
         productId
       );
 
-
-      /*
-      GO TO SELAR
-      */
+      localStorage.setItem(
+        "purchase_email",
+        email
+      );
 
       if (data.checkout_url) {
 
@@ -714,14 +731,11 @@ buyButton.addEventListener(
           data.checkout_url;
 
         return;
-
       }
-
 
       throw new Error(
         "Selar checkout URL was not returned."
       );
-
 
     } catch (error) {
 
@@ -730,20 +744,17 @@ buyButton.addEventListener(
         error
       );
 
-
       showMessage(
         error.message ||
         "Unable to start payment. Please try again.",
         "error"
       );
 
-
       buyButton.disabled =
         false;
 
       buyButton.textContent =
         "BUY NOW";
-
     }
 
   }
@@ -752,13 +763,13 @@ buyButton.addEventListener(
 
 /*
 ======================================================
-TEST MODE
+TEST MODE — GET DOWNLOAD URL
 ======================================================
 */
 
 testDownloadButton.addEventListener(
   "click",
-  function () {
+  async function () {
 
     if (!product) {
 
@@ -770,14 +781,8 @@ testDownloadButton.addEventListener(
       return;
     }
 
-
-    /*
-    Require an email for the test.
-    */
-
     const email =
       emailInput.value.trim();
-
 
     if (!email) {
 
@@ -790,7 +795,6 @@ testDownloadButton.addEventListener(
 
       return;
     }
-
 
     if (
       !email.includes("@") ||
@@ -809,7 +813,7 @@ testDownloadButton.addEventListener(
 
 
     /*
-    Save test information.
+    SAVE TEST INFORMATION
     */
 
     localStorage.setItem(
@@ -834,8 +838,7 @@ testDownloadButton.addEventListener(
 
 
     /*
-    Use the existing working
-    product-specific test endpoint.
+    DISABLE BUTTON
     */
 
     testDownloadButton.disabled =
@@ -844,15 +847,125 @@ testDownloadButton.addEventListener(
     testDownloadButton.textContent =
       "TESTING...";
 
+    message.style.display =
+      "none";
 
-    window.location.href =
-      "/api/test-product/" +
-      encodeURIComponent(productId);
+
+    try {
+
+      /*
+      CALL EXISTING TEST ENDPOINT
+      */
+
+      const response =
+        await fetch(
+          "/api/test-product/" +
+          encodeURIComponent(productId)
+        );
+
+
+      const data =
+        await response.json();
+
+
+      console.log(
+        "Test download response:",
+        data
+      );
+
+
+      /*
+      CHECK RESPONSE
+      */
+
+      if (
+        !response.ok ||
+        !data.success ||
+        !data.download_url
+      ) {
+
+        throw new Error(
+          data.message ||
+          "Test download could not be created."
+        );
+
+      }
+
+
+      /*
+      SAVE TEST DOWNLOAD INFORMATION
+      */
+
+      localStorage.setItem(
+        "test_download_url",
+        data.download_url
+      );
+
+
+      /*
+      SHOW DOWNLOAD AREA
+      */
+
+      testDownloadLink.href =
+        data.download_url;
+
+      testDownloadBox.style.display =
+        "block";
+
+
+      /*
+      SHOW SUCCESS MESSAGE
+      */
+
+      showMessage(
+        "Test purchase successful. Your download is ready.",
+        "success"
+      );
+
+
+      /*
+      SCROLL TO DOWNLOAD BUTTON
+      */
+
+      testDownloadBox.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+
+
+      /*
+      CHANGE TEST BUTTON
+      */
+
+      testDownloadButton.textContent =
+        "TEST DOWNLOAD READY";
+
+
+    } catch (error) {
+
+      console.error(
+        "Test download error:",
+        error
+      );
+
+
+      showMessage(
+        error.message ||
+        "Test download failed. Please try again.",
+        "error"
+      );
+
+
+      testDownloadButton.disabled =
+        false;
+
+      testDownloadButton.textContent =
+        "TEST PURCHASE & DOWNLOAD";
+
+    }
 
   }
 );
 
-</script>
-
-</body>
+</script></body>
 </html>
