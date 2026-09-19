@@ -32,7 +32,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
-  express.static(path.join(__dirname, "..", "public"))
+  express.static(
+    path.join(__dirname, "..", "public")
+  )
 );
 
 /* ======================================================
@@ -40,11 +42,15 @@ app.use(
 ====================================================== */
 
 if (!process.env.DATABASE_URL) {
-  console.error("DATABASE_URL is not configured.");
+  console.error(
+    "DATABASE_URL is not configured."
+  );
 }
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString:
+    process.env.DATABASE_URL,
+
   ssl: {
     rejectUnauthorized: false
   }
@@ -69,16 +75,21 @@ if (
       `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
 
     credentials: {
-      accessKeyId: process.env.R2_ACCESS_KEY_ID,
+      accessKeyId:
+        process.env.R2_ACCESS_KEY_ID,
 
       secretAccessKey:
         process.env.R2_SECRET_ACCESS_KEY
     }
   });
 
-  console.log("Cloudflare R2 configured.");
+  console.log(
+    "Cloudflare R2 configured."
+  );
 } else {
-  console.log("Cloudflare R2 is not fully configured.");
+  console.log(
+    "Cloudflare R2 is not fully configured."
+  );
 }
 
 /* ======================================================
@@ -350,8 +361,8 @@ async function initializeDatabase() {
     `);
 
     /*
-      Temporary table for recording the exact
-      Selar webhook payload.
+      Keep the webhook table so every received
+      Selar event can be recorded.
     */
 
     await pool.query(`
@@ -365,7 +376,9 @@ async function initializeDatabase() {
       )
     `);
 
-    console.log("PostgreSQL database initialized.");
+    console.log(
+      "PostgreSQL database initialized."
+    );
   } catch (error) {
     console.error(
       "Database initialization error:",
@@ -440,140 +453,161 @@ async function createDownloadToken({
    PRODUCTS API
 ====================================================== */
 
-app.get("/api/products", (req, res) => {
-  res.json({
-    success: true,
+app.get(
+  "/api/products",
+  (req, res) => {
+    res.json({
+      success: true,
 
-    products:
-      Object.values(PRODUCTS).map(
-        (product) => ({
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          priceNaira: product.priceNaira,
-          amountKobo: product.amountKobo,
-          selarUrl: product.selarUrl
-        })
-      )
-  });
-});
+      products:
+        Object.values(PRODUCTS).map(
+          (product) => ({
+            id: product.id,
+            name: product.name,
+            description:
+              product.description,
+            priceNaira:
+              product.priceNaira,
+            amountKobo:
+              product.amountKobo,
+            selarUrl:
+              product.selarUrl
+          })
+        )
+    });
+  }
+);
 
 /* ======================================================
    SINGLE PRODUCT API
 ====================================================== */
 
-app.get("/api/products/:id", (req, res) => {
-  const product =
-    PRODUCTS[req.params.id];
+app.get(
+  "/api/products/:id",
+  (req, res) => {
+    const product =
+      PRODUCTS[req.params.id];
 
-  if (!product) {
-    return res.status(404).json({
-      success: false,
-      message: "Product not found."
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Product not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      product
     });
   }
-
-  res.json({
-    success: true,
-    product
-  });
-});
+);
 
 /* ======================================================
    START PAYMENT
 ====================================================== */
 
-app.post("/api/pay", async (req, res) => {
-  try {
-    const email =
-      String(req.body.email || "")
-        .trim()
-        .toLowerCase();
+app.post(
+  "/api/pay",
+  async (req, res) => {
+    try {
+      const email =
+        String(
+          req.body.email || ""
+        )
+          .trim()
+          .toLowerCase();
 
-    const productId =
-      req.body.product_id ||
-      req.body.productId;
+      const productId =
+        req.body.product_id ||
+        req.body.productId;
 
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required."
-      });
-    }
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Email is required."
+        });
+      }
 
-    if (
-      !productId ||
-      !PRODUCTS[productId]
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Valid product is required."
-      });
-    }
+      if (
+        !productId ||
+        !PRODUCTS[productId]
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Valid product is required."
+        });
+      }
 
-    const product =
-      PRODUCTS[productId];
+      const product =
+        PRODUCTS[productId];
 
-    const reference =
-      `EUF-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+      const reference =
+        `EUF-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 
-    const now = Date.now();
+      const now = Date.now();
 
-    await pool.query(
-      `
-        INSERT INTO payments
-        (
+      await pool.query(
+        `
+          INSERT INTO payments
+          (
+            reference,
+            email,
+            product_id,
+            amount,
+            currency,
+            status,
+            created_at,
+            updated_at
+          )
+          VALUES
+          ($1,$2,$3,$4,$5,$6,$7,$8)
+        `,
+        [
           reference,
           email,
-          product_id,
-          amount,
-          currency,
-          status,
-          created_at,
-          updated_at
-        )
-        VALUES
-        ($1,$2,$3,$4,$5,$6,$7,$8)
-      `,
-      [
+          productId,
+          product.priceNaira,
+          "NGN",
+          "PENDING",
+          now,
+          now
+        ]
+      );
+
+      const returnUrl =
+        `${SITE_URL}/payment-success.html?product=${encodeURIComponent(productId)}&reference=${encodeURIComponent(reference)}`;
+
+      res.json({
+        success: true,
         reference,
-        email,
-        productId,
-        product.priceNaira,
-        "NGN",
-        "PENDING",
-        now,
-        now
-      ]
-    );
+        product_id:
+          productId,
+        checkout_url:
+          product.selarUrl,
+        return_url:
+          returnUrl
+      });
 
-    const returnUrl =
-      `${SITE_URL}/payment-success.html?product=${encodeURIComponent(productId)}&reference=${encodeURIComponent(reference)}`;
+    } catch (error) {
+      console.error(
+        "Payment start error:",
+        error
+      );
 
-    res.json({
-      success: true,
-      reference,
-      product_id: productId,
-      checkout_url: product.selarUrl,
-      return_url: returnUrl
-    });
-  } catch (error) {
-    console.error(
-      "Payment start error:",
-      error
-    );
-
-    res.status(500).json({
-      success: false,
-      message:
-        "Unable to start payment."
-    });
+      res.status(500).json({
+        success: false,
+        message:
+          "Unable to start payment."
+      });
+    }
   }
-});
+);
 
 /* ======================================================
-   SELAR WEBHOOK - DIAGNOSTIC MODE
+   SELAR WEBHOOK - PRODUCTION
 ====================================================== */
 
 app.post(
@@ -593,94 +627,16 @@ app.post(
         "=================================================="
       );
 
+      const body =
+        req.body || {};
+
       console.log(
         "Time:",
         new Date().toISOString()
       );
 
-      /*
-        Get possible event identifiers.
-      */
-
-      const body =
-        req.body || {};
-
-      const eventId =
-        body.id ||
-        body.event_id ||
-        body.order_id ||
-        body.order?.id ||
-        body.data?.id ||
-        body.data?.event_id ||
-        null;
-
-      const eventType =
-        body.event ||
-        body.type ||
-        body.event_type ||
-        body.data?.event ||
-        body.data?.type ||
-        null;
-
-      /*
-        Safely log headers.
-
-        Authorization/API secrets/signatures
-        are redacted.
-      */
-
-      const safeHeaders = {};
-
-      for (
-        const [key, value]
-        of Object.entries(req.headers)
-      ) {
-        const lower =
-          key.toLowerCase();
-
-        if (
-          lower.includes("authorization") ||
-          lower.includes("token") ||
-          lower.includes("secret") ||
-          lower.includes("signature") ||
-          lower.includes("api-key") ||
-          lower.includes("apikey")
-        ) {
-          safeHeaders[key] =
-            "[REDACTED]";
-        } else {
-          safeHeaders[key] =
-            value;
-        }
-      }
-
       console.log(
-        "Event ID:",
-        eventId
-      );
-
-      console.log(
-        "Event Type:",
-        eventType
-      );
-
-      console.log(
-        "HEADERS:"
-      );
-
-      console.log(
-        JSON.stringify(
-          safeHeaders,
-          null,
-          2
-        )
-      );
-
-      console.log(
-        "BODY:"
-      );
-
-      console.log(
+        "BODY:",
         JSON.stringify(
           body,
           null,
@@ -688,11 +644,94 @@ app.post(
         )
       );
 
-      /*
-        Store the webhook payload in PostgreSQL
-        so we can inspect it even after Render logs
-        rotate.
-      */
+      /* ================================================
+         GET SELAR FIELDS
+      ================================================ */
+
+      const buyerEmail =
+        String(
+          body.buyer_email || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const buyerName =
+        String(
+          body.buyer_full_name || ""
+        ).trim();
+
+      const productName =
+        String(
+          body.product_names || ""
+        ).trim();
+
+      const productCode =
+        String(
+          body.product_codes || ""
+        ).trim();
+
+      const amount =
+        Number(
+          body.amount || 0
+        );
+
+      const currency =
+        String(
+          body.currency || "NGN"
+        )
+          .trim()
+          .toUpperCase();
+
+      const receiptUrl =
+        String(
+          body.receipt_url || ""
+        ).trim();
+
+      console.log(
+        "Buyer:",
+        buyerEmail
+      );
+
+      console.log(
+        "Product:",
+        productName
+      );
+
+      console.log(
+        "Product code:",
+        productCode
+      );
+
+      console.log(
+        "Amount:",
+        amount
+      );
+
+      console.log(
+        "Currency:",
+        currency
+      );
+
+      console.log(
+        "Receipt:",
+        receiptUrl
+      );
+
+      /* ================================================
+         SAVE WEBHOOK EVENT
+      ================================================ */
+
+      const eventId =
+        body.id ||
+        body.event_id ||
+        body.order_id ||
+        null;
+
+      const eventType =
+        body.event ||
+        body.type ||
+        body.event_type ||
+        null;
 
       await pool.query(
         `
@@ -719,61 +758,312 @@ app.post(
           JSON.stringify(body),
 
           JSON.stringify(
-            safeHeaders
+            req.headers
           ),
 
           Date.now()
         ]
       );
 
+      /* ================================================
+         CHECK EMAIL
+      ================================================ */
+
+      if (!buyerEmail) {
+        console.log(
+          "Buyer email missing."
+        );
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          message:
+            "Buyer email missing."
+        });
+      }
+
+      /* ================================================
+         IGNORE ZERO-AMOUNT TEST EVENTS
+      ================================================ */
+
+      if (amount <= 0) {
+        console.log(
+          "Zero amount webhook received."
+        );
+
+        console.log(
+          "This is treated as a test/non-paid event."
+        );
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          test: true,
+          message:
+            "Zero-amount/test webhook received."
+        });
+      }
+
+      /* ================================================
+         MATCH PRODUCT
+      ================================================ */
+
+      let product =
+        Object.values(
+          PRODUCTS
+        ).find(
+          (item) =>
+            item.name.toLowerCase() ===
+            productName.toLowerCase()
+        );
+
+      /*
+        Support the Selar Tst product only when
+        a non-zero amount is received.
+      */
+
+      if (
+        !product &&
+        productName.toLowerCase() ===
+          "tst"
+      ) {
+        product =
+          PRODUCTS[
+            "how-to-pass-high-in-exams"
+          ];
+      }
+
+      if (!product) {
+        console.log(
+          "Product could not be matched:",
+          productName
+        );
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          message:
+            "Product could not be matched.",
+          product_name:
+            productName,
+          product_code:
+            productCode
+        });
+      }
+
       console.log(
-        "Selar webhook saved to database."
+        "Matched product:",
+        product.id
+      );
+
+      /* ================================================
+         CHECK AMOUNT
+      ================================================ */
+
+      if (
+        amount <
+        product.priceNaira
+      ) {
+        console.log(
+          "Payment amount is below product price."
+        );
+
+        console.log(
+          "Expected:",
+          product.priceNaira
+        );
+
+        console.log(
+          "Received:",
+          amount
+        );
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          message:
+            "Payment amount is below product price."
+        });
+      }
+
+      /* ================================================
+         FIND PENDING WEBSITE PAYMENT
+      ================================================ */
+
+      const paymentResult =
+        await pool.query(
+          `
+            SELECT *
+            FROM payments
+            WHERE LOWER(email) = $1
+              AND product_id = $2
+              AND status = 'PENDING'
+            ORDER BY id DESC
+            LIMIT 1
+          `,
+          [
+            buyerEmail,
+            product.id
+          ]
+        );
+
+      if (
+        paymentResult.rows.length ===
+        0
+      ) {
+        console.log(
+          "No matching pending website payment found."
+        );
+
+        /*
+          IMPORTANT:
+          Do not create a fallback payment.
+        */
+
+        return res.status(200).json({
+          success: true,
+          received: true,
+          paid: false,
+          message:
+            "No matching pending website payment found."
+        });
+      }
+
+      const payment =
+        paymentResult.rows[0];
+
+      console.log(
+        "Website payment found:",
+        payment.reference
+      );
+
+      /* ================================================
+         MARK PAYMENT AS PAID
+      ================================================ */
+
+      await pool.query(
+        `
+          UPDATE payments
+          SET
+            status = 'PAID',
+            amount = $1,
+            currency = $2,
+            updated_at = $3
+          WHERE reference = $4
+        `,
+        [
+          amount,
+          currency,
+          Date.now(),
+          payment.reference
+        ]
       );
 
       console.log(
-        "Webhook diagnostic mode:"
+        "PAYMENT MARKED PAID"
       );
 
       console.log(
-        "NO PAYMENT WAS MARKED AS PAID."
+        "Reference:",
+        payment.reference
       );
 
       console.log(
-        "NO DOWNLOAD TOKEN WAS CREATED."
+        "Product:",
+        product.name
+      );
+
+      console.log(
+        "Buyer:",
+        buyerEmail
+      );
+
+      /* ================================================
+         CREATE DOWNLOAD TOKEN
+      ================================================ */
+
+      const download =
+        await createDownloadToken({
+          paymentReference:
+            payment.reference,
+
+          productId:
+            product.id,
+
+          email:
+            buyerEmail
+        });
+
+      console.log(
+        "DOWNLOAD TOKEN CREATED"
+      );
+
+      console.log(
+        "Download URL:",
+        download.downloadUrl
       );
 
       console.log(
         "=================================================="
       );
 
-      /*
-        Return 200 quickly.
-
-        This tells Selar that the webhook
-        was received successfully.
-      */
+      /* ================================================
+         SUCCESS
+      ================================================ */
 
       return res.status(200).json({
         success: true,
         received: true,
-        diagnostic: true
+        paid: true,
+
+        buyer_email:
+          buyerEmail,
+
+        buyer_name:
+          buyerName,
+
+        product_id:
+          product.id,
+
+        product_name:
+          product.name,
+
+        product_code:
+          productCode,
+
+        amount:
+          amount,
+
+        currency:
+          currency,
+
+        reference:
+          payment.reference,
+
+        receipt_url:
+          receiptUrl,
+
+        download_url:
+          download.downloadUrl,
+
+        expires_at:
+          download.expiresAt
       });
 
     } catch (error) {
       console.error(
-        "Selar webhook diagnostic error:",
+        "SELAR WEBHOOK ERROR:",
         error
       );
 
-      /*
-        Still return 200 so Selar does not
-        repeatedly retry while we are diagnosing.
-      */
-
-      return res.status(200).json({
-        success: true,
-        received: true,
-        diagnostic: true
+      return res.status(500).json({
+        success: false,
+        message:
+          "Webhook processing failed."
       });
     }
   }
@@ -827,17 +1117,24 @@ app.get(
       res.json({
         success: true,
         found: true,
+
         paid:
-          payment.status === "PAID",
+          payment.status ===
+          "PAID",
+
         status:
           payment.status,
+
         reference:
           payment.reference,
+
         product_id:
           payment.product_id,
+
         email:
           payment.email
       });
+
     } catch (error) {
       console.error(
         "Purchase status error:",
@@ -926,74 +1223,18 @@ app.get(
       }
 
       /*
-        Reuse an existing active download
-        token instead of creating unlimited
-        tokens every time the page polls.
+        Generate a new secure download token
+        only after the payment has been confirmed.
       */
-
-      const existing =
-        await pool.query(
-          `
-            SELECT *
-            FROM downloads
-            WHERE payment_reference = $1
-              AND product_id = $2
-              AND email = $3
-              AND used = 0
-              AND expires_at > $4
-            ORDER BY id DESC
-            LIMIT 1
-          `,
-          [
-            payment.reference,
-            product.id,
-            payment.email,
-            Date.now()
-          ]
-        );
-
-      if (
-        existing.rows.length > 0
-      ) {
-        /*
-          The original raw token cannot be recovered
-          from the hash, so create a fresh token.
-        */
-
-        const download =
-          await createDownloadToken({
-            paymentReference:
-              payment.reference,
-            productId:
-              product.id,
-            email:
-              payment.email
-          });
-
-        return res.json({
-          success: true,
-          paid: true,
-          reference:
-            payment.reference,
-          product_id:
-            product.id,
-          product_name:
-            product.name,
-          email:
-            payment.email,
-          download_url:
-            download.downloadUrl,
-          expires_at:
-            download.expiresAt
-        });
-      }
 
       const download =
         await createDownloadToken({
           paymentReference:
             payment.reference,
+
           productId:
             product.id,
+
           email:
             payment.email
         });
@@ -1001,16 +1242,22 @@ app.get(
       res.json({
         success: true,
         paid: true,
+
         reference:
           payment.reference,
+
         product_id:
           product.id,
+
         product_name:
           product.name,
+
         email:
           payment.email,
+
         download_url:
           download.downloadUrl,
+
         expires_at:
           download.expiresAt
       });
@@ -1031,7 +1278,7 @@ app.get(
 );
 
 /* ======================================================
-   SECURE DOWNLOAD
+   SECURE R2 DOWNLOAD
 ====================================================== */
 
 app.get(
@@ -1167,10 +1414,8 @@ app.get(
       );
 
       if (
-        error.name ===
-          "NoSuchKey" ||
-        error.Code ===
-          "NoSuchKey"
+        error.name === "NoSuchKey" ||
+        error.Code === "NoSuchKey"
       ) {
         return res.status(404).send(
           "The product file was not found in R2."
@@ -1246,23 +1491,31 @@ app.get(
         await createDownloadToken({
           paymentReference:
             reference,
+
           productId,
+
           email
         });
 
       res.json({
         success: true,
         test: true,
+
         product_id:
           product.id,
+
         product_name:
           product.name,
+
         r2_key:
           product.r2Key,
+
         download_name:
           product.downloadName,
+
         download_url:
           download.downloadUrl,
+
         expires_at:
           download.expiresAt
       });
@@ -1351,10 +1604,13 @@ app.get(
 
       res.json({
         success: true,
+
         database:
           "connected",
+
         r2_configured:
           !!r2,
+
         service:
           "Earn Unlimited Funds"
       });
@@ -1362,8 +1618,10 @@ app.get(
     } catch (error) {
       res.status(500).json({
         success: false,
+
         database:
           "error",
+
         message:
           error.message
       });
