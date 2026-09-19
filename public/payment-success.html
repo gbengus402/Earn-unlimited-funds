@@ -1,13 +1,7 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Payment Successful | Earn Unlimited Funds</title>
-
-  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Payment Successful | Earn Unlimited Funds</title>  <style>
     * {
       box-sizing: border-box;
       margin: 0;
@@ -62,64 +56,141 @@
       margin-top: 10px;
     }
 
+    .button:hover {
+      opacity: 0.9;
+    }
+
+    #downloadButton {
+      display: none;
+    }
+
     #status {
       margin-top: 20px;
       font-weight: bold;
     }
-  </style>
-</head>
 
-<body>
+    .error {
+      color: #b00020;
+    }
 
-  <div class="card">
+    .success {
+      color: #087f23;
+    }
+  </style></head><body>  <div class="card"><div class="icon">✅</div>
 
-    <div class="icon">✅</div>
+<h1>Payment Successful!</h1>
 
-    <h1>Payment Successful!</h1>
+<p id="productMessage">
+  Your payment is being verified.
+</p>
 
-    <p>
-      Thank you for purchasing
-      <strong>How to Pass High in Exams</strong>.
-    </p>
+<p id="status">
+  Preparing your secure download...
+</p>
 
-    <p>
-      Your payment has been verified successfully.
-    </p>
+<a
+  id="downloadButton"
+  href="#"
+  class="button"
+>
+  Download Your Product
+</a>
 
-    <p id="status">
-      Preparing your secure download...
-    </p>
+<br>
 
-    <a
-      id="downloadButton"
-      href="/api/download"
-      class="button"
-    >
-      Download Your Product
-    </a>
+<a href="/" class="button">
+  Return to Store
+</a>
 
-    <br>
+  </div>  <script>
+    const params = new URLSearchParams(window.location.search);
 
-    <a href="/" class="button">
-      Return to Store
-    </a>
+    const reference = params.get("reference");
+    const productId = params.get("product");
 
-  </div>
+    const status = document.getElementById("status");
+    const downloadButton =
+      document.getElementById("downloadButton");
 
-  <script>
-    /*
-      The payment callback has already verified the
-      Paystack transaction and placed the secure
-      download cookie in the browser.
+    const productMessage =
+      document.getElementById("productMessage");
 
-      When the customer reaches this page,
-      send them directly to the protected download.
-    */
+    let attempts = 0;
+    const maxAttempts = 15;
 
-    setTimeout(function () {
-      window.location.href = "/api/download";
-    }, 1500);
-  </script>
+    async function checkPayment() {
+      attempts++;
 
-</body>
+      if (!reference) {
+        status.textContent =
+          "Payment reference was not found.";
+
+        status.className = "error";
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/get-download?reference=${encodeURIComponent(reference)}`
+        );
+
+        const data = await response.json();
+
+        if (data.success && data.paid && data.download_url) {
+
+          productMessage.innerHTML =
+            `Your purchase of <strong>${data.product_name}</strong> has been verified.`;
+
+          status.textContent =
+            "Your secure download is ready.";
+
+          status.className = "success";
+
+          downloadButton.href =
+            data.download_url;
+
+          downloadButton.style.display =
+            "inline-block";
+
+          return;
+        }
+
+        if (attempts < maxAttempts) {
+
+          status.textContent =
+            "Waiting for payment verification...";
+
+          setTimeout(checkPayment, 2000);
+
+        } else {
+
+          status.textContent =
+            "Payment verification is taking longer than expected. Please refresh this page in a moment.";
+
+          status.className = "error";
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
+        if (attempts < maxAttempts) {
+
+          status.textContent =
+            "Connecting to payment verification...";
+
+          setTimeout(checkPayment, 2000);
+
+        } else {
+
+          status.textContent =
+            "Unable to verify payment right now. Please refresh the page.";
+
+          status.className = "error";
+        }
+      }
+    }
+
+    checkPayment();
+  </script></body>
 </html>
