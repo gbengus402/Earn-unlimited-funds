@@ -844,55 +844,91 @@ app.get("/api/purchase-status", async (req, res) => {
         downloadResult.rows.length > 0,
       download_url: null
     });
+// ======================================================
+// GET SECURE DOWNLOAD FOR PAID PURCHASE
+// ======================================================
+
+app.get("/api/get-download", async (req, res) => {
+  try {
+    const reference = String(
+      req.query.reference || ""
+    ).trim();
+
+    if (!reference) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment reference is required."
+      });
+    }
+
+    const paymentResult = await pool.query(
+      `
+        SELECT *
+        FROM payments
+        WHERE reference = $1
+        LIMIT 1
+      `,
+      [reference]
+    );
+
+    if (paymentResult.rows.length === 0) {
+      return res.json({
+        success: true,
+        paid: false,
+        message: "Payment not found yet."
+      });
+    }
+
+    const payment = paymentResult.rows[0];
+
+    if (payment.status !== "PAID") {
+      return res.json({
+        success: true,
+        paid: false,
+        status: payment.status,
+        message: "Payment is still being verified."
+      });
+    }
+
+    const product = PRODUCTS[payment.product_id];
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Purchased product was not found."
+      });
+    }
+
+    // Create a fresh secure download token.
+    const download = await createDownloadToken({
+      paymentReference: payment.reference,
+      productId: payment.product_id,
+      email: payment.email
+    });
+
+    return res.json({
+      success: true,
+      paid: true,
+      reference: payment.reference,
+      product_id: product.id,
+      product_name: product.name,
+      download_url: download.downloadUrl,
+      expires_at: download.expiresAt
+    });
+
   } catch (error) {
     console.error(
-      "Purchase status error:",
+      "Get download error:",
       error
     );
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Unable to check purchase status.",
+      message: "Could not prepare download.",
       error: error.message
     });
   }
-});
-
-// ======================================================
-// SECURE DOWNLOAD
-// ======================================================
-
-app.get("/api/download", async (req, res) => {
-  try {
-    const token = String(
-      req.query.token || ""
-    ).trim();
-
-    if (!token) {
-      return res.status(400).send(
-        "Download token is required."
-      );
-    }
-
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
-
-    const result = await pool.query(
-      `
-        SELECT *
-        FROM downloads
-        WHERE token_hash = $1
-        LIMIT 1
-      `,
-      [tokenHash]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).send(
-        "Invalid or expired download link."
-      );
+});  );
     }
 
     const download = result.rows[0];
