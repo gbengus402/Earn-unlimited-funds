@@ -2,11 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Product | Earn Unlimited Funds</title>
 
@@ -80,7 +76,6 @@
       line-height: 1.7;
       color: #555;
       margin-bottom: 25px;
-      white-space: pre-line;
     }
 
     .features {
@@ -164,7 +159,6 @@
       font-weight: bold;
       cursor: pointer;
       text-align: center;
-      text-decoration: none;
     }
 
     .buy-btn {
@@ -212,10 +206,6 @@
       margin-top: 10px;
     }
 
-    .test-btn:hover {
-      opacity: 0.9;
-    }
-
     #message {
       display: none;
       margin-top: 18px;
@@ -238,16 +228,9 @@
       border: 1px solid #efb0b0;
     }
 
-    .loading {
-      text-align: center;
-      padding: 50px 20px;
-      color: #555;
-      font-size: 17px;
-    }
-
     .not-found {
       text-align: center;
-      padding: 50px 20px;
+      padding: 40px 20px;
     }
 
     .not-found h2 {
@@ -262,7 +245,6 @@
     }
 
     @media (max-width: 600px) {
-
       header h1 {
         font-size: 20px;
       }
@@ -302,259 +284,373 @@
 
 <body>
 
-  <header>
-    <h1>Earn Unlimited Funds</h1>
-    <p>Digital Products & Resources</p>
-  </header>
+<header>
+  <h1>Earn Unlimited Funds</h1>
+  <p>Digital Products & Resources</p>
+</header>
 
-  <nav>
-    <a href="/">Home</a>
-    <a href="/#about">About</a>
-    <a href="/#products">Products</a>
-  </nav>
+<nav>
+  <a href="/">Home</a>
+  <a href="/#about">About</a>
+  <a href="/#products">Products</a>
+</nav>
 
-  <main>
+<main>
 
-    <div id="loading" class="loading">
-      Loading product...
+  <div id="productContainer" class="product-card">
+
+    <h1 id="productTitle" class="product-title"></h1>
+
+    <div id="productDescription" class="product-description"></div>
+
+    <ul class="features">
+      <li>✓ Digital product delivered online</li>
+      <li>✓ Secure payment through Selar</li>
+      <li>✓ Access your purchased product</li>
+      <li>✓ Secure digital delivery</li>
+    </ul>
+
+    <div class="price-box">
+      <div class="price-label">Product Price</div>
+      <div id="productPrice" class="price"></div>
     </div>
 
-    <div
-      id="productContainer"
-      class="product-card"
-      style="display:none;"
-    >
+    <div class="purchase-box">
 
-      <h1
-        id="productTitle"
-        class="product-title"
-      ></h1>
+      <h2>Get Your Copy</h2>
 
-      <div
-        id="productDescription"
-        class="product-description"
-      ></div>
+      <label for="email">
+        Enter your email address
+      </label>
 
-      <ul class="features">
+      <input
+        type="email"
+        id="email"
+        placeholder="your@email.com"
+        autocomplete="email"
+        required
+      >
 
-        <li>✓ Digital product delivered online</li>
+      <button
+        type="button"
+        class="btn buy-btn"
+        id="buyButton"
+      >
+        BUY NOW
+      </button>
 
-        <li>✓ Instant access after successful payment</li>
-
-        <li>✓ Secure product delivery</li>
-
-        <li>✓ Access your purchased product online</li>
-
-      </ul>
-
-      <div class="price-box">
-
-        <div class="price-label">
-          Product Price
-        </div>
-
-        <div
-          id="productPrice"
-          class="price"
-        >
-          ₦0
-        </div>
-
-      </div>
-
-      <div class="purchase-box">
-
-        <h2>
-          Get Your Copy
-        </h2>
-
-        <label for="email">
-          Enter your email address
-        </label>
-
-        <input
-          type="email"
-          id="email"
-          placeholder="your@email.com"
-          autocomplete="email"
-          required
-        >
-
-        <button
-          type="button"
-          class="btn buy-btn"
-          id="buyButton"
-        >
-          BUY NOW
-        </button>
-
-        <div id="message"></div>
-
-      </div>
-
-      <div class="test-section">
-
-        <h3>
-          Test Product Delivery
-        </h3>
-
-        <p>
-          This temporary button is for testing the Cloudflare R2
-          product delivery system. No payment is required.
-        </p>
-
-        <a
-          href="/api/test-download"
-          class="test-btn"
-        >
-          TEST DOWNLOAD
-        </a>
-
-      </div>
+      <div id="message"></div>
 
     </div>
 
-    <div
-      id="notFound"
-      class="product-card not-found"
-      style="display:none;"
-    >
+    <div class="test-section">
 
-      <h2>
-        Product Not Found
-      </h2>
+      <h3>Test Product Delivery</h3>
 
       <p>
-        The product you requested could not be found.
+        This temporary button is for testing the Cloudflare R2
+        product delivery system. No payment is required.
       </p>
 
       <a
-        href="/"
+        href="/api/test-download"
         class="test-btn"
       >
-        BACK TO PRODUCTS
+        TEST DOWNLOAD
       </a>
 
     </div>
 
-  </main>
+  </div>
 
-  <footer>
-    © 2026 Earn Unlimited Funds. All rights reserved.
-  </footer>
+  <div
+    id="notFound"
+    class="product-card not-found"
+    style="display:none;"
+  >
+    <h2>Product Not Found</h2>
+
+    <p>
+      The product you requested could not be found.
+    </p>
+
+    <a href="/" class="test-btn">
+      BACK TO PRODUCTS
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  © 2026 Earn Unlimited Funds. All rights reserved.
+</footer>
 
 
-  <script>
+<script>
+
+  /*
+  ======================================================
+  PRODUCT ID FROM URL
+  ======================================================
+  */
+
+  const urlParams =
+    new URLSearchParams(window.location.search);
+
+  const productId =
+    urlParams.get("id");
+
+
+  /*
+  ======================================================
+  ALL PRODUCTS
+  ======================================================
+  */
+
+  const PRODUCTS = {
+
+    "how-to-pass-high-in-exams": {
+      name: "How to Pass High in Exams",
+      price: 25000,
+      description:
+        "Learn practical study strategies, preparation techniques, examination tips and methods for improving your academic performance."
+    },
+
+    "ai-response-complete-guide": {
+      name: "AI Response Complete Guide",
+      price: 40000,
+      description:
+        "Learn practical ways to use AI for better responses, ideas, productivity, communication and online work."
+    },
+
+    "facebook-automation": {
+      name: "Facebook Automation",
+      price: 60000,
+      description:
+        "Learn practical Facebook automation strategies for managing your online presence, responding to customers and improving your digital marketing workflow."
+    },
+
+    "save-a-billion-from-zero-account": {
+      name: "How to Save a Billion from a Zero Account",
+      price: 80000,
+      description:
+        "Explore practical money habits, saving strategies, financial planning and long-term approaches to building better financial discipline."
+    },
+
+    "pregnancy-care": {
+      name: "Pregnancy Care Guide",
+      price: 150000,
+      description:
+        "A practical guide containing useful pregnancy-care information, preparation tips, healthy routines and important considerations."
+    },
+
+    "sell-faster": {
+      name: "Sell Faster Professional Ebook",
+      price: 150200,
+      description:
+        "Learn practical selling approaches, customer attraction, offer presentation and strategies that can help improve your chances of making sales."
+    }
+
+  };
+
+
+  /*
+  ======================================================
+  PAGE ELEMENTS
+  ======================================================
+  */
+
+  const productContainer =
+    document.getElementById("productContainer");
+
+  const notFound =
+    document.getElementById("notFound");
+
+  const productTitle =
+    document.getElementById("productTitle");
+
+  const productDescription =
+    document.getElementById("productDescription");
+
+  const productPrice =
+    document.getElementById("productPrice");
+
+  const buyButton =
+    document.getElementById("buyButton");
+
+  const emailInput =
+    document.getElementById("email");
+
+  const message =
+    document.getElementById("message");
+
+
+  /*
+  ======================================================
+  FORMAT PRICE
+  ======================================================
+  */
+
+  function formatPrice(amount) {
+
+    return "₦" +
+      Number(amount).toLocaleString("en-NG");
+
+  }
+
+
+  /*
+  ======================================================
+  SHOW MESSAGE
+  ======================================================
+  */
+
+  function showMessage(text, type) {
+
+    message.textContent = text;
+
+    message.className = type;
+
+    message.style.display = "block";
+
+  }
+
+
+  /*
+  ======================================================
+  CHECK PRODUCT
+  ======================================================
+  */
+
+  const product =
+    PRODUCTS[productId];
+
+
+  if (!product) {
+
+    productContainer.style.display =
+      "none";
+
+    notFound.style.display =
+      "block";
+
+  } else {
 
     /*
-    ======================================================
-    GET PRODUCT ID FROM URL
-    ======================================================
+    ================================================
+    DISPLAY PRODUCT
+    ================================================
     */
 
-    const urlParams =
-      new URLSearchParams(window.location.search);
+    productTitle.textContent =
+      product.name;
 
-    const productId =
-      urlParams.get("id");
+    productDescription.textContent =
+      product.description;
 
+    productPrice.textContent =
+      formatPrice(product.price);
 
-    /*
-    ======================================================
-    PAGE ELEMENTS
-    ======================================================
-    */
+    document.title =
+      product.name +
+      " | Earn Unlimited Funds";
 
-    const loading =
-      document.getElementById("loading");
-
-    const productContainer =
-      document.getElementById("productContainer");
-
-    const notFound =
-      document.getElementById("notFound");
-
-    const productTitle =
-      document.getElementById("productTitle");
-
-    const productDescription =
-      document.getElementById("productDescription");
-
-    const productPrice =
-      document.getElementById("productPrice");
-
-    const buyButton =
-      document.getElementById("buyButton");
-
-    const emailInput =
-      document.getElementById("email");
-
-    const message =
-      document.getElementById("message");
+  }
 
 
-    /*
-    ======================================================
-    FORMAT PRICE
-    ======================================================
-    */
+  /*
+  ======================================================
+  BUY NOW
+  ======================================================
+  */
 
-    function formatPrice(amount) {
+  buyButton.addEventListener(
+    "click",
+    async function () {
 
-      const number =
-        Number(amount);
+      const email =
+        emailInput.value.trim();
 
-      if (Number.isNaN(number)) {
-        return "₦0";
+
+      if (!email) {
+
+        showMessage(
+          "Please enter your email address.",
+          "error"
+        );
+
+        emailInput.focus();
+
+        return;
       }
 
-      return "₦" +
-        number.toLocaleString("en-NG");
 
-    }
+      if (
+        !email.includes("@") ||
+        !email.includes(".")
+      ) {
 
+        showMessage(
+          "Please enter a valid email address.",
+          "error"
+        );
 
-    /*
-    ======================================================
-    SHOW MESSAGE
-    ======================================================
-    */
+        emailInput.focus();
 
-    function showMessage(text, type) {
-
-      message.textContent = text;
-
-      message.className = type;
-
-      message.style.display = "block";
-
-    }
+        return;
+      }
 
 
-    /*
-    ======================================================
-    LOAD PRODUCT
-    ======================================================
-    */
+      if (!product) {
 
-    async function loadProduct() {
+        showMessage(
+          "Product not found.",
+          "error"
+        );
+
+        return;
+      }
+
+
+      buyButton.disabled =
+        true;
+
+      buyButton.textContent =
+        "PLEASE WAIT...";
+
+      message.style.display =
+        "none";
+
 
       try {
 
-        if (!productId) {
-
-          loading.style.display = "none";
-
-          notFound.style.display = "block";
-
-          return;
-        }
-
+        /*
+        ==============================================
+        SEND THE CORRECT PRODUCT ID TO SERVER
+        ==============================================
+        */
 
         const response =
           await fetch(
-            "/api/products/" +
-            encodeURIComponent(productId)
+            "/api/pay",
+            {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+
+                email: email,
+
+                productId: productId
+
+              })
+
+            }
           );
 
 
@@ -564,327 +660,87 @@
 
         if (
           !response.ok ||
-          !data.success ||
-          !data.product
+          !data.success
         ) {
 
           throw new Error(
-            "Product not found."
+            data.message ||
+            "Unable to start payment."
           );
 
         }
 
 
-        const product =
-          data.product;
-
-
         /*
-        ==================================================
-        DISPLAY PRODUCT INFORMATION
-        ==================================================
+        ==============================================
+        SAVE REFERENCE
+        ==============================================
         */
 
-        productTitle.textContent =
-          product.name ||
-          product.title ||
-          "Digital Product";
+        if (data.reference) {
 
-
-        productDescription.textContent =
-          product.description ||
-          "Premium digital product from Earn Unlimited Funds.";
-
-
-        /*
-        ==================================================
-        DISPLAY CORRECT PRICE
-        ==================================================
-        */
-
-        let price =
-          product.price;
-
-
-        /*
-        Support different backend price fields.
-        */
-
-        if (
-          price === undefined ||
-          price === null
-        ) {
-
-          price =
-            product.amount;
+          localStorage.setItem(
+            "payment_reference",
+            data.reference
+          );
 
         }
 
 
-        if (
-          price === undefined ||
-          price === null
-        ) {
+        localStorage.setItem(
+          "purchase_product_id",
+          productId
+        );
 
-          price =
-            product.amountNaira;
+
+        /*
+        ==============================================
+        GO TO SELAR
+        ==============================================
+        */
+
+        if (data.checkout_url) {
+
+          window.location.href =
+            data.checkout_url;
+
+          return;
 
         }
 
 
-        productPrice.textContent =
-          formatPrice(price);
-
-
-        /*
-        ==================================================
-        SAVE PRODUCT FOR PURCHASE
-        ==================================================
-        */
-
-        window.currentProduct =
-          product;
-
-
-        loading.style.display =
-          "none";
-
-        productContainer.style.display =
-          "block";
-
-
-        /*
-        ==================================================
-        UPDATE BROWSER TITLE
-        ==================================================
-        */
-
-        document.title =
-          (product.name ||
-           product.title ||
-           "Product") +
-          " | Earn Unlimited Funds";
+        throw new Error(
+          "Selar checkout URL was not returned."
+        );
 
 
       } catch (error) {
 
         console.error(
-          "Product loading error:",
+          "Payment error:",
           error
         );
 
-        loading.style.display =
-          "none";
 
-        notFound.style.display =
-          "block";
+        showMessage(
+          error.message ||
+          "Unable to start payment. Please try again.",
+          "error"
+        );
+
+
+        buyButton.disabled =
+          false;
+
+        buyButton.textContent =
+          "BUY NOW";
 
       }
 
     }
+  );
 
-
-    /*
-    ======================================================
-    BUY PRODUCT
-    ======================================================
-    */
-
-    buyButton.addEventListener(
-      "click",
-      async function () {
-
-        const email =
-          emailInput.value.trim();
-
-
-        if (!email) {
-
-          showMessage(
-            "Please enter your email address.",
-            "error"
-          );
-
-          emailInput.focus();
-
-          return;
-
-        }
-
-
-        if (
-          !email.includes("@") ||
-          !email.includes(".")
-        ) {
-
-          showMessage(
-            "Please enter a valid email address.",
-            "error"
-          );
-
-          emailInput.focus();
-
-          return;
-
-        }
-
-
-        if (!productId) {
-
-          showMessage(
-            "Product ID is missing.",
-            "error"
-          );
-
-          return;
-
-        }
-
-
-        buyButton.disabled =
-          true;
-
-        buyButton.textContent =
-          "PLEASE WAIT...";
-
-        message.style.display =
-          "none";
-
-
-        try {
-
-          /*
-          ================================================
-          SEND THE ACTUAL PRODUCT ID
-          ================================================
-          */
-
-          const response =
-            await fetch(
-              "/api/pay",
-              {
-
-                method: "POST",
-
-                headers: {
-                  "Content-Type":
-                    "application/json"
-                },
-
-                body: JSON.stringify({
-
-                  email: email,
-
-                  productId: productId
-
-                })
-
-              }
-            );
-
-
-          const data =
-            await response.json();
-
-
-          if (
-            !response.ok ||
-            !data.success
-          ) {
-
-            throw new Error(
-              data.message ||
-              "Unable to start payment."
-            );
-
-          }
-
-
-          /*
-          ================================================
-          SAVE PAYMENT REFERENCE
-          ================================================
-          */
-
-          if (data.reference) {
-
-            localStorage.setItem(
-              "payment_reference",
-              data.reference
-            );
-
-          }
-
-
-          /*
-          ================================================
-          SAVE PRODUCT ID
-          ================================================
-          */
-
-          localStorage.setItem(
-            "purchase_product_id",
-            productId
-          );
-
-
-          /*
-          ================================================
-          GO TO SELAR CHECKOUT
-          ================================================
-          */
-
-          if (data.checkout_url) {
-
-            window.location.href =
-              data.checkout_url;
-
-            return;
-
-          }
-
-
-          throw new Error(
-            "Selar checkout URL was not returned."
-          );
-
-
-        } catch (error) {
-
-          console.error(
-            "Payment error:",
-            error
-          );
-
-
-          showMessage(
-            error.message ||
-            "Unable to start payment. Please try again.",
-            "error"
-          );
-
-
-          buyButton.disabled =
-            false;
-
-          buyButton.textContent =
-            "BUY NOW";
-
-        }
-
-      }
-    );
-
-
-    /*
-    ======================================================
-    START
-    ======================================================
-    */
-
-    loadProduct();
-
-  </script>
+</script>
 
 </body>
 </html>
