@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Products | Earn Unlimited Funds</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #222;
+    }
+
+    header {
+      background: #0757c8;
+      color: white;
+      padding: 28px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      font-size: 15px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      color: #0757c8;
+      font-size: 27px;
+    }
+
+    .section-title p {
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 22px;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 5px 22px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card h3 {
+      margin: 0 0 12px;
+      color: #0757c8;
+      font-size: 21px;
+    }
+
+    .description {
+      color: #555;
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .price {
+      font-size: 23px;
+      font-weight: bold;
+      margin: 18px 0;
+      color: #111;
+    }
+
+    .buy-button {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: #0757c8;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .buy-button:hover {
+      background: #06449d;
+    }
+
+    .affiliate-button {
+      background: #0b8f45;
+    }
+
+    .affiliate-button:hover {
+      background: #087438;
+    }
+
+    .loading,
+    .error,
+    .empty {
+      text-align: center;
+      padding: 30px;
+      background: white;
+      border-radius: 12px;
+    }
+
+    .error {
+      color: #b00020;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      color: #777;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 25px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Earn Unlimited Funds</h1>
+  <p>Digital Products, Learning Resources & Opportunities</p>
+</header>
+
+<div class="container">
+
+  <div class="section-title">
+    <h2>Our Products</h2>
+    <p>Choose a product and start your journey today.</p>
+  </div>
+
+  <div id="productsContainer" class="products-grid">
+    <div class="loading">
+      Loading products...
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  © 2026 Earn Unlimited Funds. All rights reserved.
+</footer>
+
+<script>
+
+  const productsContainer =
+    document.getElementById("productsContainer");
+
+
+  function formatPrice(price) {
+
+    return "₦" + Number(price).toLocaleString("en-NG");
+
+  }
+
+
+  function createProductCard(product) {
+
+    const card =
+      document.createElement("div");
+
+    card.className = "product-card";
+
+
+    const name =
+      document.createElement("h3");
+
+    name.textContent =
+      product.name;
+
+
+    const description =
+      document.createElement("p");
+
+    description.className =
+      "description";
+
+    description.textContent =
+      product.description ||
+      "Digital product from Earn Unlimited Funds.";
+
+
+    const price =
+      document.createElement("div");
+
+    price.className =
+      "price";
+
+    price.textContent =
+      formatPrice(product.priceNaira);
+
+
+    const button =
+      document.createElement("a");
+
+
+    /*
+      Own products use your website
+      checkout page.
+
+      Affiliate products can use
+      affiliateUrl if provided.
+    */
+
+    if (product.affiliateUrl) {
+
+      button.href =
+        product.affiliateUrl;
+
+      button.target =
+        "_blank";
+
+      button.rel =
+        "noopener noreferrer";
+
+      button.textContent =
+        "View Product";
+
+      button.className =
+        "buy-button affiliate-button";
+
+    } else {
+
+      button.href =
+        "product.html?id=" +
+        encodeURIComponent(product.id);
+
+      button.textContent =
+        "Buy Now";
+
+      button.className =
+        "buy-button";
+
+    }
+
+
+    card.appendChild(name);
+
+    card.appendChild(description);
+
+    card.appendChild(price);
+
+    card.appendChild(button);
+
+
+    return card;
+
+  }
+
+
+  async function loadProducts() {
+
+    try {
+
+      const response =
+        await fetch("/api/products");
+
+
+      const data =
+        await response.json();
+
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+
+        throw new Error(
+          data.message ||
+          "Unable to load products."
+        );
+
+      }
+
+
+      const products =
+        data.products || [];
+
+
+      productsContainer.innerHTML = "";
+
+
+      if (products.length === 0) {
+
+        productsContainer.innerHTML =
+          '<div class="empty">No products available yet.</div>';
+
+        return;
+
+      }
+
+
+      products.forEach(function(product) {
+
+        const card =
+          createProductCard(product);
+
+        productsContainer.appendChild(card);
+
+      });
+
+
+    } catch (error) {
+
+      console.error(error);
+
+
+      productsContainer.innerHTML =
+        '<div class="error">' +
+        'Unable to load products. Please refresh the page.' +
+        '</div>';
+
+    }
+
+  }
+
+
+  loadProducts();
+
+</script>
+
+</body>
+</html>
