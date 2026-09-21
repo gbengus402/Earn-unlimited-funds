@@ -96,7 +96,30 @@ if (
    PRODUCTS
 ====================================================== */
 
-const PRODUCTS = {
+const   "tst": {
+    id: "tst",
+
+    name: "Tst",
+
+    description:
+      "Have raw knowledge",
+
+    priceNaira: 0,
+
+    amountKobo: 0,
+
+    r2Key:
+      "Tst.pdf",
+
+    downloadName:
+      "Tst.pdf",
+
+    contentType:
+      "application/pdf",
+
+    selarUrl:
+      "https://selar.com/4j11q9844e"
+  }, = {
   "how-to-pass-high-in-exams": {
     id: "how-to-pass-high-in-exams",
 
