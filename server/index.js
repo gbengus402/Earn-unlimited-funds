@@ -96,7 +96,9 @@ if (
    PRODUCTS
 ====================================================== */
 
-const   "tst": {
+const PRODUCTS = {
+
+  "tst": {
     id: "tst",
 
     name: "Tst",
@@ -119,8 +121,9 @@ const   "tst": {
 
     selarUrl:
       "https://selar.com/4j11q9844e"
-  }, = {
-  "how-to-pass-high-in-exams": {
+  },
+  
+        "how-to-pass-high-in-exams": {
     id: "how-to-pass-high-in-exams",
 
     name: "How to Pass High in Exams",
