@@ -189,6 +189,31 @@
   }
 
 
+  /*
+    AFFILIATE PRODUCTS
+
+    Add new affiliate products here.
+
+    Required:
+    name
+    priceNaira
+    description
+    affiliateUrl
+  */
+
+  const affiliateProducts = [
+
+    {
+      id: "write-and-launch-bootcamp",
+      name: "Write and Launch Bootcamp",
+      priceNaira: 37900,
+      description: "Automate your ideas and turn them into a launched product.",
+      affiliateUrl: "https://selar.com/p/8y7x?affiliate=q5vq"
+    }
+
+  ];
+
+
   function createProductCard(product) {
 
     const card =
@@ -230,11 +255,11 @@
 
 
     /*
-      Own products use your website
-      checkout page.
+      Affiliate products go directly
+      to the affiliate link.
 
-      Affiliate products can use
-      affiliateUrl if provided.
+      Your own products go to
+      your website product page.
     */
 
     if (product.affiliateUrl) {
@@ -287,6 +312,11 @@
 
     try {
 
+      /*
+        Load your own products
+        from the backend.
+      */
+
       const response =
         await fetch("/api/products");
 
@@ -295,37 +325,47 @@
         await response.json();
 
 
+      let ownProducts = [];
+
+
       if (
-        !response.ok ||
-        !data.success
+        response.ok &&
+        data.success
       ) {
 
-        throw new Error(
-          data.message ||
-          "Unable to load products."
-        );
+        ownProducts =
+          data.products || [];
 
       }
 
 
-      const products =
-        data.products || [];
+      /*
+        Combine your own products
+        with affiliate products.
+      */
+
+      const allProducts = [
+        ...ownProducts,
+        ...affiliateProducts
+      ];
 
 
       productsContainer.innerHTML = "";
 
 
-      if (products.length === 0) {
+      if (allProducts.length === 0) {
 
         productsContainer.innerHTML =
-          '<div class="empty">No products available yet.</div>';
+          '<div class="empty">' +
+          'No products available yet.' +
+          '</div>';
 
         return;
 
       }
 
 
-      products.forEach(function(product) {
+      allProducts.forEach(function(product) {
 
         const card =
           createProductCard(product);
@@ -340,10 +380,22 @@
       console.error(error);
 
 
-      productsContainer.innerHTML =
-        '<div class="error">' +
-        'Unable to load products. Please refresh the page.' +
-        '</div>';
+      /*
+        Even if the backend has a temporary
+        problem, show the affiliate product.
+      */
+
+      productsContainer.innerHTML = "";
+
+
+      affiliateProducts.forEach(function(product) {
+
+        const card =
+          createProductCard(product);
+
+        productsContainer.appendChild(card);
+
+      });
 
     }
 
