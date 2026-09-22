@@ -3,7 +3,6 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import crypto from "crypto";
-import fs from "fs";
 import { fileURLToPath } from "url";
 import pg from "pg";
 
@@ -634,6 +633,7 @@ app.post(
         `${SITE_URL}/payment-success.html?product=${encodeURIComponent(productId)}&reference=${encodeURIComponent(reference)}`;
 
       res.json({
+
         success: true,
 
         reference,
@@ -743,36 +743,6 @@ app.post(
         String(
           body.receipt_url || ""
         ).trim();
-
-      console.log(
-        "Buyer:",
-        buyerEmail
-      );
-
-      console.log(
-        "Product:",
-        productName
-      );
-
-      console.log(
-        "Product code:",
-        productCode
-      );
-
-      console.log(
-        "Amount:",
-        amount
-      );
-
-      console.log(
-        "Currency:",
-        currency
-      );
-
-      console.log(
-        "Receipt:",
-        receiptUrl
-      );
 
       const eventId =
         body.id ||
@@ -973,6 +943,31 @@ app.post(
 
       console.log(
         "PAYMENT MARKED PAID"
+      );
+
+      console.log(
+        "Buyer:",
+        buyerName
+      );
+
+      console.log(
+        "Product:",
+        product.name
+      );
+
+      console.log(
+        "Amount:",
+        amount
+      );
+
+      console.log(
+        "Currency:",
+        currency
+      );
+
+      console.log(
+        "Receipt:",
+        receiptUrl
       );
 
       console.log(
@@ -1585,8 +1580,8 @@ app.get(
 );
 
 /* ======================================================
-   HOME PAGE
-   FULL LANDING PAGE FIRST
+   HOMEPAGE
+   LANDING PAGE FIRST
    PRODUCTS UNDERNEATH
 ====================================================== */
 
@@ -1594,81 +1589,273 @@ app.get(
   "/",
   (req, res) => {
 
-    const hexPath =
-      path.join(
-        __dirname,
-        "..",
-        "public",
-        "hex.html"
-      );
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
 
-    try {
+<head>
 
-      let html =
-        fs.readFileSync(
-          hexPath,
-          "utf8"
-        );
+  <meta charset="UTF-8">
 
-      const productsSection = `
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-        <section
-          id="homepage-products"
-          style="
-            width:100%;
-            margin:0;
-            padding:0;
-            background:#f5f7fb;
-          "
-        >
+  <title>
+    Earn Unlimited Funds
+  </title>
 
-          <iframe
-            src="/products.html"
-            title="Earn Unlimited Funds Products"
-            style="
-              width:100%;
-              min-height:2200px;
-              border:0;
-              display:block;
-            "
-          ></iframe>
+  <style>
 
-        </section>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background: #f5f7fb;
+    }
 
-      `;
+    #landingFrame,
+    #productsFrame {
+      width: 100%;
+      border: 0;
+      display: block;
+    }
 
-      if (
-        html.includes(
-          "</body>"
-        )
-      ) {
+    #landingFrame {
+      min-height: 800px;
+    }
 
-        html =
-          html.replace(
-            "</body>",
-            productsSection +
-            "</body>"
+    #productsFrame {
+      min-height: 2200px;
+    }
+
+    .products-heading {
+
+      width: 100%;
+
+      padding:
+        40px
+        20px
+        20px;
+
+      text-align: center;
+
+      background:
+        #f5f7fb;
+
+      font-family:
+        Arial,
+        sans-serif;
+    }
+
+    .products-heading h2 {
+
+      margin: 0;
+
+      font-size: 32px;
+
+      color:
+        #0b3d91;
+    }
+
+    .products-heading p {
+
+      margin:
+        10px 0 0;
+
+      font-size: 16px;
+
+      color:
+        #555;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- ================================================
+       FULL LANDING PAGE
+  ================================================= -->
+
+  <iframe
+    id="landingFrame"
+    src="/hex.html"
+    title="Earn Unlimited Funds Landing Page"
+    scrolling="no"
+  ></iframe>
+
+
+  <!-- ================================================
+       PRODUCTS HEADING
+  ================================================= -->
+
+  <section
+    class="products-heading"
+  >
+
+    <h2>
+      Our Products
+    </h2>
+
+    <p>
+      Explore our digital products and available offers.
+    </p>
+
+  </section>
+
+
+  <!-- ================================================
+       PRODUCTS
+  ================================================= -->
+
+  <iframe
+    id="productsFrame"
+    src="/products.html"
+    title="Earn Unlimited Funds Products"
+    scrolling="no"
+  ></iframe>
+
+
+  <!-- ================================================
+       RESIZE IFRAMES
+  ================================================= -->
+
+  <script>
+
+    function resizeFrame(frame) {
+
+      try {
+
+        const doc =
+          frame.contentWindow.document;
+
+        const body =
+          doc.body;
+
+        const html =
+          doc.documentElement;
+
+        const height =
+          Math.max(
+            body
+              ? body.scrollHeight
+              : 0,
+
+            body
+              ? body.offsetHeight
+              : 0,
+
+            html
+              ? html.scrollHeight
+              : 0,
+
+            html
+              ? html.offsetHeight
+              : 0
           );
 
-      } else {
+        if (height > 0) {
 
-        html +=
-          productsSection;
+          frame.style.height =
+            height + "px";
+        }
+
+      } catch (error) {
+
+        console.log(
+          "Frame resize error:",
+          error
+        );
       }
-
-      res.send(html);
-
-    } catch (error) {
-
-      console.error(
-        "Homepage error:",
-        error
-      );
-
-      res.status(500).send(
-        "Unable to load homepage."
-      );
     }
+
+
+    const landingFrame =
+      document.getElementById(
+        "landingFrame"
+      );
+
+    const productsFrame =
+      document.getElementById(
+        "productsFrame"
+      );
+
+
+    landingFrame.onload =
+      function () {
+
+        resizeFrame(
+          landingFrame
+        );
+
+        setTimeout(
+          () =>
+            resizeFrame(
+              landingFrame
+            ),
+          500
+        );
+
+        setTimeout(
+          () =>
+            resizeFrame(
+              landingFrame
+            ),
+          1500
+        );
+
+        setTimeout(
+          () =>
+            resizeFrame(
+              landingFrame
+            ),
+          3000
+        );
+      };
+
+
+    productsFrame.onload =
+      function () {
+
+        resizeFrame(
+          productsFrame
+        );
+
+        setTimeout(
+          () =>
+            resizeFrame(
+              productsFrame
+            ),
+          500
+        );
+
+        setTimeout(
+          () =>
+            resizeFrame(
+              productsFrame
+            ),
+          1500
+        );
+
+        setTimeout(
+          () =>
+            resizeFrame(
+              productsFrame
+            ),
+          3000
+        );
+      };
+
+  </script>
+
+</body>
+
+</html>
+    `);
   }
 );
 
