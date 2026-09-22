@@ -11,6 +11,10 @@
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -48,6 +52,10 @@
       font-size: 15px;
     }
 
+    nav a:hover {
+      text-decoration: underline;
+    }
+
     .hero {
       background: linear-gradient(135deg, #071a3d, #123d7a);
       color: white;
@@ -76,6 +84,10 @@
       text-decoration: none;
       border-radius: 8px;
       font-weight: bold;
+    }
+
+    .hero-button:hover {
+      background: #e9f0ff;
     }
 
     .section {
@@ -165,10 +177,23 @@
       border-radius: 8px;
       font-weight: bold;
       font-size: 16px;
+      border: none;
+      cursor: pointer;
     }
 
     .buy-button:hover {
       background: #123d7a;
+    }
+
+    .affiliate-label {
+      display: inline-block;
+      background: #e9f0ff;
+      color: #071a3d;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 6px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
     }
 
     .about {
@@ -242,20 +267,27 @@
   <!-- HEADER -->
   <header>
     <div class="nav">
-      <div class="logo">Earn Unlimited Funds</div>
+
+      <div class="logo">
+        Earn Unlimited Funds
+      </div>
 
       <nav>
         <a href="#home">Home</a>
         <a href="#products">Products</a>
         <a href="#about">About</a>
       </nav>
+
     </div>
   </header>
 
 
   <!-- HERO -->
   <section class="hero" id="home">
-    <h1>Earn Unlimited Funds</h1>
+
+    <h1>
+      Earn Unlimited Funds
+    </h1>
 
     <p>
       Discover practical digital guides designed to help you learn,
@@ -266,6 +298,7 @@
     <a href="#products" class="hero-button">
       Explore Our Products
     </a>
+
   </section>
 
 
@@ -273,11 +306,15 @@
   <section class="section" id="products">
 
     <div class="section-title">
-      <h2>Our Digital Products</h2>
+
+      <h2>
+        Our Digital Products
+      </h2>
 
       <p>
         Choose the guide you need and get started today.
       </p>
+
     </div>
 
 
@@ -285,9 +322,14 @@
 
       <!-- PRODUCT 1 -->
       <div class="product-card">
-        <div class="product-icon">📚</div>
 
-        <h3>How to Pass High in Exams</h3>
+        <div class="product-icon">
+          📚
+        </div>
+
+        <h3>
+          How to Pass High in Exams
+        </h3>
 
         <p>
           Learn practical study strategies, preparation techniques,
@@ -295,7 +337,9 @@
           performance.
         </p>
 
-        <div class="price">₦25,000</div>
+        <div class="price">
+          ₦25,000
+        </div>
 
         <a
           href="/product.html?id=how-to-pass-high-in-exams"
@@ -303,21 +347,29 @@
         >
           Buy Now
         </a>
+
       </div>
 
 
       <!-- PRODUCT 2 -->
       <div class="product-card">
-        <div class="product-icon">🤖</div>
 
-        <h3>AI Response Complete Guide</h3>
+        <div class="product-icon">
+          🤖
+        </div>
+
+        <h3>
+          AI Response Complete Guide
+        </h3>
 
         <p>
           Learn practical ways to use AI for better responses,
           ideas, productivity, communication and online work.
         </p>
 
-        <div class="price">₦40,000</div>
+        <div class="price">
+          ₦40,000
+        </div>
 
         <a
           href="/product.html?id=ai-response-complete-guide"
@@ -325,14 +377,20 @@
         >
           Buy Now
         </a>
+
       </div>
 
 
       <!-- PRODUCT 3 -->
       <div class="product-card">
-        <div class="product-icon">📱</div>
 
-        <h3>Facebook Automation</h3>
+        <div class="product-icon">
+          📱
+        </div>
+
+        <h3>
+          Facebook Automation
+        </h3>
 
         <p>
           Learn practical Facebook automation strategies for
@@ -340,7 +398,9 @@
           and improving your digital marketing workflow.
         </p>
 
-        <div class="price">₦60,000</div>
+        <div class="price">
+          ₦60,000
+        </div>
 
         <a
           href="/product.html?id=facebook-automation"
@@ -348,14 +408,20 @@
         >
           Buy Now
         </a>
+
       </div>
 
 
       <!-- PRODUCT 4 -->
       <div class="product-card">
-        <div class="product-icon">💰</div>
 
-        <h3>How to Save a Billion from a Zero Account</h3>
+        <div class="product-icon">
+          💰
+        </div>
+
+        <h3>
+          How to Save a Billion from a Zero Account
+        </h3>
 
         <p>
           Explore practical money habits, saving strategies,
@@ -363,7 +429,9 @@
           better financial discipline.
         </p>
 
-        <div class="price">₦80,000</div>
+        <div class="price">
+          ₦80,000
+        </div>
 
         <a
           href="/product.html?id=save-a-billion-from-zero-account"
@@ -371,14 +439,20 @@
         >
           Buy Now
         </a>
+
       </div>
 
 
       <!-- PRODUCT 5 -->
       <div class="product-card">
-        <div class="product-icon">🤰</div>
 
-        <h3>Pregnancy Care Guide</h3>
+        <div class="product-icon">
+          🤰
+        </div>
+
+        <h3>
+          Pregnancy Care Guide
+        </h3>
 
         <p>
           A practical guide containing useful pregnancy-care
@@ -386,7 +460,9 @@
           important considerations.
         </p>
 
-        <div class="price">₦150,000</div>
+        <div class="price">
+          ₦150,000
+        </div>
 
         <a
           href="/product.html?id=pregnancy-care"
@@ -394,14 +470,20 @@
         >
           Buy Now
         </a>
+
       </div>
 
 
       <!-- PRODUCT 6 -->
       <div class="product-card">
-        <div class="product-icon">🚀</div>
 
-        <h3>Sell Faster Professional Ebook</h3>
+        <div class="product-icon">
+          🚀
+        </div>
+
+        <h3>
+          Sell Faster Professional Ebook
+        </h3>
 
         <p>
           Learn practical selling approaches, customer attraction,
@@ -409,7 +491,9 @@
           your chances of making sales.
         </p>
 
-        <div class="price">₦150,200</div>
+        <div class="price">
+          ₦150,200
+        </div>
 
         <a
           href="/product.html?id=sell-faster"
@@ -417,9 +501,46 @@
         >
           Buy Now
         </a>
+
+      </div>
+
+
+      <!-- AFFILIATE PRODUCT -->
+      <div class="product-card">
+
+        <div class="product-icon">
+          ✍️
+        </div>
+
+        <span class="affiliate-label">
+          AFFILIATE PRODUCT
+        </span>
+
+        <h3>
+          Write and Launch Bootcamp
+        </h3>
+
+        <p>
+          Automate your ideas and turn them into a launched product.
+        </p>
+
+        <div class="price">
+          ₦37,900
+        </div>
+
+        <a
+          href="https://selar.com/p/8y7x?affiliate=q5vq"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="buy-button"
+        >
+          View Product
+        </a>
+
       </div>
 
     </div>
+
   </section>
 
 
@@ -428,7 +549,9 @@
 
     <div class="about">
 
-      <h2>About Earn Unlimited Funds</h2>
+      <h2>
+        About Earn Unlimited Funds
+      </h2>
 
       <p>
         Earn Unlimited Funds is a digital platform created to provide
@@ -455,7 +578,9 @@
   <!-- FOOTER -->
   <footer>
 
-    <p><strong>Earn Unlimited Funds</strong></p>
+    <p>
+      <strong>Earn Unlimited Funds</strong>
+    </p>
 
     <p>
       Build your knowledge. Take action. Move forward.
