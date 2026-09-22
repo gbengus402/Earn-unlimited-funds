@@ -3,6 +3,7 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import crypto from "crypto";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import pg from "pg";
 
@@ -122,11 +123,12 @@ const PRODUCTS = {
     selarUrl:
       "https://selar.com/4j11q9844e"
   },
-  
-        "how-to-pass-high-in-exams": {
+
+  "how-to-pass-high-in-exams": {
     id: "how-to-pass-high-in-exams",
 
-    name: "How to Pass High in Exams",
+    name:
+      "How to Pass High in Exams",
 
     description:
       "A practical guide designed to help students prepare better, study effectively, manage examination pressure and improve their academic performance.",
@@ -151,7 +153,8 @@ const PRODUCTS = {
   "ai-response-complete-guide": {
     id: "ai-response-complete-guide",
 
-    name: "AI Response Complete Guide",
+    name:
+      "AI Response Complete Guide",
 
     description:
       "A practical guide to using AI effectively for better responses, ideas, productivity, communication and results.",
@@ -176,7 +179,8 @@ const PRODUCTS = {
   "facebook-automation": {
     id: "facebook-automation",
 
-    name: "Facebook Automation",
+    name:
+      "Facebook Automation",
 
     description:
       "Learn practical Facebook automation strategies for improving your online marketing and business activities.",
@@ -199,7 +203,8 @@ const PRODUCTS = {
   },
 
   "save-a-billion-from-zero-account": {
-    id: "save-a-billion-from-zero-account",
+    id:
+      "save-a-billion-from-zero-account",
 
     name:
       "How to Save a Billion from a Zero Account",
@@ -225,7 +230,8 @@ const PRODUCTS = {
   },
 
   "pregnancy-care": {
-    id: "pregnancy-care",
+    id:
+      "pregnancy-care",
 
     name:
       "Pregnancy Care Guide",
@@ -251,7 +257,8 @@ const PRODUCTS = {
   },
 
   "sell-faster": {
-    id: "sell-faster",
+    id:
+      "sell-faster",
 
     name:
       "Sell Faster Professional Ebook",
@@ -283,6 +290,7 @@ const PRODUCTS = {
 
 async function initializeDatabase() {
   try {
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS payments (
         id SERIAL PRIMARY KEY,
@@ -386,11 +394,6 @@ async function initializeDatabase() {
       ADD COLUMN IF NOT EXISTS created_at BIGINT
     `);
 
-    /*
-      Keep the webhook table so every received
-      Selar event can be recorded.
-    */
-
     await pool.query(`
       CREATE TABLE IF NOT EXISTS selar_webhook_events (
         id SERIAL PRIMARY KEY,
@@ -405,7 +408,9 @@ async function initializeDatabase() {
     console.log(
       "PostgreSQL database initialized."
     );
+
   } catch (error) {
+
     console.error(
       "Database initialization error:",
       error
@@ -424,6 +429,7 @@ async function createDownloadToken({
   productId,
   email
 }) {
+
   const rawToken =
     crypto.randomBytes(32).toString("hex");
 
@@ -433,7 +439,8 @@ async function createDownloadToken({
       .update(rawToken)
       .digest("hex");
 
-  const now = Date.now();
+  const now =
+    Date.now();
 
   const expiresAt =
     now + 24 * 60 * 60 * 1000;
@@ -466,7 +473,8 @@ async function createDownloadToken({
   );
 
   return {
-    token: rawToken,
+    token:
+      rawToken,
 
     downloadUrl:
       `${SITE_URL}/api/download?token=${encodeURIComponent(rawToken)}`,
@@ -482,20 +490,28 @@ async function createDownloadToken({
 app.get(
   "/api/products",
   (req, res) => {
+
     res.json({
       success: true,
 
       products:
         Object.values(PRODUCTS).map(
           (product) => ({
-            id: product.id,
-            name: product.name,
+            id:
+              product.id,
+
+            name:
+              product.name,
+
             description:
               product.description,
+
             priceNaira:
               product.priceNaira,
+
             amountKobo:
               product.amountKobo,
+
             selarUrl:
               product.selarUrl
           })
@@ -511,12 +527,15 @@ app.get(
 app.get(
   "/api/products/:id",
   (req, res) => {
+
     const product =
       PRODUCTS[req.params.id];
 
     if (!product) {
+
       return res.status(404).json({
         success: false,
+
         message:
           "Product not found."
       });
@@ -524,6 +543,7 @@ app.get(
 
     res.json({
       success: true,
+
       product
     });
   }
@@ -536,7 +556,9 @@ app.get(
 app.post(
   "/api/pay",
   async (req, res) => {
+
     try {
+
       const email =
         String(
           req.body.email || ""
@@ -549,8 +571,10 @@ app.post(
         req.body.productId;
 
       if (!email) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Email is required."
         });
@@ -560,8 +584,10 @@ app.post(
         !productId ||
         !PRODUCTS[productId]
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Valid product is required."
         });
@@ -573,7 +599,8 @@ app.post(
       const reference =
         `EUF-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 
-      const now = Date.now();
+      const now =
+        Date.now();
 
       await pool.query(
         `
@@ -608,16 +635,21 @@ app.post(
 
       res.json({
         success: true,
+
         reference,
+
         product_id:
           productId,
+
         checkout_url:
           product.selarUrl,
+
         return_url:
           returnUrl
       });
 
     } catch (error) {
+
       console.error(
         "Payment start error:",
         error
@@ -625,6 +657,7 @@ app.post(
 
       res.status(500).json({
         success: false,
+
         message:
           "Unable to start payment."
       });
@@ -633,20 +666,22 @@ app.post(
 );
 
 /* ======================================================
-   SELAR WEBHOOK - PRODUCTION
+   SELAR WEBHOOK
 ====================================================== */
 
 app.post(
   "/api/selar/webhook",
   async (req, res) => {
+
     try {
+
       console.log("");
       console.log(
         "=================================================="
       );
 
       console.log(
-        "          SELAR WEBHOOK RECEIVED"
+        "SELAR WEBHOOK RECEIVED"
       );
 
       console.log(
@@ -669,10 +704,6 @@ app.post(
           2
         )
       );
-
-      /* ================================================
-         GET SELAR FIELDS
-      ================================================ */
 
       const buyerEmail =
         String(
@@ -743,10 +774,6 @@ app.post(
         receiptUrl
       );
 
-      /* ================================================
-         SAVE WEBHOOK EVENT
-      ================================================ */
-
       const eventId =
         body.id ||
         body.event_id ||
@@ -791,70 +818,49 @@ app.post(
         ]
       );
 
-      /* ================================================
-         CHECK EMAIL
-      ================================================ */
-
       if (!buyerEmail) {
-        console.log(
-          "Buyer email missing."
-        );
 
         return res.status(200).json({
           success: true,
+
           received: true,
+
           paid: false,
+
           message:
             "Buyer email missing."
         });
       }
 
-      /* ================================================
-         IGNORE ZERO-AMOUNT TEST EVENTS
-      ================================================ */
-
       if (amount <= 0) {
-        console.log(
-          "Zero amount webhook received."
-        );
-
-        console.log(
-          "This is treated as a test/non-paid event."
-        );
 
         return res.status(200).json({
           success: true,
+
           received: true,
+
           paid: false,
+
           test: true,
+
           message:
             "Zero-amount/test webhook received."
         });
       }
 
-      /* ================================================
-         MATCH PRODUCT
-      ================================================ */
-
       let product =
-        Object.values(
-          PRODUCTS
-        ).find(
+        Object.values(PRODUCTS).find(
           (item) =>
             item.name.toLowerCase() ===
             productName.toLowerCase()
         );
-
-      /*
-        Support the Selar Tst product only when
-        a non-zero amount is received.
-      */
 
       if (
         !product &&
         productName.toLowerCase() ===
           "tst"
       ) {
+
         product =
           PRODUCTS[
             "how-to-pass-high-in-exams"
@@ -862,63 +868,41 @@ app.post(
       }
 
       if (!product) {
-        console.log(
-          "Product could not be matched:",
-          productName
-        );
 
         return res.status(200).json({
           success: true,
+
           received: true,
+
           paid: false,
+
           message:
             "Product could not be matched.",
+
           product_name:
             productName,
+
           product_code:
             productCode
         });
       }
 
-      console.log(
-        "Matched product:",
-        product.id
-      );
-
-      /* ================================================
-         CHECK AMOUNT
-      ================================================ */
-
       if (
         amount <
         product.priceNaira
       ) {
-        console.log(
-          "Payment amount is below product price."
-        );
-
-        console.log(
-          "Expected:",
-          product.priceNaira
-        );
-
-        console.log(
-          "Received:",
-          amount
-        );
 
         return res.status(200).json({
           success: true,
+
           received: true,
+
           paid: false,
+
           message:
             "Payment amount is below product price."
         });
       }
-
-      /* ================================================
-         FIND PENDING WEBSITE PAYMENT
-      ================================================ */
 
       const paymentResult =
         await pool.query(
@@ -941,19 +925,14 @@ app.post(
         paymentResult.rows.length ===
         0
       ) {
-        console.log(
-          "No matching pending website payment found."
-        );
-
-        /*
-          IMPORTANT:
-          Do not create a fallback payment.
-        */
 
         return res.status(200).json({
           success: true,
+
           received: true,
+
           paid: false,
+
           message:
             "No matching pending website payment found."
         });
@@ -961,15 +940,6 @@ app.post(
 
       const payment =
         paymentResult.rows[0];
-
-      console.log(
-        "Website payment found:",
-        payment.reference
-      );
-
-      /* ================================================
-         MARK PAYMENT AS PAID
-      ================================================ */
 
       await pool.query(
         `
@@ -989,29 +959,6 @@ app.post(
         ]
       );
 
-      console.log(
-        "PAYMENT MARKED PAID"
-      );
-
-      console.log(
-        "Reference:",
-        payment.reference
-      );
-
-      console.log(
-        "Product:",
-        product.name
-      );
-
-      console.log(
-        "Buyer:",
-        buyerEmail
-      );
-
-      /* ================================================
-         CREATE DOWNLOAD TOKEN
-      ================================================ */
-
       const download =
         await createDownloadToken({
           paymentReference:
@@ -1025,7 +972,7 @@ app.post(
         });
 
       console.log(
-        "DOWNLOAD TOKEN CREATED"
+        "PAYMENT MARKED PAID"
       );
 
       console.log(
@@ -1033,17 +980,12 @@ app.post(
         download.downloadUrl
       );
 
-      console.log(
-        "=================================================="
-      );
-
-      /* ================================================
-         SUCCESS
-      ================================================ */
-
       return res.status(200).json({
+
         success: true,
+
         received: true,
+
         paid: true,
 
         buyer_email:
@@ -1081,6 +1023,7 @@ app.post(
       });
 
     } catch (error) {
+
       console.error(
         "SELAR WEBHOOK ERROR:",
         error
@@ -1088,6 +1031,7 @@ app.post(
 
       return res.status(500).json({
         success: false,
+
         message:
           "Webhook processing failed."
       });
@@ -1102,15 +1046,19 @@ app.post(
 app.get(
   "/api/purchase-status",
   async (req, res) => {
+
     try {
+
       const reference =
         String(
           req.query.reference || ""
         ).trim();
 
       if (!reference) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Reference is required."
         });
@@ -1130,9 +1078,12 @@ app.get(
       if (
         result.rows.length === 0
       ) {
+
         return res.json({
           success: true,
+
           found: false,
+
           paid: false
         });
       }
@@ -1141,7 +1092,9 @@ app.get(
         result.rows[0];
 
       res.json({
+
         success: true,
+
         found: true,
 
         paid:
@@ -1162,6 +1115,7 @@ app.get(
       });
 
     } catch (error) {
+
       console.error(
         "Purchase status error:",
         error
@@ -1169,6 +1123,7 @@ app.get(
 
       res.status(500).json({
         success: false,
+
         message:
           "Unable to check purchase status."
       });
@@ -1183,15 +1138,19 @@ app.get(
 app.get(
   "/api/get-download",
   async (req, res) => {
+
     try {
+
       const reference =
         String(
           req.query.reference || ""
         ).trim();
 
       if (!reference) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Reference is required."
         });
@@ -1211,9 +1170,12 @@ app.get(
       if (
         result.rows.length === 0
       ) {
+
         return res.json({
           success: true,
+
           paid: false,
+
           message:
             "Payment not found yet."
         });
@@ -1225,11 +1187,15 @@ app.get(
       if (
         payment.status !== "PAID"
       ) {
+
         return res.json({
           success: true,
+
           paid: false,
+
           status:
             payment.status,
+
           message:
             "Payment has not been verified yet."
         });
@@ -1241,17 +1207,14 @@ app.get(
         ];
 
       if (!product) {
+
         return res.status(404).json({
           success: false,
+
           message:
             "Product not found."
         });
       }
-
-      /*
-        Generate a new secure download token
-        only after the payment has been confirmed.
-      */
 
       const download =
         await createDownloadToken({
@@ -1266,7 +1229,9 @@ app.get(
         });
 
       res.json({
+
         success: true,
+
         paid: true,
 
         reference:
@@ -1289,6 +1254,7 @@ app.get(
       });
 
     } catch (error) {
+
       console.error(
         "Get download error:",
         error
@@ -1296,6 +1262,7 @@ app.get(
 
       res.status(500).json({
         success: false,
+
         message:
           "Unable to prepare download."
       });
@@ -1310,13 +1277,16 @@ app.get(
 app.get(
   "/api/download",
   async (req, res) => {
+
     try {
+
       const token =
         String(
           req.query.token || ""
         ).trim();
 
       if (!token) {
+
         return res.status(400).send(
           "Download token is required."
         );
@@ -1342,6 +1312,7 @@ app.get(
       if (
         result.rows.length === 0
       ) {
+
         return res.status(403).send(
           "Invalid or expired download link."
         );
@@ -1353,6 +1324,7 @@ app.get(
       if (
         Number(download.used) === 1
       ) {
+
         return res.status(403).send(
           "This download link has already been used."
         );
@@ -1365,6 +1337,7 @@ app.get(
             download.expires_at
           )
       ) {
+
         return res.status(403).send(
           "This download link has expired."
         );
@@ -1376,12 +1349,14 @@ app.get(
         ];
 
       if (!product) {
+
         return res.status(404).send(
           "Product not found."
         );
       }
 
       if (!r2) {
+
         return res.status(500).send(
           "R2 storage is not configured."
         );
@@ -1389,6 +1364,7 @@ app.get(
 
       const command =
         new GetObjectCommand({
+
           Bucket:
             process.env.R2_BUCKET_NAME,
 
@@ -1398,10 +1374,6 @@ app.get(
 
       const object =
         await r2.send(command);
-
-      /*
-        Mark token as used.
-      */
 
       await pool.query(
         `
@@ -1425,6 +1397,7 @@ app.get(
       if (
         object.ContentLength
       ) {
+
         res.setHeader(
           "Content-Length",
           object.ContentLength
@@ -1434,6 +1407,7 @@ app.get(
       object.Body.pipe(res);
 
     } catch (error) {
+
       console.error(
         "Download error:",
         error
@@ -1443,6 +1417,7 @@ app.get(
         error.name === "NoSuchKey" ||
         error.Code === "NoSuchKey"
       ) {
+
         return res.status(404).send(
           "The product file was not found in R2."
         );
@@ -1462,7 +1437,9 @@ app.get(
 app.get(
   "/api/test-product/:productId",
   async (req, res) => {
+
     try {
+
       const productId =
         req.params.productId;
 
@@ -1470,8 +1447,10 @@ app.get(
         PRODUCTS[productId];
 
       if (!product) {
+
         return res.status(404).json({
           success: false,
+
           message:
             "Product not found."
         });
@@ -1524,7 +1503,9 @@ app.get(
         });
 
       res.json({
+
         success: true,
+
         test: true,
 
         product_id:
@@ -1547,6 +1528,7 @@ app.get(
       });
 
     } catch (error) {
+
       console.error(
         "Test product error:",
         error
@@ -1554,6 +1536,7 @@ app.get(
 
       res.status(500).json({
         success: false,
+
         message:
           "Test failed."
       });
@@ -1568,7 +1551,9 @@ app.get(
 app.get(
   "/api/test-download-v2",
   (req, res) => {
+
     res.json({
+
       success: true,
 
       message:
@@ -1587,6 +1572,7 @@ app.get(
 app.get(
   "/payment-success.html",
   (req, res) => {
+
     res.sendFile(
       path.join(
         __dirname,
@@ -1600,19 +1586,89 @@ app.get(
 
 /* ======================================================
    HOME PAGE
+   FULL LANDING PAGE FIRST
+   PRODUCTS UNDERNEATH
 ====================================================== */
 
 app.get(
   "/",
   (req, res) => {
-    res.sendFile(
+
+    const hexPath =
       path.join(
         __dirname,
         "..",
         "public",
         "hex.html"
-      )
-    );
+      );
+
+    try {
+
+      let html =
+        fs.readFileSync(
+          hexPath,
+          "utf8"
+        );
+
+      const productsSection = `
+
+        <section
+          id="homepage-products"
+          style="
+            width:100%;
+            margin:0;
+            padding:0;
+            background:#f5f7fb;
+          "
+        >
+
+          <iframe
+            src="/products.html"
+            title="Earn Unlimited Funds Products"
+            style="
+              width:100%;
+              min-height:2200px;
+              border:0;
+              display:block;
+            "
+          ></iframe>
+
+        </section>
+
+      `;
+
+      if (
+        html.includes(
+          "</body>"
+        )
+      ) {
+
+        html =
+          html.replace(
+            "</body>",
+            productsSection +
+            "</body>"
+          );
+
+      } else {
+
+        html +=
+          productsSection;
+      }
+
+      res.send(html);
+
+    } catch (error) {
+
+      console.error(
+        "Homepage error:",
+        error
+      );
+
+      res.status(500).send(
+        "Unable to load homepage."
+      );
+    }
   }
 );
 
@@ -1623,12 +1679,15 @@ app.get(
 app.get(
   "/health",
   async (req, res) => {
+
     try {
+
       await pool.query(
         "SELECT 1"
       );
 
       res.json({
+
         success: true,
 
         database:
@@ -1642,7 +1701,9 @@ app.get(
       });
 
     } catch (error) {
+
       res.status(500).json({
+
         success: false,
 
         database:
@@ -1661,8 +1722,11 @@ app.get(
 
 app.use(
   (req, res) => {
+
     res.status(404).json({
+
       success: false,
+
       message:
         "Route not found."
     });
@@ -1674,12 +1738,15 @@ app.use(
 ====================================================== */
 
 async function startServer() {
+
   try {
+
     await initializeDatabase();
 
     app.listen(
       PORT,
       () => {
+
         console.log(
           `Earn Unlimited Funds server running on port ${PORT}`
         );
@@ -1691,6 +1758,7 @@ async function startServer() {
     );
 
   } catch (error) {
+
     console.error(
       "Server startup failed:",
       error
