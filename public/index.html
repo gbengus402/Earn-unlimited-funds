@@ -52,10 +52,6 @@
       font-size: 15px;
     }
 
-    nav a:hover {
-      text-decoration: underline;
-    }
-
     .hero {
       background: linear-gradient(135deg, #071a3d, #123d7a);
       color: white;
@@ -79,15 +75,11 @@
       display: inline-block;
       margin-top: 28px;
       padding: 14px 28px;
-      background: #ffffff;
+      background: white;
       color: #071a3d;
       text-decoration: none;
       border-radius: 8px;
       font-weight: bold;
-    }
-
-    .hero-button:hover {
-      background: #e9f0ff;
     }
 
     .section {
@@ -121,16 +113,15 @@
       background: white;
       border-radius: 14px;
       padding: 25px;
-      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 6px 25px rgba(0,0,0,0.08);
       display: flex;
       flex-direction: column;
       min-height: 330px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: 0.2s;
     }
 
     .product-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
     }
 
     .product-icon {
@@ -177,7 +168,7 @@
       border-radius: 8px;
       font-weight: bold;
       font-size: 16px;
-      border: none;
+      border: 0;
       cursor: pointer;
     }
 
@@ -187,6 +178,7 @@
 
     .affiliate-label {
       display: inline-block;
+      width: fit-content;
       background: #e9f0ff;
       color: #071a3d;
       font-size: 12px;
@@ -196,11 +188,18 @@
       margin-bottom: 12px;
     }
 
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #596579;
+      grid-column: 1 / -1;
+    }
+
     .about {
       background: white;
       border-radius: 14px;
       padding: 35px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.06);
       line-height: 1.8;
     }
 
@@ -264,333 +263,395 @@
 
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <div class="nav">
+<header>
+  <div class="nav">
 
-      <div class="logo">
-        Earn Unlimited Funds
-      </div>
-
-      <nav>
-        <a href="#home">Home</a>
-        <a href="#products">Products</a>
-        <a href="#about">About</a>
-      </nav>
-
-    </div>
-  </header>
-
-
-  <!-- HERO -->
-  <section class="hero" id="home">
-
-    <h1>
+    <div class="logo">
       Earn Unlimited Funds
-    </h1>
-
-    <p>
-      Discover practical digital guides designed to help you learn,
-      improve your skills, grow your knowledge and take meaningful
-      steps toward your financial and personal goals.
-    </p>
-
-    <a href="#products" class="hero-button">
-      Explore Our Products
-    </a>
-
-  </section>
-
-
-  <!-- PRODUCTS -->
-  <section class="section" id="products">
-
-    <div class="section-title">
-
-      <h2>
-        Our Digital Products
-      </h2>
-
-      <p>
-        Choose the guide you need and get started today.
-      </p>
-
     </div>
 
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#products">Products</a>
+      <a href="#about">About</a>
+    </nav>
 
-    <div class="products">
-
-      <!-- PRODUCT 1 -->
-      <div class="product-card">
-
-        <div class="product-icon">
-          📚
-        </div>
-
-        <h3>
-          How to Pass High in Exams
-        </h3>
-
-        <p>
-          Learn practical study strategies, preparation techniques,
-          examination tips and methods for improving your academic
-          performance.
-        </p>
-
-        <div class="price">
-          ₦25,000
-        </div>
-
-        <a
-          href="/product.html?id=how-to-pass-high-in-exams"
-          class="buy-button"
-        >
-          Buy Now
-        </a>
-
-      </div>
+  </div>
+</header>
 
 
-      <!-- PRODUCT 2 -->
-      <div class="product-card">
+<section class="hero" id="home">
 
-        <div class="product-icon">
-          🤖
-        </div>
+  <h1>
+    Earn Unlimited Funds
+  </h1>
 
-        <h3>
-          AI Response Complete Guide
-        </h3>
+  <p>
+    Discover practical digital guides designed to help you learn,
+    improve your skills, grow your knowledge and take meaningful
+    steps toward your financial and personal goals.
+  </p>
 
-        <p>
-          Learn practical ways to use AI for better responses,
-          ideas, productivity, communication and online work.
-        </p>
+  <a href="#products" class="hero-button">
+    Explore Our Products
+  </a>
 
-        <div class="price">
-          ₦40,000
-        </div>
-
-        <a
-          href="/product.html?id=ai-response-complete-guide"
-          class="buy-button"
-        >
-          Buy Now
-        </a>
-
-      </div>
+</section>
 
 
-      <!-- PRODUCT 3 -->
-      <div class="product-card">
+<section class="section" id="products">
 
-        <div class="product-icon">
-          📱
-        </div>
+  <div class="section-title">
 
-        <h3>
-          Facebook Automation
-        </h3>
+    <h2>
+      All Products
+    </h2>
 
-        <p>
-          Learn practical Facebook automation strategies for
-          managing your online presence, responding to customers
-          and improving your digital marketing workflow.
-        </p>
+    <p>
+      Digital products and recommended affiliate products.
+    </p>
 
-        <div class="price">
-          ₦60,000
-        </div>
+  </div>
 
-        <a
-          href="/product.html?id=facebook-automation"
-          class="buy-button"
-        >
-          Buy Now
-        </a>
+  <div
+    class="products"
+    id="productsContainer"
+  >
 
-      </div>
-
-
-      <!-- PRODUCT 4 -->
-      <div class="product-card">
-
-        <div class="product-icon">
-          💰
-        </div>
-
-        <h3>
-          How to Save a Billion from a Zero Account
-        </h3>
-
-        <p>
-          Explore practical money habits, saving strategies,
-          financial planning and long-term approaches to building
-          better financial discipline.
-        </p>
-
-        <div class="price">
-          ₦80,000
-        </div>
-
-        <a
-          href="/product.html?id=save-a-billion-from-zero-account"
-          class="buy-button"
-        >
-          Buy Now
-        </a>
-
-      </div>
-
-
-      <!-- PRODUCT 5 -->
-      <div class="product-card">
-
-        <div class="product-icon">
-          🤰
-        </div>
-
-        <h3>
-          Pregnancy Care Guide
-        </h3>
-
-        <p>
-          A practical guide containing useful pregnancy-care
-          information, preparation tips, healthy routines and
-          important considerations.
-        </p>
-
-        <div class="price">
-          ₦150,000
-        </div>
-
-        <a
-          href="/product.html?id=pregnancy-care"
-          class="buy-button"
-        >
-          Buy Now
-        </a>
-
-      </div>
-
-
-      <!-- PRODUCT 6 -->
-      <div class="product-card">
-
-        <div class="product-icon">
-          🚀
-        </div>
-
-        <h3>
-          Sell Faster Professional Ebook
-        </h3>
-
-        <p>
-          Learn practical selling approaches, customer attraction,
-          offer presentation and strategies that can help improve
-          your chances of making sales.
-        </p>
-
-        <div class="price">
-          ₦150,200
-        </div>
-
-        <a
-          href="/product.html?id=sell-faster"
-          class="buy-button"
-        >
-          Buy Now
-        </a>
-
-      </div>
-
-
-      <!-- AFFILIATE PRODUCT -->
-      <div class="product-card">
-
-        <div class="product-icon">
-          ✍️
-        </div>
-
-        <span class="affiliate-label">
-          AFFILIATE PRODUCT
-        </span>
-
-        <h3>
-          Write and Launch Bootcamp
-        </h3>
-
-        <p>
-          Automate your ideas and turn them into a launched product.
-        </p>
-
-        <div class="price">
-          ₦37,900
-        </div>
-
-        <a
-          href="https://selar.com/p/8y7x?affiliate=q5vq"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="buy-button"
-        >
-          View Product
-        </a>
-
-      </div>
-
+    <div class="loading">
+      Loading products...
     </div>
 
-  </section>
+  </div>
+
+</section>
 
 
-  <!-- ABOUT -->
-  <section class="section" id="about">
+<section class="section" id="about">
 
-    <div class="about">
+  <div class="about">
 
-      <h2>
-        About Earn Unlimited Funds
-      </h2>
-
-      <p>
-        Earn Unlimited Funds is a digital platform created to provide
-        practical resources, guides and educational materials that
-        can help people develop useful knowledge and skills.
-      </p>
-
-      <p>
-        Our goal is to make valuable digital information easily
-        accessible while providing a simple and secure purchasing
-        experience.
-      </p>
-
-      <p>
-        After successful payment, customers receive secure access
-        to their purchased digital product.
-      </p>
-
-    </div>
-
-  </section>
-
-
-  <!-- FOOTER -->
-  <footer>
+    <h2>
+      About Earn Unlimited Funds
+    </h2>
 
     <p>
-      <strong>Earn Unlimited Funds</strong>
+      Earn Unlimited Funds is a digital platform created to provide
+      practical resources, guides and educational materials that
+      can help people develop useful knowledge and skills.
     </p>
 
     <p>
-      Build your knowledge. Take action. Move forward.
+      Our goal is to make valuable digital information easily
+      accessible while providing a simple and secure purchasing
+      experience.
     </p>
 
     <p>
-      © 2026 Earn Unlimited Funds. All rights reserved.
+      After successful payment, customers receive secure access
+      to their purchased digital product.
     </p>
 
-  </footer>
+  </div>
+
+</section>
+
+
+<footer>
+
+  <p>
+    <strong>Earn Unlimited Funds</strong>
+  </p>
+
+  <p>
+    Build your knowledge. Take action. Move forward.
+  </p>
+
+  <p>
+    © 2026 Earn Unlimited Funds. All rights reserved.
+  </p>
+
+</footer>
+
+
+<script>
+
+  /*
+    =====================================================
+    AFFILIATE PRODUCTS
+
+    To add another affiliate product, add:
+    name
+    price
+    description
+    affiliateUrl
+    =====================================================
+  */
+
+  const affiliateProducts = [
+
+    {
+      id: "write-and-launch-bootcamp",
+
+      name:
+        "Write and Launch Bootcamp",
+
+      priceNaira:
+        37900,
+
+      description:
+        "Automate your ideas and turn them into a launched product.",
+
+      affiliateUrl:
+        "https://selar.com/p/8y7x?affiliate=q5vq"
+    }
+
+  ];
+
+
+  /*
+    =====================================================
+    FORMAT PRICE
+    =====================================================
+  */
+
+  function formatPrice(amount) {
+
+    return "₦" +
+      Number(amount || 0)
+        .toLocaleString("en-NG");
+
+  }
+
+
+  /*
+    =====================================================
+    PRODUCT ICON
+    =====================================================
+  */
+
+  function getIcon(name) {
+
+    const text =
+      String(name).toLowerCase();
+
+    if (text.includes("exam")) return "📚";
+
+    if (text.includes("ai")) return "🤖";
+
+    if (text.includes("facebook")) return "📱";
+
+    if (text.includes("billion")) return "💰";
+
+    if (text.includes("pregnancy")) return "🤰";
+
+    if (text.includes("sell")) return "🚀";
+
+    if (text.includes("write")) return "✍️";
+
+    return "📦";
+  }
+
+
+  /*
+    =====================================================
+    CREATE OWN PRODUCT CARD
+    =====================================================
+  */
+
+  function createOwnProductCard(product) {
+
+    const card =
+      document.createElement("div");
+
+    card.className =
+      "product-card";
+
+    card.innerHTML = `
+
+      <div class="product-icon">
+        ${getIcon(product.name)}
+      </div>
+
+      <h3>
+        ${product.name}
+      </h3>
+
+      <p>
+        ${product.description || ""}
+      </p>
+
+      <div class="price">
+        ${formatPrice(product.priceNaira)}
+      </div>
+
+      <a
+        href="/product.html?id=${encodeURIComponent(product.id)}"
+        class="buy-button"
+      >
+        Buy Now
+      </a>
+
+    `;
+
+    return card;
+  }
+
+
+  /*
+    =====================================================
+    CREATE AFFILIATE PRODUCT CARD
+    =====================================================
+  */
+
+  function createAffiliateProductCard(product) {
+
+    const card =
+      document.createElement("div");
+
+    card.className =
+      "product-card";
+
+    card.innerHTML = `
+
+      <div class="product-icon">
+        ${getIcon(product.name)}
+      </div>
+
+      <span class="affiliate-label">
+        AFFILIATE PRODUCT
+      </span>
+
+      <h3>
+        ${product.name}
+      </h3>
+
+      <p>
+        ${product.description || ""}
+      </p>
+
+      <div class="price">
+        ${formatPrice(product.priceNaira)}
+      </div>
+
+      <a
+        href="${product.affiliateUrl}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="buy-button"
+      >
+        View Product
+      </a>
+
+    `;
+
+    return card;
+  }
+
+
+  /*
+    =====================================================
+    LOAD ALL PRODUCTS
+    =====================================================
+  */
+
+  async function loadAllProducts() {
+
+    const container =
+      document.getElementById(
+        "productsContainer"
+      );
+
+    container.innerHTML = "";
+
+    let ownProducts = [];
+
+    try {
+
+      const response =
+        await fetch("/api/products");
+
+      const data =
+        await response.json();
+
+      if (
+        data.success &&
+        Array.isArray(data.products)
+      ) {
+
+        ownProducts =
+          data.products.filter(
+            product =>
+              product.id !== "tst"
+          );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Unable to load own products:",
+        error
+      );
+
+    }
+
+
+    /*
+      OWN PRODUCTS
+    */
+
+    ownProducts.forEach(
+      product => {
+
+        container.appendChild(
+          createOwnProductCard(product)
+        );
+
+      }
+    );
+
+
+    /*
+      AFFILIATE PRODUCTS
+    */
+
+    affiliateProducts.forEach(
+      product => {
+
+        container.appendChild(
+          createAffiliateProductCard(product)
+        );
+
+      }
+    );
+
+
+    /*
+      NOTHING FOUND
+    */
+
+    if (
+      ownProducts.length === 0 &&
+      affiliateProducts.length === 0
+    ) {
+
+      container.innerHTML = `
+
+        <div class="loading">
+          No products available at the moment.
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  loadAllProducts();
+
+</script>
 
 </body>
 </html>
